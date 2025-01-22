@@ -152,7 +152,7 @@ iframe {
 .npSl {
     -webkit-appearance: none;
     position: absolute;
-    height: inherit
+    height: 40px
 }
 
 .slider {
@@ -163,6 +163,10 @@ iframe {
     top: 0
 }
 
+.noI {
+    pointer-events: none;
+}
+
 .npSl {
     width: 100%;
     left: -.2px;
@@ -170,10 +174,6 @@ iframe {
     height: 40px;
     overflow: hidden;
     border-radius: 5px
-}
-
-.sliderAmount {
-    margin-top: -4px
 }
 
 .slider::-webkit-slider-thumb {
@@ -225,7 +225,8 @@ iframe {
     background-image: linear-gradient(to right, white, #333)
 }
 
-.slTS {
+.slTS,
+.thermO {
     -webkit-appearance: none;
     position: absolute;
     height: 40px;
@@ -233,8 +234,12 @@ iframe {
     border-radius: 5px;
     width: 100%;
     top: 0;
-    mix-blend-mode: overlay;
     pointer-events: none;
+
+}
+
+.slTS {
+    mix-blend-mode: overlay;
     background: #8a8787
 }
 
@@ -262,21 +267,55 @@ iframe {
     border-right: 10px solid #d25e42
 }
 
+.thermO::-webkit-slider-thumb {
+    border: 4px solid #d25e42;
+}
+
+.thermO::-moz-range-thumb {
+    border: 4px solid #d25e42;
+}
+
 .slTS::-webkit-slider-thumb {
     -webkit-appearance: none;
+    background: none;
     width: 0;
     height: 40px;
-    cursor: pointer;
-    appearance: none;
-    pointer-events: all
+    -webkit-box-shadow: 0 0 10px 10px #00000026
 }
 
 .slTS::-moz-range-thumb {
     width: 0;
     height: 100vh;
+}
+
+.slTHU::-moz-range-thumb {
     cursor: pointer;
     appearance: none;
     pointer-events: all
+}
+
+
+.slTHU::-webkit-slider-thumb {
+    cursor: pointer;
+    appearance: none;
+    pointer-events: all
+}
+
+.thermO::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: none;
+    width: 25px;
+    height: 40px;
+    border-radius: 5px;
+    -webkit-box-shadow: 0 0 10px 10px #00000026, inset 0 0 5px 2px #00000026
+}
+
+.thermO::-moz-range-thumb {
+    background: none;
+    width: 20px;
+    height: 32px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px 10px #00000026, inset 0 0 5px 2px #00000026
 }
 
 .slTimeSet {
@@ -293,11 +332,18 @@ iframe {
     position: relative
 }
 
-.slTimeText {
+.slTimeText,
+.sliderAmount {
     position: absolute;
     right: 4.2px;
-    bottom: 2.2px;
-    font-weight: 400
+    bottom: 0;
+    font-weight: 400;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.thermO {
+    background: none
 }
 
 .sensorset:not(.btnTile) {
@@ -402,9 +448,13 @@ input[type=number] {
 }
 
 .even {
+
+    display: flex;
     word-spacing: -2px;
     white-space: nowrap;
-    align-self: self-end
+    height: 20px;
+    align-items: center;
+    justify-content: flex-end
 }
 
 .cron {
@@ -642,7 +692,8 @@ input::placeholder {
 
     .slTS:nth-child(2)::-webkit-slider-thumb {
         border-left: 10px solid #44607a;
-        border-right: 10px solid #6d1343
+        border-right: 10px solid #6d1343;
+        pointer-events: none
     }
 
     .slTS:nth-child(1)::-moz-range-thumb {
@@ -653,6 +704,14 @@ input::placeholder {
     .slTS:nth-child(2)::-moz-range-thumb {
         border-left: 10px solid #44607a;
         border-right: 10px solid #6d1343
+    }
+
+    .thermO::-webkit-slider-thumb {
+        border: 4px solid #882c29;
+    }
+
+    .thermO::-moz-range-thumb {
+        border: 4px solid #882c29;
     }
 
     .slider {

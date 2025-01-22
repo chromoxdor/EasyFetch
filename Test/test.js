@@ -132,6 +132,11 @@ async function fetchJson(event) {
                                 }
                                 else { num2Value = item.Value; }
                                 iN = item.Name.toString();
+                                let XI = "";
+                                if (iN.endsWith("XI")) {
+                                    XI = " noI ";
+                                    iN = iN.slice(0, -2); // Remove "XI" from the end of the string
+                                }
                                 //replace "_" and "." in value names
                                 //this is a bit to confusing when creating events for now
                                 /*const index = iN.indexOf('?') === -1 ? iN.indexOf('&') : iN.indexOf('?');
@@ -168,7 +173,7 @@ async function fetchJson(event) {
                                     if (sensor.TaskDeviceGPIO1 && iN === "State" || iN === "iState") {
                                         if (iN === "iState") { item.Value = item.Value == 1 ? 0 : 1 };
                                         uttonGP = sensorName + "|" + sensor.TaskDeviceGPIO1;
-                                        html += '<div class="btnTile ' + bS + htS1 + 'buttonClick(\'' + uttonGP + '\', \'' + item.Value + '\')">' + htS2;
+                                        html += '<div class="btnTile ' + bS + htS1 + XI + 'buttonClick(\'' + uttonGP + '\', \'' + item.Value + '\')">' + htS2;
                                     }
                                     //needs an extra plugin in espeasy
                                     /*else if (sensor.TaskDeviceGPIO1 && iN === "ledState") {
@@ -184,7 +189,7 @@ async function fetchJson(event) {
                                     else if (itemN.includes("btnState")) {
                                         if (itemN === "ibtnState") { item.Value = item.Value == 1 ? 0 : 1 };
                                         if (kindN) { sensorName = sensorName + "|" + kindN };
-                                        html += '<div class="btnTile ' + bS + htS1 + 'buttonClick(\'' + sensorName + '\', \'' + item.Value + '\')">' + htS2;
+                                        html += '<div class="btnTile '+ XI + bS + htS1 + 'buttonClick(\'' + sensorName + '\', \'' + item.Value + '\')">' + htS2;
                                     }
 
                                     else if (itemN.includes("XI")) {
@@ -214,7 +219,7 @@ async function fetchJson(event) {
                                             itemNB2 = changeNN(itemNB);
                                             if (itemN.split(">")[1]) getRemoteGPIOState(sensor.TaskNumber, itemN.split("&")[1].split(">")[0], itemN.split(">")[1], myJson.System['Unit Number'], item.ValueNumber);
                                             if (itemN.split("&")[1] == "A") { html += '<div class="btnTile ' + bS + htS1 + 'getNodes(\'' + itemNB + '\')"><div  class="sensors nodes" style="font-weight:bold;">' + itemNB2 + '</div></div>'; }
-                                            else { html += '<div class="btnTile ' + bS + htS1 + 'buttonClick(\'' + itemN + '\')"><div id="' + itemN + '" class="sensors" style="font-weight:bold;">' + itemNB2 + '</div></div>'; }
+                                            else { html += '<div class="btnTile '+ XI + bS + htS1 +'buttonClick(\'' + itemN + '\')"><div id="' + itemN + '" class="sensors" style="font-weight:bold;">' + itemNB2 + '</div></div>'; }
                                         }
                                     }
                                     //push buttons
@@ -241,7 +246,7 @@ async function fetchJson(event) {
                                         num2Value = Number(num2Value).toFixed((slStep.toString().split('.')[1] || '').length);
                                         if (slName == "noVal") slName = "&nbsp;";
                                         if (!slKind) { slKind = ""; } if (slKind == "H") { slKind = "%"; }
-                                        html2 += '<div class="sensorset"><input type="range" min="' + slMin + '" max="' + slMax + '"  step="' + slStep + '" value="' + num2Value + '" id="' + iN + '"class="slider sL ' + sensor.TaskNumber + ',' + item.ValueNumber;
+                                        html2 += '<div class="sensorset' + XI + '"><input type="range" min="' + slMin + '" max="' + slMax + '"  step="' + slStep + '" value="' + num2Value + '" id="' + iN + '"class="slider sL ' + sensor.TaskNumber + ',' + item.ValueNumber;
                                         if ((sensorName).includes("vSliderSw")) { html2 += " swSlider"; } // add switch functionality 
                                         if ((sensorName).includes("nvSlider")) { html2 += ' noVal"><div  class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">' + slName + '</div></div></div>'; }
                                         else { html2 += '"><div  class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">' + slName + '</div><div class="sliderAmount" style="text-align: right;">' + num2Value + slKind + '</div></div></div>'; }
@@ -252,6 +257,7 @@ async function fetchJson(event) {
                                         slT1 = item.Value.toFixed(4);
                                         slT2 = (slT1 + "").split(".")[1];
                                         slT1 = Math.floor(slT1);
+                                        console.log(slT1, slT2);
                                         hour1 = Math.floor(slT1 / 60);
                                         minute1 = slT1 % 60;
                                         const padded1 = minute1.toString().padStart(2, "0");
@@ -259,8 +265,23 @@ async function fetchJson(event) {
                                         minute2 = slT2 % 60;
                                         const padded2 = minute2.toString().padStart(2, "0");
                                         iN = changeNN(iN);
-                                        htmlSlider1 = '<input class="slTS" type="range" min="0" max="1440" step="5" value="';
+                                        htmlSlider1 = '<input class="slTS slTHU" type="range" min="0" max="1440" step="5" value="';
                                         html2 += '<div id="' + iN + '" class="slTimeSetWrap ' + sensorName + ' ' + sensor.TaskNumber + ',' + item.ValueNumber + '" style="font-weight:bold;">' + iN + '<div class="slTimeText"> <span class="hAmount1">' + hour1 + '</span><span>:</span><span class="mAmount1">' + padded1 + '</span><span>-</span><span class="hAmount2">' + hour2 + '</span><span>:</span><span class="mAmount2">' + padded2 + '</span></div><div class="slTimeSet">' + htmlSlider1 + slT1 + '" id="' + iN + 'L">' + htmlSlider1 + slT2 + '" id="' + iN + 'R"></div></div>';
+
+                                    }
+                                    // thermostat slider
+                                    else if ((sensorName).includes("thermoSlider")) {
+                                        if (item.NrDecimals !== 3) iN = "For the Time slider the value must have<br>2 decimals!";
+                                        slT1 = item.Value.toFixed(3);
+                                        slT2 = (slT1 - Math.floor(slT1)) * 100;
+                                        slT2 = slT2.toFixed(1)
+                                        slT1 = (Math.floor(slT1) / 10).toFixed(1);
+                                        console.log(slT1, slT2);
+                                        if (Math.floor(slT1) < 10) { slT1 = "&nbsp;" + slT1.toString() }
+                                        console.log(slT1, slT2);
+                                        htmlSlider1 = 'type="range" min="0" max="35" step="0.5" value="';
+                                        thermoSliderAddon = '<div class="noI" style="z-index: 2; position: absolute">' + iN + '</div>'
+                                        html2 += '<div id="' + iN + '" class="slTimeSetWrap ' + sensorName + ' ' + sensor.TaskNumber + ',' + item.ValueNumber + '" style="font-weight:bold;">' + thermoSliderAddon + '<div class="slTimeText"> <div class="even">&#9728;&#xFE0E;<span class="isT"> ' + slT1 + '</span>°C</div><div class="even">&#9737;&#xFE0E;<span class="setT"> ' + slT2 + '</span>°C</div></div><div class="slTimeSet"><input class="slTHU thermO" ' + htmlSlider1 + slT2 + '" id="setpoint"><input class="slider noI" ' + htmlSlider1 + slT1 + '" id="' + iN + '"></div></div>';
                                     }
                                     //neopixel slider
                                     else if (sensorName.includes("neoPixel")) {
@@ -464,7 +485,7 @@ function changeCss() {
 //      ADD ADDITIONAL STUFF
 //##############################################################################################################
 function paramS() {
-    var sliders = document.querySelectorAll(".slTS");
+    var sliders = document.querySelectorAll(".slTHU");
     sliders.forEach(slider => {
         slider.addEventListener("input", updateSlTS);
         slider.addEventListener('change', sliderChTS);
@@ -532,16 +553,30 @@ function checkDirection() {
 //      TIMESLIDER UPDATE VALUES
 //##############################################################################################################
 function updateSlTS(event) {
+    console.log(event.target);
     isittime = 0;
-    slider = event.target;
-    if (slider.id.slice(-1) == "L") { nuM = 1 } else { nuM = 2 }
-    const amount = slider.parentElement.closest(".slTimeSetWrap").firstElementChild.querySelector(".hAmount" + nuM);
-    const amount2 = slider.parentElement.closest(".slTimeSetWrap").firstElementChild.querySelector(".mAmount" + nuM);
-    var hours = Math.floor(slider.value / 60);
-    var minutes = slider.value % 60;
-    const padded = minutes.toString().padStart(2, "0");
-    amount.textContent = hours;
-    amount2.textContent = padded;
+
+    const slider = event.target;
+
+    if (slider.id === "setpoint") {
+        // Update setpoint amount
+        const amount = slider.closest(".slTimeSetWrap").querySelector(".setT");
+        amount.textContent = Number(slider.value).toFixed(1);
+    } else {
+        // Determine hour or minute slider
+        const nuM = slider.id.endsWith("L") ? 1 : 2;
+
+        // Update hours and minutes
+        const wrapper = slider.closest(".slTimeSetWrap").firstElementChild;
+        const hoursElement = wrapper.querySelector(`.hAmount${nuM}`);
+        const minutesElement = wrapper.querySelector(`.mAmount${nuM}`);
+
+        const hours = Math.floor(slider.value / 60);
+        const minutes = (slider.value % 60).toString().padStart(2, "0");
+
+        hoursElement.textContent = hours;
+        minutesElement.textContent = minutes;
+    }
 }
 
 //##############################################################################################################
@@ -550,26 +585,39 @@ function updateSlTS(event) {
 function updateSlider(event) {
     NrofSlides++;
     isittime = 0;
-    slider = event.target;
-    currVal = slider.attributes.value.nodeValue;
-    slKind = slider.id.split("?")[4];
+
+    const slider = event.target;
+    const currVal = slider.attributes.value.nodeValue;
+    let slKind = slider.id.split("?")[4] || "";
+
+    // Update slider value display if not marked "noVal"
     if (!slider.className.includes("noVal")) {
-        const amount = slider.closest('div.sensorset').querySelector('.sliderAmount');
-        if (!slKind) { slKind = ""; } if (slKind == "H") { slKind = "%"; }
-        slA = Number(event.target.value).toFixed(undefined !== event.target.step.split('.')[1] && event.target.step.split('.')[1].length) + slKind;
+        const amount = slider.closest("div.sensorset").querySelector(".sliderAmount");
+        if (slKind === "H") slKind = "%";
+
+        const stepPrecision = slider.step.includes(".") 
+            ? slider.step.split(".")[1].length 
+            : 0;
+        const slA = Number(slider.value).toFixed(stepPrecision) + slKind;
+
         amount.textContent = slA;
     }
-    if (slider.classList[1] == 'npSl') {
-        sliderId = slider.id.split("?")[0];
-        hVal = document.getElementById(sliderId + '?H')?.value;
-        sVal = document.getElementById(sliderId + '?S')?.value;
-        vVal = document.getElementById(sliderId + '?V')?.value;
+
+    // Handle "npSl" slider type
+    if (slider.classList[1] === "npSl") {
+        const sliderId = slider.id.split("?")[0];
+
+        const hVal = document.getElementById(`${sliderId}?H`)?.value;
+        const sVal = document.getElementById(`${sliderId}?S`)?.value;
+        let vVal = document.getElementById(`${sliderId}?V`)?.value || 0;
+
         gesVal = [hVal, sVal, vVal];
-        vVal = vVal ?? 0;
-        if (sVal && hVal) {
-            if (vVal < 20) vVal = 20;
-            sGrad = document.getElementById(sliderId + '?S');
-            sGrad.style.backgroundImage = 'linear-gradient(to right, hsl(0,0%,' + vVal + '%),hsl(' + hVal + ',100%,50%))';
+
+        // Update saturation gradient if H and S values exist
+        if (hVal && sVal) {
+            vVal = Math.max(vVal, 20);
+            const sGrad = document.getElementById(`${sliderId}?S`);
+            sGrad.style.backgroundImage = `linear-gradient(to right, hsl(0,0%,${vVal}%), hsl(${hVal},100%,50%))`;
         }
     }
 }
@@ -579,42 +627,132 @@ function updateSlider(event) {
 //##############################################################################################################
 function sliderChTS(event) {
     playSound(4000);
-    slider = event.target;
+    const slider = event.target;
     const slTName = slider.parentNode.parentNode;
-    if (slider.id == slTName.id + "L") { var secVal = document.getElementById(slTName.id + "R"); }
-    else { var secVal = document.getElementById(slTName.id + "L"); }
-    if (unitNr === unitNr1) { if (slider.id == slTName.id + "L") { getUrl('control?cmd=taskvalueset,' + slTName.classList[2] + ',' + event.target.value + '.' + secVal.value.toString().padStart(4, "0")); } else { getUrl('control?cmd=taskvalueset,' + slTName.classList[2] + ',' + secVal.value + '.' + event.target.value.toString().padStart(4, "0")); }; getUrl('control?cmd=event,' + slTName.classList[1] + 'Event=' + slTName.classList[2].split(",")[1]) }
-    else { if (slider.id == slTName.id + "L") { getUrl('control?cmd=SendTo,' + nNr + ',"taskvalueset,' + slTName.classList[2] + ',' + event.target.value + '.' + secVal.value.toString().padStart(4, "0") + '"'); } else { getUrl('control?cmd=SendTo,' + nNr + ',"taskvalueset,' + slTName.classList[2] + ',' + secVal.value + '.' + event.target.value.toString().padStart(4, "0") + '"'); }; getUrl('control?cmd=SendTo,' + nNr + ',"event,' + slTName.classList[1] + 'Event=' + slTName.classList[2].split(",")[1] + '"') }
+    const sliderId = slider.id;
+    const slClass2 = slTName.classList[2];
+    const slClass1 = slTName.classList[1];
+    const sliderValue = event.target.value;
+
+    if (sliderId === "setpoint") {
+        const isT = parseFloat(slider.closest(".slTimeSetWrap").querySelector(".isT").textContent);
+        const setTvalue = (isT * 10) + (sliderValue / 100);
+        console.log(isT, setTvalue, slClass2, sliderValue);
+
+        const commandBase = `control?cmd=taskvalueset,${slClass2},${setTvalue}`;
+        const eventBase = `control?cmd=event,${slTName.id}Event=${sliderValue * 10}`;
+
+        if (unitNr === unitNr1) {
+            getUrl(commandBase);
+            getUrl(eventBase);
+        } else {
+            getUrl(`control?cmd=SendTo,${nNr},"${commandBase}"`);
+            getUrl(`control?cmd=SendTo,${nNr},"${eventBase}"`);
+        }
+    } else {
+        const isLeft = sliderId === `${slTName.id}L`;
+        const secVal = document.getElementById(isLeft ? `${slTName.id}R` : `${slTName.id}L`).value;
+        const paddedSecVal = secVal.toString().padStart(4, "0");
+        const combinedValue = isLeft
+            ? `${sliderValue}.${paddedSecVal}`
+            : `${secVal}.${sliderValue.toString().padStart(4, "0")}`;
+        const commandBase = `control?cmd=taskvalueset,${slClass2},${combinedValue}`;
+        const eventBase = `control?cmd=event,${slClass1}Event=${slClass2.split(",")[1]}`;
+
+        if (unitNr === unitNr1) {
+            getUrl(commandBase);
+            getUrl(eventBase);
+        } else {
+            getUrl(`control?cmd=SendTo,${nNr},"${commandBase}"`);
+            getUrl(`control?cmd=SendTo,${nNr},"${eventBase}"`);
+        }
+    }
 }
 
 //##############################################################################################################
 //      NORMAL SLIDER SEND EVENT ON CHANGE
 //##############################################################################################################
+// function sliderChange(event) {
+//     playSound(4000);
+//     slider = event.target;
+//     maxVal = parseFloat(slider.attributes.max.nodeValue);
+//     minVal = parseFloat(slider.attributes.min.nodeValue);
+//     OnOff = "";
+//     //parseFloat(event.target.value).toFixed(undefined !== event.target.step.split('.')[1] && event.target.step.split('.')[1].length);
+//     slA = event.target.value;
+//     if (NrofSlides == 1 && slider.classList[3] == 'swSlider') {
+//         df = (maxVal - minVal) * 1 / 10;
+//         if (slA > (maxVal - df) && currVal !== maxVal) { slA = maxVal; OnOff = ",1"; isittime = 1;; setTimeout(fetchJson, 500); }
+//         if (slA < (minVal + df) && currVal !== minVal) { slA = minVal; OnOff = ",0"; isittime = 1;; setTimeout(fetchJson, 500); }
+//     }
+//     if ((slider.id.match(/\?/g) || []).length >= 3 || slider.classList[1] == 'npSl') { sliderId = slider.id.split("?")[0]; } else { sliderId = slider.id; }
+//     if (gesVal) gesVal = gesVal.filter(n => n)
+//     if (unitNr === unitNr1) {
+//         getUrl('control?cmd=taskvalueset,' + slider.classList[2] + ',' + slA);
+//         if (slider.classList[1] != 'npSl') { getUrl('control?cmd=event,' + sliderId + 'Event=' + slA + OnOff); }
+//         else { getUrl('control?cmd=event,' + sliderId + 'Event=' + gesVal) }
+//     }
+//     else {
+//         getUrl('control?cmd=SendTo,' + nNr + ',"taskvalueset,' + slider.classList[2] + ',' + slA + '"');
+//         if (slider.classList[1] != 'npSl') { getUrl('control?cmd=SendTo,' + nNr + ',"event,' + sliderId + 'Event=' + slA + OnOff + '"'); }
+//         else { getUrl('control?cmd=SendTo,' + nNr + ',"event,' + sliderId + 'Event=' + gesVal + '"'); }
+//     }
+//     NrofSlides = 0;
+// }
 function sliderChange(event) {
     playSound(4000);
-    slider = event.target;
-    maxVal = parseFloat(slider.attributes.max.nodeValue);
-    minVal = parseFloat(slider.attributes.min.nodeValue);
-    OnOff = "";
-    //parseFloat(event.target.value).toFixed(undefined !== event.target.step.split('.')[1] && event.target.step.split('.')[1].length);
-    slA = event.target.value;
-    if (NrofSlides == 1 && slider.classList[3] == 'swSlider') {
-        df = (maxVal - minVal) * 1 / 10;
-        if (slA > (maxVal - df) && currVal !== maxVal) { slA = maxVal; OnOff = ",1"; isittime = 1;; setTimeout(fetchJson, 500); }
-        if (slA < (minVal + df) && currVal !== minVal) { slA = minVal; OnOff = ",0"; isittime = 1;; setTimeout(fetchJson, 500); }
+
+    const slider = event.target;
+    const maxVal = parseFloat(slider.max);
+    const minVal = parseFloat(slider.min);
+    let slA = slider.value;
+    let OnOff = "";
+    const isSwSlider = slider.classList[3] === "swSlider";
+    const isNpSlider = slider.classList[1] === "npSl";
+
+    // Handle single-slider specific logic
+    if (NrofSlides === 1 && isSwSlider) {
+        const threshold = (maxVal - minVal) / 10;
+
+        if (slA > (maxVal - threshold) && currVal !== maxVal) {
+            slA = maxVal;
+            OnOff = ",1";
+            isittime = 1;
+            setTimeout(fetchJson, 500);
+        }
+
+        if (slA < (minVal + threshold) && currVal !== minVal) {
+            slA = minVal;
+            OnOff = ",0";
+            isittime = 1;
+            setTimeout(fetchJson, 500);
+        }
     }
-    if ((slider.id.match(/\?/g) || []).length >= 3 || slider.classList[1] == 'npSl') { sliderId = slider.id.split("?")[0]; } else { sliderId = slider.id; }
-    if (gesVal) gesVal = gesVal.filter(n => n)
+
+    // Simplify slider ID handling
+    const sliderId = (slider.id.match(/\?/g) || []).length >= 3 || slider.classList[1] == 'npSl'
+        ? slider.id.split("?")[0]
+        : slider.id;
+
+    // Filter `gesVal` if defined
+    if (gesVal) {
+        gesVal = gesVal.filter(Boolean);
+    }
+
+    // Build command strings
+    const taskValueSetCmd = `taskvalueset,${slider.classList[2]},${slA}`;
+    const eventCmd = isNpSlider
+        ? `event,${sliderId}Event=${gesVal}`
+        : `event,${sliderId}Event=${slA}${OnOff}`;
+
     if (unitNr === unitNr1) {
-        getUrl('control?cmd=taskvalueset,' + slider.classList[2] + ',' + slA);
-        if (slider.classList[1] != 'npSl') { getUrl('control?cmd=event,' + sliderId + 'Event=' + slA + OnOff); }
-        else { getUrl('control?cmd=event,' + sliderId + 'Event=' + gesVal) }
+        getUrl(`control?cmd="${taskValueSetCmd}"`);
+        getUrl(`control?cmd="${eventCmd}"`);
+    } else {
+        getUrl(`control?cmd=SendTo,${nNr},"${taskValueSetCmd}"`);
+        getUrl(`control?cmd=SendTo,${nNr},"${eventCmd}"`);
     }
-    else {
-        getUrl('control?cmd=SendTo,' + nNr + ',"taskvalueset,' + slider.classList[2] + ',' + slA + '"');
-        if (slider.classList[1] != 'npSl') { getUrl('control?cmd=SendTo,' + nNr + ',"event,' + sliderId + 'Event=' + slA + OnOff + '"'); }
-        else { getUrl('control?cmd=SendTo,' + nNr + ',"event,' + sliderId + 'Event=' + gesVal + '"'); }
-    }
+
     NrofSlides = 0;
 }
 
@@ -623,29 +761,44 @@ function sliderChange(event) {
 //##############################################################################################################
 function buttonClick(sensorName, gState) {
     console.log(sensorName, gState);
-    //send to other nodes by "dButtons"
-    if (sensorName.split("&")[1]) {
-        utton2 = sensorName.split("&")[0];
-        nNr2 = sensorName.split("&")[1].split(">")[0];
-        console.log(sensorName.split(">")[1])
-        if (sensorName.split(">")[1] && !sensorName.split(">")[1].endsWith('L')) {
-            getUrl('control?cmd=SendTo,' + nNr2 + ',"GPIOToggle,' + sensorName.split(">")[1] + '"');
+
+    // Handle "dButtons" sending to other nodes
+    if (sensorName.includes("&")) {
+        const [utton2, nodeInfo] = sensorName.split("&");
+        const [nNr2, gpioOrEvent] = nodeInfo.split(">");
+        const isGPIOToggle = gpioOrEvent && !gpioOrEvent.endsWith("L");
+
+        if (isGPIOToggle) {
+            getUrl(`control?cmd=SendTo,${nNr2},"GPIOToggle,${gpioOrEvent}"`);
+        } else {
+            getUrl(`control?cmd=SendTo,${nNr2},"event,${utton2}Event"`);
         }
-        else getUrl('control?cmd=SendTo,' + nNr2 + ',"event,' + utton2 + 'Event"');
     }
-    //button event by "switch plugin"
-    else if (sensorName.split("|")[1]) {
-        gpioNr = sensorName.split("|")[1];
-        uN = sensorName.split("|")[0];
-        gS = gState == 1 ? 0 : 1
-        if (unitNr === unitNr1) { getUrl('control?cmd=gpio,' + gpioNr + ',' + gS); getUrl('control?cmd=event,' + uN + 'Event'); }
-        else { getUrl('control?cmd=SendTo,' + nNr + ',"gpio,' + gpioNr + ',' + gS + '"'); getUrl('control?cmd=SendTo,' + nNr + ',"event,' + uN + 'Event"'); }
+    // Handle button events via "switch plugin"
+    else if (sensorName.includes("|")) {
+        const [uN, gpioNr] = sensorName.split("|");
+        const gS = gState === 1 ? 0 : 1;
+
+        if (unitNr === unitNr1) {
+            getUrl(`control?cmd=gpio,${gpioNr},${gS}`);
+            getUrl(`control?cmd=event,${uN}Event`);
+        } else {
+            getUrl(`control?cmd=SendTo,${nNr},"gpio,${gpioNr},${gS}"`);
+            getUrl(`control?cmd=SendTo,${nNr},"event,${uN}Event"`);
+        }
     }
-    //normal button event by "dButtons"
+    // Handle normal button events via "dButtons"
     else {
-        if (unitNr === unitNr1) { getUrl('control?cmd=event,' + sensorName + 'Event'); }
-        else { getUrl('control?cmd=SendTo,' + nNr + ',"event,' + sensorName + 'Event"'); }
+        const eventCmd = `event,${sensorName}Event`;
+
+        if (unitNr === unitNr1) {
+            getUrl(`control?cmd="${eventCmd}"`);
+        } else {
+            getUrl(`control?cmd=SendTo,${nNr},"${eventCmd}"`);
+        }
     }
+
+    // Refresh data after 400ms
     setTimeout(fetchJson, 400);
 }
 
@@ -653,21 +806,27 @@ function buttonClick(sensorName, gState) {
 //      PUSH BUTTON EVENT
 //##############################################################################################################
 function pushClick(sensorName, b) {
-    if (b == 0) { isittime = 1; playSound(1000); }
-    else { isittime = 0 }
-    if (sensorName.split("?")[1]) {
-        gpioNr = sensorName.split("?")[1];
-        if (unitNr === unitNr1) { getUrl('control?cmd=gpio,' + gpioNr + ',' + b); }
-        else { getUrl('control?cmd=SendTo,' + nNr + ',"gpio,' + gpioNr + ',' + b + '"'); }
-    }
-    else if (sensorName.split("&")[1]) {
-        utton2 = sensorName.split("&")[0];
-        nNr2 = sensorName.split("&")[1];
-        getUrl('control?cmd=SendTo,' + nNr2 + ',"event,' + utton2 + 'Event=' + b + '"');
-    }
-    else {
-        if (unitNr === unitNr1) { getUrl('control?cmd=event,' + sensorName + 'Event=' + b); }
-        else { getUrl('control?cmd=SendTo,' + nNr + ',"event,' + sensorName + 'Event=' + b + '"'); }
+    isittime = b === 0 ? 1 : 0;
+    if (b === 0) playSound(1000);
+
+    if (sensorName.includes("?")) {
+        const gpioNr = sensorName.split("?")[1];
+        const cmd = `control?cmd=gpio,${gpioNr},${b}`;
+        if (unitNr === unitNr1) {
+            getUrl(cmd);
+        } else {
+            getUrl(`control?cmd=SendTo,${nNr},"${cmd}"`);
+        }
+    } else if (sensorName.includes("&")) {
+        const [utton2, nNr2] = sensorName.split("&");
+        getUrl(`control?cmd=SendTo,${nNr2},"event,${utton2}Event=${b}"`);
+    } else {
+        const eventCmd = `control?cmd=event,${sensorName}Event=${b}`;
+        if (unitNr === unitNr1) {
+            getUrl(eventCmd);
+        } else {
+            getUrl(`control?cmd=SendTo,${nNr},"${eventCmd}"`);
+        }
     }
 }
 
