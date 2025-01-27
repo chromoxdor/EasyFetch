@@ -57,8 +57,6 @@ iframe {
     display: flex;
     position: fixed;
     transition: 0.3s ease-out;
-    border-radius: 12px;
-    padding: 2px
 }
 
 #allList {
@@ -396,7 +394,12 @@ iframe {
     width: inherit;
 }
 
-input:focus::placeholder {
+.vInputs::placeholder {
+    opacity: 1;
+    color: #fff;
+}
+
+vInputs:focus::placeholder {
     opacity: .2;
 }
 
@@ -460,19 +463,14 @@ input[type=number] {
 
 .cron {
     padding-bottom: 1pt;
-    text-align: end;
-}
-
-input::placeholder {
-    opacity: 1;
-    color: #fff;
+    text-align: end
 }
 
 #opener {
     bottom: 0;
     z-index: 2;
     width: 100%;
-    position: fixed;
+    position: fixed
 }
 
 .open {
@@ -507,20 +505,20 @@ input::placeholder {
     display: grid;
     justify-content: start;
     grid-template-columns: 25px auto;
-    align-items: end;
+    align-items: end
 }
 
 .numberUnit {
     font-size: 10px;
-    color: #818181;
+    color: #818181
 }
 
 #menueList div:hover {
-    color: #444;
+    color: #444
 }
 
 .nc {
-    word-break: break-all;
+    word-break: break-all
 }
 
 .sideNbtn {
@@ -532,11 +530,11 @@ input::placeholder {
 
 #openSys {
     left: 20px;
-    width: 40px;
+    width: 40px
 }
 
 #closeBtn {
-    right: 20px;
+    right: 20px
 }
 
 #menueList {
@@ -569,12 +567,12 @@ input::placeholder {
     top: 5px;
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: space-evenly
 }
 
 .syspair {
     display: flex;
-    justify-content: flex-start;
+    justify-content: flex-start
 }
 
 .syspair>div {
@@ -584,13 +582,13 @@ input::placeholder {
 .syspair div:nth-child(1) {
     text-align: end;
     width: 35%;
-    padding-right: 5px;
+    padding-right: 5px
 }
 
 .menueWrap {
     transition: .5s;
     height: 185px;
-    flex-shrink: 999;
+    flex-shrink: 999
 }
 
 .bigSpan:nth-child(1) {
@@ -599,12 +597,12 @@ input::placeholder {
 }
 
 @media screen and (max-height: 450px) {
-    framie {
+    #framie {
         padding-bottom: 40px;
     }
 
     #opener {
-        height: 40px;
+        height: 40px
     }
 }
 
@@ -617,31 +615,31 @@ input::placeholder {
 @media screen and (max-width: 450px) {
     #allList {
         grid-row-gap: 5px;
-        min-width: unset;
+        min-width: unset
     }
 
     #opener {
-        height: 40px;
+        height: 40px
     }
 
     #framie {
-        padding-bottom: 40px;
+        padding-bottom: 40px
     }
 
     .allExtra {
-        grid-row-gap: 2.5px !important;
+        grid-row-gap: 2.5px !important
     }
 
     #bigNumber {
-        grid-row-gap: 5px;
+        grid-row-gap: 5px
     }
 
     #sliderList {
-        gap: 5px 1vh;
+        gap: 5px 1vh
     }
 
     #sensorList {
-        gap: 5px;
+        gap: 5px
     }
 
     .bigNum {
@@ -649,41 +647,41 @@ input::placeholder {
     }
 
     .sensors {
-        padding-bottom: 2%;
+        padding-bottom: 2%
     }
 }
 
 @media (prefers-color-scheme: dark) {
     body {
         background: #000;
-        color: #b3b3b3;
+        color: #b3b3b3
     }
 
     input::placeholder,
     #allList {
-        color: #b3b3b3;
+        color: #b3b3b3
     }
 
     iframe,
     .slTimeSetWrap {
-        background: #000;
+        background: #000
     }
 
     #opener {
-        background: #000000a8;
+        background: #000000a8
     }
 
     .bigNumWrap {
-        background: #444;
+        background: #444
     }
 
     .bigC {
-        background: #553630;
+        background: #553630
     }
 
     .slTS {
         mix-blend-mode: lighten;
-        background: #444 !important;
+        background: #444 !important
     }
 
     .slTS:nth-child(1)::-webkit-slider-thumb {
@@ -694,7 +692,6 @@ input::placeholder {
     .slTS:nth-child(2)::-webkit-slider-thumb {
         border-left: 10px solid #44607a;
         border-right: 10px solid #6d1343;
-        pointer-events: none;
     }
 
     .slTS:nth-child(1)::-moz-range-thumb {
@@ -716,19 +713,19 @@ input::placeholder {
     }
 
     .slider {
-        background: #444;
+        background: #444
     }
 
     .slider::-webkit-slider-thumb {
         box-shadow: -100vw 0 0 100vw #44607a;
         border-left: 20px solid #44607a;
-        border-right: 20px solid #444;
+        border-right: 20px solid #444
     }
 
     .slider::-moz-range-thumb {
         box-shadow: -100vw 0 0 100vw #44607a;
         border-left: 20px solid #44607a;
-        border-right: 20px solid #444;
+        border-right: 20px solid #444
     }
 
     .npSl::-webkit-slider-thumb {
@@ -750,11 +747,11 @@ input::placeholder {
 
     .on,
     .push:active {
-        background: #44607a !important;
+        background: #44607a !important
     }
 
     .alert {
-        background: #553044 !important;
+        background: #553044 !important
     }
 
     .valueBig {

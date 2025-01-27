@@ -51,8 +51,8 @@ async function fetchJson() {
     } catch (err) {
         //console.error("Error processing style sheets:", err);
     }
+    if (!isittime) return;
     //-----------------------
-    
     let urlParams = new URLSearchParams(window.location.search);
     myParam = urlParams.get('unit');
     if (urlParams.get('cmd') == "reboot") { window.location.href = window.location.origin + "/tools?cmd=reboot" }
@@ -140,7 +140,7 @@ async function fetchJson() {
 
                         let XI = iN.endsWith("XI") ? " noI " : "";
                         iN = XI ? iN.slice(0, -2) : iN;
-                        
+
                         //split name into name and unit of measurement 
                         itemN = iN.split("?")[0];
                         kindN = iN.split("?")[1];
@@ -369,7 +369,7 @@ async function fetchJson() {
         if (window.navigator.userAgent.match(/iPhone/i)) {
             document.body.style.height = "101vh";
         }
-        //fJ = setInterval(fetchJson, 2000);
+        fJ = setInterval(fetchJson, 2000);
         unitNr1 = myJson.System['Unit Number'];
         initIP = 0;
         if (myJson.WiFi['IP Address'] == "(IP unset)") { initIP = "192.168.4.1" }
@@ -400,8 +400,8 @@ async function fetchJson() {
 
 async function getRemoteGPIOState(taskNum, unitToNum, gpioNum, unitFromNum, valueNum) {
     const url = Number(unitToNum) === unitNr1
-        ? `${cmD}SendTo,${unitFromNum},'taskvalueset,${taskNum},${valueNum},%5BPlugin%23GPIO%23Pinstate%23${gpioNum}%5D'`
-        : `${cmD}SendTo,${unitToNum},'SendTo,${unitFromNum},"taskvalueset,${taskNum},${valueNum},|Plugin%23GPIO%23Pinstate%23${gpioNum}%5D"'`;
+        ? `${cmD}SendTo,${unitFromNum},'taskvalueset,${taskNum},${valueNum},[Plugin%23GPIO%23Pinstate%23${gpioNum}]'`
+        : `${cmD}SendTo,${unitToNum},'SendTo,${unitFromNum},"taskvaluesetandrun,${taskNum},${valueNum},\\[Plugin%23GPIO%23Pinstate%23${gpioNum}\\]"'`;
     return await getUrl(url);
 }
 
@@ -455,56 +455,59 @@ function changeNN(nn) {
 //      ADJUST THE STYLING
 //##############################################################################################################
 function changeCss() {
-    const x = "auto ";
+    let x = "auto ";
     let m = null;
-    const numSl = document.querySelectorAll('input[type=range]').length;
-    const allList = document.getElementById("allList");
-    const list3 = document.querySelectorAll(".bigNum");
-    const sList = document.getElementById("sensorList");
-    const numSet = sList.getElementsByClassName('sensorset').length;
-    let z = list3.length ? 0 : numSet;
-
-    allList.classList.toggle('allExtra', !numSl);
-
-    if (bigLength === 4 || z > 9) {
+    let coloumnSet, y, z;
+    var numSl = document.querySelectorAll('input[type=range]').length;
+    if (!numSl) { document.getElementById("allList").classList.add('allExtra'); }
+    else { document.getElementById("allList").classList.remove('allExtra'); }
+    var list3 = document.querySelectorAll(".bigNum");
+    var sList = document.getElementById("sensorList");
+    var numSet = sList.getElementsByClassName('sensorset').length;
+    z = 0;
+    if (!list3.length) z = numSet; //if there are no big values orient on number of "normal" tiles
+    if (bigLength == 4 || z > 9) {
+        y = x + x + x + x;
         coloumnSet = 4;
-    } else if (bigLength === 3 || z > 4) {
+    }
+    else if (bigLength == 3 || z > 4) {
+        y = x + x + x;
         coloumnSet = 3;
-    } else if (bigLength === 2 || z > 1) {
+    }
+    else if (bigLength == 2 || z > 1) {
+        y = x + x;
         coloumnSet = 2;
-    } else if (bigLength === 1 || z < 2) {
+    }
+    else if (bigLength == 1 || z < 2) {
+        y = x;
+        m = "important"
+        if (list3.length) { for (let i = 0; i < list3.length; ++i) { list3[i].classList.add('bigNumOne'); } }
         coloumnSet = 1;
-        m = "important";
-        list3.forEach(item => item.classList.add('bigNumOne'));
-    } else {
+    }
+    else {
+        y = x + x;
         coloumnSet = 2;
     }
-
-    let y = x.repeat(coloumnSet).trim();
-    const widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
-
+    widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
-        list3.forEach(item => item.style.cssText = "display: grid; grid-template-columns: auto auto;");
-        if (bigLength === 1 || (bigLength === 0 && numSet === 1)) {
-            coloumnSet = 1;
+        if (list3.length) { for (let i = 0; i < list3.length; ++i) { list3[i].style.cssText = "display: grid; grid-template-columns: auto auto;"; } }
+        if (bigLength == 1 || (bigLength == 0 && numSet == 1)) {
+            coloumnSet = 1
             y = x;
-            m = "important";
-        } else {
-            coloumnSet = 2;
-            y = x + x;
+            m = "important"
         }
-    }
+        else { coloumnSet = 2; y = x + x }
+    };
 
     sList.style.setProperty('grid-template-columns', y, m);
 
     //calculate and add extra tiles
-    sList.style.setProperty('grid-template-columns', y, m);
-
-    if (numSet % coloumnSet !== 0 && coloumnSet !== 1) {
-        const calcTile = coloumnSet - (numSet % coloumnSet);
-        html += '<div class="sensorset"></div>'.repeat(calcTile);
+    if (numSet % coloumnSet != 0 && coloumnSet != 1) {
+        calcTile = coloumnSet - (numSet - coloumnSet * Math.floor(numSet / coloumnSet));
+        for (let i = 1; i <= calcTile; i++) {
+            html += '<div class="sensorset"></div>'
+        }
     }
-
     document.getElementById('sensorList').innerHTML = html;
     bigLength = 0;
 }
@@ -560,18 +563,6 @@ function addEonce() {
             closeNav()
         }
     })
-
-    // let previousWidthLimitExceeded = false;
-    // window.addEventListener('resize', () => {
-    //     const widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
-    //     const widthLimitExceeded = window.innerWidth < widthLimit;
-
-    //     if (widthLimitExceeded !== previousWidthLimitExceeded) {
-    //         console.log("resize");
-    //         setTimeout(fetchJson, 10);
-    //         previousWidthLimitExceeded = widthLimitExceeded;
-    //     }
-    // });
 }
 
 //##############################################################################################################
@@ -594,31 +585,15 @@ function checkDirection() {
 //##############################################################################################################
 function updateSlTS(event) {
     isittime = 0;
-
-    const slider = event.target;
-
-    // thermoslider
-    if (slider.id === "setpoint") {
-        // Update setpoint amount
-        const amount = slider.closest(".slTimeSetWrap").querySelector(".setT");
-        amount.textContent = Number(slider.value).toFixed(1);
-
-        // timeslider
-    } else {
-        // Determine hour or minute slider
-        const nuM = slider.id.endsWith("L") ? 1 : 2;
-
-        // Update hours and minutes
-        const wrapper = slider.closest(".slTimeSetWrap").firstElementChild;
-        const hoursElement = wrapper.querySelector(`.hAmount${nuM}`);
-        const minutesElement = wrapper.querySelector(`.mAmount${nuM}`);
-
-        const hours = Math.floor(slider.value / 60);
-        const minutes = (slider.value % 60).toString().padStart(2, "0");
-
-        hoursElement.textContent = hours;
-        minutesElement.textContent = minutes;
-    }
+    slider = event.target;
+    if (slider.id.slice(-1) == "L") { nuM = 1 } else { nuM = 2 }
+    const amount = slider.parentElement.closest(".slTimeSetWrap").firstElementChild.querySelector(".hAmount" + nuM);
+    const amount2 = slider.parentElement.closest(".slTimeSetWrap").firstElementChild.querySelector(".mAmount" + nuM);
+    var hours = Math.floor(slider.value / 60);
+    var minutes = slider.value % 60;
+    const padded = minutes.toString().padStart(2, "0");
+    amount.textContent = hours;
+    amount2.textContent = padded;
 }
 
 //##############################################################################################################
@@ -778,17 +753,17 @@ function buttonClick(sensorName, gState) {
     // Handle "dButtons" sending to other nodes
     if (sensorName.includes("&")) {
         const [utton2, nodeInfo] = sensorName.split("&");
-        const [nNr2, gpioOrEvent] = nodeInfo.split(">");
-        const isGPIOToggle = gpioOrEvent && !gpioOrEvent.endsWith("L");
-        if (gState === initIP) {
+        const [nNr2, gpioNr] = nodeInfo.split("G");
+        const isGPIOToggle = gpioNr && !gpioNr.endsWith("L");
+        if (unitNr == nNr2) {
             if (isGPIOToggle) {
-                getUrl(`${cmD}GPIOToggle,${gpioOrEvent}`);
+                getUrl(`${cmD}GPIOToggle,${gpioNr}`);
             } else {
                 getUrl(`${cmD}"event,${utton2}Event"`);
             }
         } else {
             if (isGPIOToggle) {
-                getUrl(`${cmD}SendTo,${nNr2},"GPIOToggle,${gpioOrEvent}"`);
+                getUrl(`${cmD}SendTo,${nNr2},"GPIOToggle,${gpioNr}"`);
             } else {
                 getUrl(`${cmD}SendTo,${nNr2},"event,${utton2}Event"`);
             }
@@ -1097,11 +1072,11 @@ function longPressB() {
                 getNodes(lBNode.textContent, "1");
             } else {
                 const [utton2, nNr2] = (lBName.id).split("&");
-                const gpioOrEvent = (lBName.id).split(">")[1];
+                const gpioNr = (lBName.id).split(">")[1];
 
                 if (nNr2) {
-                    url = gpioOrEvent && gpioOrEvent.endsWith('L')
-                        ? `${cmD}SendTo,${nNr2},"GPIOToggle,${gpioOrEvent.split('L')[0]}"`
+                    url = gpioNr && gpioNr.endsWith('L')
+                        ? `${cmD}SendTo,${nNr2},"GPIOToggle,${gpioNr.split('L')[0]}"`
                         : `${cmD}SendTo,${nNr2},"event,${utton2}Long"`;
                 } else {
                     url = unitNr === unitNr1
@@ -1174,7 +1149,6 @@ async function getUrl(url) {
 }
 
 document.addEventListener("visibilitychange", () => {
-    //console.log(document.visibilityState);
     if (document.visibilityState === "visible") {
         //console.log("visible");
         clearTimeout(fJ);
@@ -1198,9 +1172,7 @@ function receiveNote(S) {
         Array.from({ length: 7 }, (_, i) => `0 0 ${10 * (i + 1)}px ${color}`).join(", ");
 
     const receiveNoteEl = document.getElementById("unitId");
-    receiveNoteEl.style.textShadow = 
-        S === 0 ? colors.N : colors[S] ? createBoxShadow(colors[S]) : createBoxShadow(colors[S]);
-
+    receiveNoteEl.style.textShadow = S === 0 || S === "N" ? colors.N : createBoxShadow(colors[S]);
     if (S) setTimeout(() => receiveNote(0), 300);
 }
 !function (e, t) { "use strict"; let n = null; const o = 10, a = 10; let i = { x: 0, y: 0 }; const s = "ontouchstart" in e || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0, c = "PointerEvent" in e || e.navigator && "msPointerEnabled" in e.navigator ? { down: "pointerdown", up: "pointerup", move: "pointermove", leave: "pointerleave" } : s ? { down: "touchstart", up: "touchend", move: "touchmove", leave: "touchleave" } : { down: "mousedown", up: "mouseup", move: "mousemove", leave: "mouseleave" }; "function" != typeof e.CustomEvent && (e.CustomEvent = function (e, n = { bubbles: !1, cancelable: !1, detail: void 0 }) { const o = t.createEvent("CustomEvent"); return o.initCustomEvent(e, n.bubbles, n.cancelable, n.detail), o }, e.CustomEvent.prototype = e.Event.prototype); const u = e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || (t => e.setTimeout(t, 1e3 / 60)); function r(e) { v(); const n = l(e), o = new CustomEvent("long-press", { bubbles: !0, cancelable: !0, detail: (a = n, { clientX: a.clientX, clientY: a.clientY, offsetX: a.offsetX, offsetY: a.offsetY, pageX: a.pageX, pageY: a.pageY, screenX: a.screenX, screenY: a.screenY }) }); var a; this.dispatchEvent(o) || t.addEventListener("click", d, !0) } function l(e) { return e.changedTouches ? e.changedTouches[0] : e } function m(o) { v(); const a = o.target, i = parseInt(function (e, n, o) { for (; e && e !== t.documentElement;) { const t = e.getAttribute(n); if (t) return t; e = e.parentNode } return o }(a, "data-long-press-delay", "600"), 10); n = function (t, n) { if (!u) return e.setTimeout(t, n); const o = (new Date).getTime(), a = {}, i = () => { (new Date).getTime() - o >= n ? t() : a.value = u(i) }; return a.value = u(i), a }(r.bind(a, o), i) } function v() { var t; (t = n) && (e.cancelAnimationFrame || e.clearTimeout)(t.value), n = null } function d(e) { t.removeEventListener("click", d, !0), e.preventDefault(), e.stopImmediatePropagation() } t.addEventListener(c.down, (function (e) { const t = l(e); i = { x: t.clientX, y: t.clientY }, m(e) }), !0), t.addEventListener(c.move, (function (e) { const t = l(e); (Math.abs(i.x - t.clientX) > o || Math.abs(i.y - t.clientY) > a) && v() }), !0), t.addEventListener(c.up, v, !0), t.addEventListener(c.leave, v, !0), t.addEventListener("wheel", v, !0), t.addEventListener("scroll", v, !0), t.addEventListener("contextmenu", v, !0) }(window, document);
