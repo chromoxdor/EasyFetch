@@ -401,7 +401,7 @@ async function fetchJson() {
 async function getRemoteGPIOState(taskNum, unitToNum, gpioNum, unitFromNum, valueNum) {
     const url = Number(unitToNum) === unitNr1
         ? `${cmD}SendTo,${unitFromNum},'taskvalueset,${taskNum},${valueNum},[Plugin%23GPIO%23Pinstate%23${gpioNum}]'`
-        : `${cmD}SendTo,${unitToNum},'SendTo,${unitFromNum},"taskvaluesetandrun,${taskNum},${valueNum},\\[Plugin%23GPIO%23Pinstate%23${gpioNum}\\]"'`;
+        : `${cmD}SendTo,${unitToNum},'SendTo,${unitFromNum},"taskvalueset,${taskNum},${valueNum},\\[Plugin%23GPIO%23Pinstate%23${gpioNum}\\]"'`;
     return await getUrl(url);
 }
 
