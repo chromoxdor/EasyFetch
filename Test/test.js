@@ -591,7 +591,7 @@ function updateSlTS(event) {
 
     if (isSetpoint) {
         const amount = slTimeSetWrap.querySelector(".slTimeText .setT");
-        amount.textContent = slider.value;
+        amount.textContent =  Number(slider.value).toFixed(1);
         return;
     }
 
