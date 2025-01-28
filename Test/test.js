@@ -585,15 +585,25 @@ function checkDirection() {
 //##############################################################################################################
 function updateSlTS(event) {
     isittime = 0;
-    slider = event.target;
-    if (slider.id.slice(-1) == "L") { nuM = 1 } else { nuM = 2 }
-    const amount = slider.parentElement.closest(".slTimeSetWrap").firstElementChild.querySelector(".hAmount" + nuM);
-    const amount2 = slider.parentElement.closest(".slTimeSetWrap").firstElementChild.querySelector(".mAmount" + nuM);
-    var hours = Math.floor(slider.value / 60);
-    var minutes = slider.value % 60;
-    const padded = minutes.toString().padStart(2, "0");
+    const slider = event.target;
+    const isSetpoint = slider.id === "setpoint";
+    const slTimeSetWrap = slider.closest(".slTimeSetWrap");
+
+    if (isSetpoint) {
+        const amount = slTimeSetWrap.querySelector(".slTimeText .setT");
+        amount.textContent = slider.value;
+        return;
+    }
+
+    const nuM = slider.id.slice(-1) === "L" ? 1 : 2;
+    const amount = slTimeSetWrap.querySelector(`.hAmount${nuM}`);
+    const amount2 = slTimeSetWrap.querySelector(`.mAmount${nuM}`);
+
+    const hours = Math.floor(slider.value / 60);
+    const minutes = slider.value % 60;
+
     amount.textContent = hours;
-    amount2.textContent = padded;
+    amount2.textContent = minutes.toString().padStart(2, "0");
 }
 
 //##############################################################################################################
