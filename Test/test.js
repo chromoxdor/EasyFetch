@@ -591,7 +591,7 @@ function updateSlTS(event) {
 
     if (isSetpoint) {
         const amount = slTimeSetWrap.querySelector(".slTimeText .setT");
-        amount.textContent =  Number(slider.value).toFixed(1);
+        amount.textContent = Number(slider.value).toFixed(1);
         return;
     }
 
@@ -935,9 +935,7 @@ async function getNodes(sensorName, allNodes) {
         html4 += `
             <div class="menueItem">
                 <div class="serverUnit" style="text-align: center;">${styleN}</div>
-                <div id="${node.name}" class="nc" onclick="nodeChange(${i});iFr();">
-                    ${node.name}
-                    <span class="numberUnit">${node.nr}</span>
+                <div id="${node.name}" class="nc" onclick="nodeChange(${i});iFr();">${node.name}<span class="numberUnit">${node.nr}</span>
                 </div>
             </div>`;
 
