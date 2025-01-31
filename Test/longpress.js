@@ -136,7 +136,11 @@
     document.addEventListener(eventMap.move, handleMouseMove, true);
     document.addEventListener(eventMap.up, clearTimer, true);
     document.addEventListener(eventMap.leave, clearTimer, true);
-    document.addEventListener('wheel', clearTimer, true);
-    document.addEventListener('scroll', clearTimer, true);
-    document.addEventListener('contextmenu', clearTimer, true);
+    document.addEventListener("wheel", clearTimer, true);
+    document.addEventListener("scroll", clearTimer, true);
+    
+    // Only add 'contextmenu' event if NOT on Android
+    if (!navigator.userAgent.toLowerCase().includes("android")) {
+        document.addEventListener("contextmenu", clearTimer, true);
+    }
 }(window, document));

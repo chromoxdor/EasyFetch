@@ -140,18 +140,12 @@ iframe {
     background: #837c7c;
 }
 
-.clickables:active,
-.push:active {
+.clickables:active {
     transform: scale(0.95);
     transition: .1s;
 }
 
 .slider,
-.npSl {
-    -webkit-appearance: none;
-    position: absolute;
-    height: 40px;
-}
 
 .slider {
     background: #847d7d;
@@ -162,15 +156,6 @@ iframe {
 
 .noI {
     pointer-events: none;
-}
-
-.npSl {
-    width: 100%;
-    left: -.2px;
-    position: inherit;
-    height: 40px;
-    overflow: hidden;
-    border-radius: 5px;
 }
 
 .slider::-webkit-slider-thumb {
@@ -194,24 +179,6 @@ iframe {
     box-shadow: -100vw 0 0 100vw #458fd1;
     border-left: 20px solid #458fd1;
     border-right: 20px solid #837c7c;
-}
-
-.npSl::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 42px;
-    cursor: pointer;
-    box-shadow: 0 0 2px 0 #fff;
-    background: #3e88cb;
-}
-
-.npSl::-moz-range-thumb {
-    width: 20px;
-    height: 42px;
-    cursor: pointer;
-    box-shadow: 0 0 2px 0 #fff;
-    background: #3e88cb;
-    border: 0;
 }
 
 .npH {
@@ -416,8 +383,7 @@ input[type=number] {
     padding: 0 2px 0 1px;
 }
 
-.on,
-.push:active {
+.on {
     background: #3e88cb !important;
 }
 
@@ -525,7 +491,7 @@ input[type=number] {
     position: absolute;
     bottom: 2%;
     font-size: 35px;
-    color: #b3b3b3
+    color: #b3b3b3;
 }
 
 #openSys {
@@ -569,21 +535,6 @@ input[type=number] {
     display: flex;
     flex-direction: column;
     justify-content: space-evenly
-}
-
-.syspair {
-    display: flex;
-    justify-content: flex-start
-}
-
-.syspair>div {
-    font-size: 8pt !important;
-}
-
-.syspair div:nth-child(1) {
-    text-align: end;
-    width: 35%;
-    padding-right: 5px
 }
 
 .menueWrap {
@@ -726,16 +677,6 @@ input[type=number] {
         border-right: 20px solid #444
     }
 
-    .npSl::-webkit-slider-thumb {
-        box-shadow: 0 0 4px 3px grey;
-        background: #44607a;
-    }
-
-    .npSl::-moz-range-thumb {
-        box-shadow: 0 0 4px 3px grey;
-        background: #44607a;
-    }
-
     .npS,
     .npH,
     .npV {
@@ -743,8 +684,7 @@ input[type=number] {
         background-blend-mode: multiply;
     }
 
-    .on,
-    .push:active {
+    .on {
         background: #44607a !important
     }
 

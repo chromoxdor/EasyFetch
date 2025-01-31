@@ -32,33 +32,33 @@ var initIP;
 const cmD = "control?cmd=";
 var coloumnSet;
 var myJson
-const cP = [
-    " #e6b85b", " #a56f9f",
-    " #b48555", " #102e42",
-    " #ac632f", " #4b9b8a",
-    " #116a6f", " #333c57",
-    " #a43f28", " #38b764",
-    " #698c5a", " #553630",
-    " #5d275d"
-];
+// const cP = [
+//     " #e6b85b", " #a56f9f",
+//     " #b48555", " #102e42",
+//     " #ac632f", " #4b9b8a" ,
+//     " #116a6f", " #333c57",
+//     " #a43f28", " #38b764",
+//     " #698c5a", " #553630",
+//     " #5d275d"
+// ];
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
 //##############################################################################################################
 async function fetchJson() {
-    //invert color scheme----------
-    try {
-        for (const styleSheet of document.styleSheets) {
-            for (const rule of styleSheet.cssRules) {
-                if (rule.conditionText?.includes("prefers-color-scheme")) {
-                    const isLightMode = document.cookie.includes("Col=1");
-                    rule.media.mediaText = `(prefers-color-scheme: ${isLightMode ? "light" : "dark"})`;
-                }
-            }
-        }
-    } catch (err) {
-        //console.error("Error processing style sheets:", err);
-    }
+    // //invert color scheme----------
+    // try {
+    //     for (const styleSheet of document.styleSheets) {
+    //         for (const rule of styleSheet.cssRules) {
+    //             if (rule.conditionText?.includes("prefers-color-scheme")) {
+    //                 const isLightMode = document.cookie.includes("Col=1");
+    //                 rule.media.mediaText = `(prefers-color-scheme: ${isLightMode ? "light" : "dark"})`;
+    //             }
+    //         }
+    //     }
+    // } catch (err) {
+    //     //console.error("Error processing style sheets:", err);
+    // }
     if (!isittime) return;
     //-----------------------
     let urlParams = new URLSearchParams(window.location.search);
@@ -80,43 +80,43 @@ async function fetchJson() {
     unitNr = myJson.System['Unit Number'];
     sysInfo = myJson.System
 
-    const sysPairs = [
-        { label: 'Sysinfo of', value: unit },
-        { label: 'Local Time', value: sysInfo['Local Time'] },
-        { label: 'Uptime', value: minutesToDhm(sysInfo['Uptime']) },
-        { label: 'Load', value: `${sysInfo['Load']}%` },
-        sysInfo['Internal Temperature'] && {
-            label: 'Temp',
-            value: `${sysInfo['Internal Temperature']}°C`,
-            style: `color: ${sysInfo['Internal Temperature'] > 35 ? 'red' : 'inherit'};`
-        },
-        { label: 'Free Ram', value: sysInfo['Free RAM'] },
-        { label: 'Free Stack', value: sysInfo['Free Stack'] },
-        { label: 'IP Address', value: myJson.WiFi['IP Address'] },
-        { label: 'RSSI', value: `${myJson.WiFi['RSSI']} dBm` },
-        { label: 'Build', value: sysInfo['Build'] },
-        { label: 'Eco Mode', value: sysInfo['CPU Eco Mode'] === "true" ? 'on' : 'off' }
-    ].filter(Boolean);
+    // const sysPairs = [
+    //     { label: 'Sysinfo of', value: unit },
+    //     { label: 'Local Time', value: sysInfo['Local Time'] },
+    //     { label: 'Uptime', value: minutesToDhm(sysInfo['Uptime']) },
+    //     { label: 'Load', value: `${sysInfo['Load']}%` },
+    //     sysInfo['Internal Temperature'] && {
+    //         label: 'Temp',
+    //         value: `${sysInfo['Internal Temperature']}°C`,
+    //         style: `color: ${sysInfo['Internal Temperature'] > 35 ? 'red' : 'inherit'};`
+    //     },
+    //     { label: 'Free Ram', value: sysInfo['Free RAM'] },
+    //     { label: 'Free Stack', value: sysInfo['Free Stack'] },
+    //     { label: 'IP Address', value: myJson.WiFi['IP Address'] },
+    //     { label: 'RSSI', value: `${myJson.WiFi['RSSI']} dBm` },
+    //     { label: 'Build', value: sysInfo['Build'] },
+    //     { label: 'Eco Mode', value: sysInfo['CPU Eco Mode'] === "true" ? 'on' : 'off' }
+    // ].filter(Boolean);
 
-    let syshtml = sysPairs.map(pair => `
-                <div class="syspair">
-                    <div>${pair.label}:</div>
-                    <div style="${pair.style || ''}">${pair.value}</div>
-                </div>
-            `).join('');
+    // let syshtml = sysPairs.map(pair => `
+    //             <div class="syspair">
+    //                 <div>${pair.label}:</div>
+    //                 <div style="${pair.style || ''}">${pair.value}</div>
+    //             </div>
+    //         `).join('');
 
-    let [dateBig, clockBig] = myJson.System['Local Time'].split(" ");
-    clockBig = clockBig.split(':').slice(0, -1).join(':');
-    let [dateY, dateM, dateD] = dateBig.split('-');
+    // let [dateBig, clockBig] = myJson.System['Local Time'].split(" ");
+    // clockBig = clockBig.split(':').slice(0, -1).join(':');
+    // let [dateY, dateM, dateD] = dateBig.split('-');
 
     if (!myJson.Sensors.length) {
         html += '<div class="sensorset clickables"><div  class="sensors" style="font-weight:bold;">no tasks configured...</div>';
     }
     else {
-        let c = 0;
+        //let c = 0;
         const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
-        const tBGArray = cP.map(color => `background:${color}${bgColor === "0" ? "80" : ""}`);
-
+        //const tBGArray = cP.map(color => `background:${color}${bgColor === "0" ? "80" : ""}`);
+        
         for (const sensor of myJson.Sensors) {
             //myJson.Sensors.forEach(sensor => {
             var bigSpan = "";
@@ -126,16 +126,17 @@ async function fetchJson() {
                 tBG = `background:#${sensorName.split("?")[1]}${bgColor === "0" ? "80" : ""}`;
                 sensorName = sensorName.split("?")[0];
             } else {
-                if (sensor.TaskDeviceNumber != 1 || (sensorName).includes("dButtons")) {
-                    tBG = tBGArray[c];
-                    c = (c + 1) % tBGArray.length; // Loop back to 0 when reaching the end
-                } else {
+                // if (sensor.TaskDeviceNumber != 1 || (sensorName).includes("dButtons")) {
+                //     tBG = tBGArray[c];
+                //     c = (c + 1) % tBGArray.length; // Loop back to 0 when reaching the end
+                // } else {
                     tBG = "";
-                }
+              //  }
             }
             //this is a bit to confusing when creating events for now
             var sensorName3 = changeNN(sensorName) //replace "_" and "." in device and "BigValue" names
-
+            console.log(c);
+            console.log(tBGArray, tBGArray[c], c);
             const htS1 = `sensorset clickables" onclick="playSound(3000), `;
 
             const htS2 = `<div id="${sensorName}" class="sensors" style="font-weight:bold;">${sensorName3}</div>`;
@@ -222,18 +223,18 @@ async function fetchJson() {
                                     itemNB = itemN.split("&")[0];
                                     itemNB2 = changeNN(itemNB);
                                     const [nr, gpio] = itemN.split("&")[1]?.split("G") || [];
-                                    if (gpio) {
-                                        getRemoteGPIOState(sensor.TaskNumber, nr, gpio, myJson.System['Unit Number'], item.ValueNumber);
-                                    }
+                                    // if (gpio) {
+                                    //     getRemoteGPIOState(sensor.TaskNumber, nr, gpio, myJson.System['Unit Number'], item.ValueNumber);
+                                    // }
                                     const clickHandler = nr === "A" ? `getNodes('${itemNB}')` : `buttonClick('${itemN}')`;
                                     html += `<div class="btnTile ${XI} ${bS} ${htS1} ${clickHandler}"><div id="${itemNB}" class="sensors ${nr === "A" ? `nodes` : ``}" style="font-weight:bold;">${itemNB2}</div></div>`;
                                 }
                             }
                             //push buttons
-                            else if (sensorName.includes("pButtons") && item.Value > -1) {
-                                const [itemNB, itemNB2] = [itemN.split("&")[0], changeNN(itemN.split("&")[0])];
-                                html += `<div class="${bS} btnTile push sensorset" onpointerdown="playSound(3000), pushClick('${itemN}',1)" onpointerup="pushClick('${itemN}',0)"><div id="${itemN}" class="sensors" style="font-weight:bold;">${itemNB2}</div></div>`;
-                            }
+                            // else if (sensorName.includes("pButtons") && item.Value > -1) {
+                            //     const [itemNB, itemNB2] = [itemN.split("&")[0], changeNN(itemN.split("&")[0])];
+                            //     html += `<div class="${bS} btnTile push sensorset" onpointerdown="playSound(3000), pushClick('${itemN}',1)" onpointerup="pushClick('${itemN}',0)"><div id="${itemN}" class="sensors" style="font-weight:bold;">${itemNB2}</div></div>`;
+                            // }
                             //number input
                             else if (sensorName.includes("vInput")) {
                                 itemN = itemN || "&nbsp;";
@@ -294,13 +295,13 @@ async function fetchJson() {
                                 html2 += '<div id="' + slName + '" class="slTimeSetWrap ' + sensorName + ' ' + sensor.TaskNumber + ',' + item.ValueNumber + '" style="font-weight:bold;">' + thermoSliderAddon + '<div class="slTimeText"> <div class="even">&#9728;&#xFE0E;<span class="isT"> ' + slT1 + '</span>°C</div><div class="even">&#9737;&#xFE0E;<span class="setT"> ' + slT2 + '</span>°C</div></div><div class="slTimeSet"><input class="slTHU thermO ' + XI + '" ' + htmlSlider1 + slT2 + '" id="setpoint"><input class="slider noI thT" ' + htmlSlider1 + slT1 + '" id="' + slName + '"></div></div>';
                             }
                             //neopixel slider
-                            else if (sensorName.includes("neoPixel")) {
-                                // Determine the type of the range based on the value of iN
-                                const rangeType = iN === 'h' ? '?H' : iN === 's' ? '?S' : iN === 'v' ? '?V' : '';
+                            // else if (sensorName.includes("neoPixel")) {
+                            //     // Determine the type of the range based on the value of iN
+                            //     const rangeType = iN === 'h' ? '?H' : iN === 's' ? '?S' : iN === 'v' ? '?V' : '';
 
-                                // Create the HTML element with a range input, depending on the type
-                                html2 += `<input type="range" max="${iN === 'h' ? 359 : 100}" min="0" value="${num2Value}" id="${sensorName}${rangeType}" class="sL npSl ${sensor.TaskNumber},${item.ValueNumber} np${iN.toUpperCase()} noVal">`;
-                            }
+                            //     // Create the HTML element with a range input, depending on the type
+                            //     html2 += `<input type="range" max="${iN === 'h' ? 359 : 100}" min="0" value="${num2Value}" id="${sensorName}${rangeType}" class="sL npSl ${sensor.TaskNumber},${item.ValueNumber} np${iN.toUpperCase()} noVal">`;
+                            // }
                             else { wasUsed = false; }
                         }
                         //big values---------------------------------------------------------
@@ -325,19 +326,19 @@ async function fetchJson() {
                                 html3 += htmlBig2 + bigSpan + `">`;
                                 let htS3 = `${htmlBig1}${iN}</div><div id="`;
 
-                                if (["Clock", "Uhr"].some(v => iN.includes(v))) {
-                                    html3 += `${htS3}clock" class="valueBig">${clockBig}</div></div>`;
-                                }
-                                else if (["Datum"].some(v => iN.toLowerCase().includes(v))) {
-                                    html3 += `${htS3}date" class="valueBig">${dateD}.${dateM}</div></div>`;
-                                }
-                                else if (["Date"].some(v => iN.toLowerCase().includes(v))) {
-                                    html3 += `${htS3}date" class="valueBig">${dateM}-${dateD}</div></div>`;
-                                }
-                                else if (["Year", "Jahr"].some(v => iN.toLowerCase().includes(v))) {
-                                    html3 += `${htS3}year" class="valueBig">${dateY}</div></div>`;
-                                }
-                                else if (iN.includes("noVal")) {
+                                // if (["Clock", "Uhr"].some(v => iN.includes(v))) {
+                                //     html3 += `${htS3}clock" class="valueBig">${clockBig}</div></div>`;
+                                // }
+                                // else if (["Datum"].some(v => iN.toLowerCase().includes(v))) {
+                                //     html3 += `${htS3}date" class="valueBig">${dateD}.${dateM}</div></div>`;
+                                // }
+                                // else if (["Date"].some(v => iN.toLowerCase().includes(v))) {
+                                //     html3 += `${htS3}date" class="valueBig">${dateM}-${dateD}</div></div>`;
+                                // }
+                                // else if (["Year", "Jahr"].some(v => iN.toLowerCase().includes(v))) {
+                                //     html3 += `${htS3}year" class="valueBig">${dateY}</div></div>`;
+                                // }
+                                if (iN.includes("noVal")) {
                                     html3 += `${htmlBig1}</div><div class="valueBig"></span></div></div>`;
                                 }
                                 else {
@@ -390,32 +391,32 @@ async function fetchJson() {
     //Things that only need to run once
     if (firstRun) {
         if (!document.cookie.includes("Snd=")) mC("Snd");
-
+    
         // Set full viewport height for iPhones
         if (/iPhone/i.test(window.navigator.userAgent)) {
-            document.body.style.height = "101vh";
+            document.body.style.height = "100vh";
         }
-
+    
         // Start fetching JSON data every 2 seconds
         fJ = setInterval(fetchJson, 2000);
-
+    
         unitNr1 = myJson.System["Unit Number"];
         initIP = myJson.WiFi["IP Address"] === "(IP unset)" ? "192.168.4.1" : myJson.WiFi["IP Address"];
-
+    
         nP2 = `http://${initIP}/devices`;
         nP = `http://${initIP}/tools`;
-
+    
         getNodes();
         longPressS();
         longPressN();
         addEonce();
-
+    
         firstRun = false;
     }
-
+    
     // Set unit symbol if unit number matches
     styleU = unitNr === unitNr1 ? "&#8858;&#xFE0E;" : "";
-
+    
     // Update unit display if there are no parameters
     if (!hasParams) {
         document.getElementById("unitId").innerHTML = `${styleU}${unit} <span class="numberUnit"> (${myJson.WiFi.RSSI})</span>`;
@@ -431,12 +432,12 @@ async function fetchJson() {
 //      get remote GPIO state
 //##############################################################################################################
 
-async function getRemoteGPIOState(taskNum, unitToNum, gpioNum, unitFromNum, valueNum) {
-    const url = Number(unitToNum) === unitNr1
-        ? `${cmD}SendTo,${unitFromNum},'taskvalueset,${taskNum},${valueNum},[Plugin%23GPIO%23Pinstate%23${gpioNum}]'`
-        : `${cmD}SendTo,${unitToNum},'SendTo,${unitFromNum},"taskvalueset,${taskNum},${valueNum},\\[Plugin%23GPIO%23Pinstate%23${gpioNum}\\]"'`;
-    return await getUrl(url);
-}
+// async function getRemoteGPIOState(taskNum, unitToNum, gpioNum, unitFromNum, valueNum) {
+//     const url = Number(unitToNum) === unitNr1
+//         ? `${cmD}SendTo,${unitFromNum},'taskvalueset,${taskNum},${valueNum},[Plugin%23GPIO%23Pinstate%23${gpioNum}]'`
+//         : `${cmD}SendTo,${unitToNum},'SendTo,${unitFromNum},"taskvalueset,${taskNum},${valueNum},\\[Plugin%23GPIO%23Pinstate%23${gpioNum}\\]"'`;
+//     return await getUrl(url);
+// }
 
 //##############################################################################################################
 //      min max step for sliders
@@ -523,6 +524,7 @@ function changeCss() {
     }
     widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
+        console.log("widthLimit: " + widthLimit + " window.innerWidth: " + window.innerWidth);
         if (list3.length) { for (let i = 0; i < list3.length; ++i) { list3[i].style.cssText = "display: grid; grid-template-columns: auto auto;"; } }
         if (bigLength == 1 || (bigLength == 0 && numSet == 1)) {
             coloumnSet = 1
@@ -532,7 +534,7 @@ function changeCss() {
         else { coloumnSet = 2; y = x + x }
     };
 
-    sList.style.setProperty('grid-template-columns', y, m);
+    sList.style.cssText = `grid-template-columns: ${y} ${m};`;
 
     //calculate and add extra tiles
     if (numSet % coloumnSet != 0 && coloumnSet != 1) {
@@ -664,22 +666,22 @@ function updateSlider(event) {
     }
 
     // Handle "npSl" slider type
-    if (slider.classList[1] === "npSl") {
-        const sliderId = slider.id.split("?")[0];
+    // if (slider.classList[1] === "npSl") {
+    //     const sliderId = slider.id.split("?")[0];
 
-        const hVal = document.getElementById(`${sliderId}?H`)?.value;
-        const sVal = document.getElementById(`${sliderId}?S`)?.value;
-        let vVal = document.getElementById(`${sliderId}?V`)?.value || 0;
+    //     const hVal = document.getElementById(`${sliderId}?H`)?.value;
+    //     const sVal = document.getElementById(`${sliderId}?S`)?.value;
+    //     let vVal = document.getElementById(`${sliderId}?V`)?.value || 0;
 
-        gesVal = [hVal, sVal, vVal];
+    //     gesVal = [hVal, sVal, vVal];
 
-        // Update saturation gradient if H and S values exist
-        if (hVal && sVal) {
-            vVal = Math.max(vVal, 20);
-            const sGrad = document.getElementById(`${sliderId}?S`);
-            sGrad.style.backgroundImage = `linear-gradient(to right, hsl(0,0%,${vVal}%), hsl(${hVal},100%,50%))`;
-        }
-    }
+    //     // Update saturation gradient if H and S values exist
+    //     if (hVal && sVal) {
+    //         vVal = Math.max(vVal, 20);
+    //         const sGrad = document.getElementById(`${sliderId}?S`);
+    //         sGrad.style.backgroundImage = `linear-gradient(to right, hsl(0,0%,${vVal}%), hsl(${hVal},100%,50%))`;
+    //     }
+    // }
 }
 
 //##############################################################################################################
@@ -842,30 +844,30 @@ function buttonClick(sensorName, gState) {
 //##############################################################################################################
 //      PUSH BUTTON EVENT
 //##############################################################################################################
-function pushClick(sensorName, b) {
-    isittime = b === 0 ? 1 : 0;
-    if (b === 0) playSound(1000);
+// function pushClick(sensorName, b) {
+//     isittime = b === 0 ? 1 : 0;
+//     if (b === 0) playSound(1000);
 
-    if (sensorName.includes("?")) {
-        const gpioNr = sensorName.split("?")[1];
-        const pcmd = `${cmD}gpio,${gpioNr},${b}`;
-        if (unitNr === unitNr1) {
-            getUrl(pcmd);
-        } else {
-            getUrl(`${cmD}SendTo,${nNr},"${pcmd}"`);
-        }
-    } else if (sensorName.includes("&")) {
-        const [utton2, nNr2] = sensorName.split("&");
-        getUrl(`${cmD}SendTo,${nNr2},"event,${utton2}Event=${b}"`);
-    } else {
-        const eventCmd = `${cmD}event,${sensorName}Event=${b}`;
-        if (unitNr === unitNr1) {
-            getUrl(eventCmd);
-        } else {
-            getUrl(`${cmD}SendTo,${nNr},"${eventCmd}"`);
-        }
-    }
-}
+//     if (sensorName.includes("?")) {
+//         const gpioNr = sensorName.split("?")[1];
+//         const pcmd = `${cmD}gpio,${gpioNr},${b}`;
+//         if (unitNr === unitNr1) {
+//             getUrl(pcmd);
+//         } else {
+//             getUrl(`${cmD}SendTo,${nNr},"${pcmd}"`);
+//         }
+//     } else if (sensorName.includes("&")) {
+//         const [utton2, nNr2] = sensorName.split("&");
+//         getUrl(`${cmD}SendTo,${nNr2},"event,${utton2}Event=${b}"`);
+//     } else {
+//         const eventCmd = `${cmD}event,${sensorName}Event=${b}`;
+//         if (unitNr === unitNr1) {
+//             getUrl(eventCmd);
+//         } else {
+//             getUrl(`${cmD}SendTo,${nNr},"${eventCmd}"`);
+//         }
+//     }
+// }
 
 //##############################################################################################################
 //      INPUT TILES EVENT
@@ -1139,19 +1141,19 @@ function longPressB() {
 //##############################################################################################################
 //      HELPER
 //##############################################################################################################
-function minutesToDhm(min) {
-    const d = Math.floor(min / (60 * 24));
-    const h = Math.floor((min % (60 * 24)) / 60);
-    const m = min % 60;
+// function minutesToDhm(min) {
+//     const d = Math.floor(min / (60 * 24));
+//     const h = Math.floor((min % (60 * 24)) / 60);
+//     const m = min % 60;
 
-    const format = (value, unit) => value > 0 ? `${value} ${unit}${value === 1 ? '' : 's'} ` : '';
+//     const format = (value, unit) => value > 0 ? `${value} ${unit}${value === 1 ? '' : 's'} ` : '';
 
-    const dDis = format(d, 'day');
-    const hDis = format(h, 'hour');
-    const mDis = format(m, 'minute');
+//     const dDis = format(d, 'day');
+//     const hDis = format(h, 'hour');
+//     const mDis = format(m, 'minute');
 
-    return dDis + hDis + mDis;
-}
+//     return dDis + hDis + mDis;
+// }
 
 function playSound(freQ) {
     if (freQ === 500) {
@@ -1219,69 +1221,68 @@ function receiveNote(S) {
 //----------------------------------------------------------------------------------------------------------------
 
 // 1️ Inject Web App Manifest (inline)
-const manifest = {
-    name: "easyfetch_local",
-    short_name: "easyfetch",
-    start_url: `http://${window.location.hostname}${window.location.pathname}?unit=1`,
-    display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#000000",
-    icons: [
-        {
-            src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Crect x='0' y='0' rx='6' ry='6' width='192' height='192' style='fill:%233c3c3b'/%3E%3C/svg%3E",
-            sizes: "192x192",
-            type: "image/svg+xml"
-        }
-    ]
-};
-console.log(`http://${window.location.hostname}${window.location.pathname}?unit=1`);
+// const manifest = {
+//     name: "easyfetch_local",
+//     short_name: "easyfetch",
+//     start_url: `http://${window.location.hostname}${window.location.pathname}?unit=1`,
+//     display: "standalone",
+//     background_color: "#ffffff",
+//     theme_color: "#000000",
+//     icons: [
+//         {
+//             src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Crect x='0' y='0' rx='6' ry='6' width='192' height='192' style='fill:%233c3c3b'/%3E%3C/svg%3E",
+//             sizes: "192x192",
+//             type: "image/svg+xml"
+//         }
+//     ]
+// };
+// console.log(`http://${window.location.hostname}${window.location.pathname}?unit=1`);
 
-const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
-const manifestURL = URL.createObjectURL(blob);
-const link = document.createElement("link");
-link.rel = "manifest";
-link.href = manifestURL;
-document.head.appendChild(link);
+// const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+// const manifestURL = URL.createObjectURL(blob);
+// const link = document.createElement("link");
+// link.rel = "manifest";
+// link.href = manifestURL;
+// document.head.appendChild(link);
 
-// 2️ Register Inline Service Worker
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("data:application/javascript," + encodeURIComponent(`
-    self.addEventListener("install", (event) => {
-      console.log("Service Worker installed");
-      self.skipWaiting();
-    });
+// // 2️ Register Inline Service Worker
+// if ("serviceWorker" in navigator) {
+//     navigator.serviceWorker.register("data:application/javascript," + encodeURIComponent(`
+//     self.addEventListener("install", (event) => {
+//       console.log("Service Worker installed");
+//       self.skipWaiting();
+//     });
 
-    self.addEventListener("activate", (event) => {
-      console.log("Service Worker activated");
-    });
+//     self.addEventListener("activate", (event) => {
+//       console.log("Service Worker activated");
+//     });
 
-    self.addEventListener("fetch", (event) => {
-      event.respondWith(
-        fetch(event.request).catch(() => {
-          console.log("Offline mode: Cannot reach server.");
-          return new Response("You are offline!", { status: 503 });
-        })
-      );
-    });
-  `)).then(() => console.log("Service Worker registered!"))
-        .catch(err => console.error("Service Worker registration failed:", err));
-}
-// 3️ Handle Install Prompt (PWA Install Button)
-let deferredPrompt;
-window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-    console.log("PWA Install prompt is available!");
+//     self.addEventListener("fetch", (event) => {
+//       event.respondWith(
+//         fetch(event.request).catch(() => {
+//           console.log("Offline mode: Cannot reach server.");
+//           return new Response("You are offline!", { status: 503 });
+//         })
+//       );
+//     });
+//   `)).then(() => console.log("Service Worker registered!"))
+//         .catch(err => console.error("Service Worker registration failed:", err));
+// }
+// // 3️ Handle Install Prompt (PWA Install Button)
+// let deferredPrompt;
+// window.addEventListener("beforeinstallprompt", (event) => {
+//     event.preventDefault();
+//     deferredPrompt = event;
+//     console.log("PWA Install prompt is available!");
 
-    // Example: Auto-show install prompt after 5 seconds
-    setTimeout(() => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt = null; // Reset prompt so it doesn't show again
-        }
-    }, 1000);
-});
+//     // Example: Auto-show install prompt after 5 seconds
+//     setTimeout(() => {
+//         if (deferredPrompt) {
+//             deferredPrompt.prompt();
+//             deferredPrompt = null; // Reset prompt so it doesn't show again
+//         }
+//     }, 1000);
+// });
 // ----------------------------------------------------------------------------------------------------------------
-
 
 !function (e, t) { "use strict"; let n = null; const o = 10, a = 10; let i = { x: 0, y: 0 }; const s = "ontouchstart" in e || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0, u = "PointerEvent" in e || e.navigator && "msPointerEnabled" in e.navigator ? { down: "pointerdown", up: "pointerup", move: "pointermove", leave: "pointerleave" } : s ? { down: "touchstart", up: "touchend", move: "touchmove", leave: "touchleave" } : { down: "mousedown", up: "mouseup", move: "mousemove", leave: "mouseleave" }; "function" != typeof e.CustomEvent && (e.CustomEvent = function (e, n = { bubbles: !1, cancelable: !1, detail: void 0 }) { const o = t.createEvent("CustomEvent"); return o.initCustomEvent(e, n.bubbles, n.cancelable, n.detail), o }, e.CustomEvent.prototype = e.Event.prototype); const c = e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || (t => e.setTimeout(t, 1e3 / 60)); function r(e) { v(); const n = l(e), o = new CustomEvent("long-press", { bubbles: !0, cancelable: !0, detail: (a = n, { clientX: a.clientX, clientY: a.clientY, offsetX: a.offsetX, offsetY: a.offsetY, pageX: a.pageX, pageY: a.pageY, screenX: a.screenX, screenY: a.screenY }) }); var a; this.dispatchEvent(o) || t.addEventListener("click", d, !0) } function l(e) { return e.changedTouches ? e.changedTouches[0] : e } function m(o) { v(); const a = o.target, i = parseInt(function (e, n, o) { for (; e && e !== t.documentElement;) { const t = e.getAttribute(n); if (t) return t; e = e.parentNode } return o }(a, "data-long-press-delay", "1000"), 10); n = function (t, n) { if (!c) return e.setTimeout(t, n); const o = (new Date).getTime(), a = {}, i = () => { (new Date).getTime() - o >= n ? t() : a.value = c(i) }; return a.value = c(i), a }(r.bind(a, o), i) } function v() { var t; (t = n) && (e.cancelAnimationFrame || e.clearTimeout)(t.value), n = null } function d(e) { t.removeEventListener("click", d, !0), e.preventDefault(), e.stopImmediatePropagation() } t.addEventListener(u.down, (function (e) { const t = l(e); i = { x: t.clientX, y: t.clientY }, m(e) }), !0), t.addEventListener(u.move, (function (e) { const t = l(e); (Math.abs(i.x - t.clientX) > o || Math.abs(i.y - t.clientY) > a) && v() }), !0), t.addEventListener(u.up, v, !0), t.addEventListener(u.leave, v, !0), t.addEventListener("wheel", v, !0), t.addEventListener("scroll", v, !0), navigator.userAgent.toLowerCase().includes("android") || t.addEventListener("contextmenu", v, !0) }(window, document);
