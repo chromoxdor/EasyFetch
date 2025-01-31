@@ -35,7 +35,7 @@ var myJson
 // const cP = [
 //     " #e6b85b", " #a56f9f",
 //     " #b48555", " #102e42",
-//     " #ac632f", " #4b9b8a" ,
+//     " #ac632f", " #4b9b8a",
 //     " #116a6f", " #333c57",
 //     " #a43f28", " #38b764",
 //     " #698c5a", " #553630",
@@ -135,8 +135,7 @@ async function fetchJson() {
             }
             //this is a bit to confusing when creating events for now
             var sensorName3 = changeNN(sensorName) //replace "_" and "." in device and "BigValue" names
-            console.log(c);
-            console.log(tBGArray, tBGArray[c], c);
+
             const htS1 = `sensorset clickables" onclick="playSound(3000), `;
 
             const htS2 = `<div id="${sensorName}" class="sensors" style="font-weight:bold;">${sensorName3}</div>`;
@@ -384,7 +383,7 @@ async function fetchJson() {
         }
     }
     html += html1;
-    document.getElementById('sysInfo').innerHTML = syshtml;
+    //document.getElementById('sysInfo').innerHTML = syshtml;
     document.getElementById('sensorList').innerHTML = html;
     document.getElementById('sliderList').innerHTML = html2;
     document.getElementById('bigNumber').innerHTML = html3;
@@ -524,7 +523,6 @@ function changeCss() {
     }
     widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
-        console.log("widthLimit: " + widthLimit + " window.innerWidth: " + window.innerWidth);
         if (list3.length) { for (let i = 0; i < list3.length; ++i) { list3[i].style.cssText = "display: grid; grid-template-columns: auto auto;"; } }
         if (bigLength == 1 || (bigLength == 0 && numSet == 1)) {
             coloumnSet = 1
@@ -534,7 +532,7 @@ function changeCss() {
         else { coloumnSet = 2; y = x + x }
     };
 
-    sList.style.cssText = `grid-template-columns: ${y} ${m};`;
+    sList.style.setProperty('grid-template-columns', y, m);
 
     //calculate and add extra tiles
     if (numSet % coloumnSet != 0 && coloumnSet != 1) {

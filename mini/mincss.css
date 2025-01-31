@@ -145,9 +145,10 @@ iframe {
     transition: .1s;
 }
 
-.slider,
-
 .slider {
+    -webkit-appearance: none;
+    position: absolute;
+    height: 40px;
     background: #847d7d;
     width: calc(100% + 44.2px);
     left: -24.2px;
