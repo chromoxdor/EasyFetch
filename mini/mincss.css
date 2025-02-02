@@ -72,7 +72,6 @@ iframe {
     padding-bottom: 40px;
     padding-top: 40px;
     color: #fff;
-    overflow-y: auto
 }
 
 #allList>div>:not(.bigNum) {
@@ -87,6 +86,7 @@ iframe {
     display: grid;
     gap: 1vh;
     transition: .8s ease-out;
+    justify-content: center
 }
 
 .bigNum {
@@ -95,7 +95,7 @@ iframe {
     gap: 1vh;
     width: -webkit-fill-available;
     justify-content: start;
-    transition: .8s ease-out;
+    transition: .8s ease-out
 }
 
 .bigNumOne {
@@ -130,7 +130,6 @@ iframe {
 #sliderList {
     display: grid;
     gap: 1vh;
-    min-width: 288px;
     transition: .8s ease-out;
 }
 
@@ -492,7 +491,7 @@ input[type=number] {
     position: absolute;
     bottom: 2%;
     font-size: 35px;
-    color: #b3b3b3;
+    color: #b3b3b3
 }
 
 #openSys {
@@ -554,9 +553,9 @@ input[type=number] {
         padding-bottom: 40px;
     }
 
-    #opener {
+    /* #opener {
         height: 40px
-    }
+    } */
 }
 
 @media screen and (max-width: 799px) {
@@ -568,12 +567,13 @@ input[type=number] {
 @media screen and (max-width: 450px) {
     #allList {
         grid-row-gap: 5px;
-        min-width: unset
+        min-width: unset;
+        overflow-y: auto
     }
 
-    #opener {
+    /* #opener {
         height: 40px
-    }
+    } */
 
     #framie {
         padding-bottom: 40px

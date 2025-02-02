@@ -31,7 +31,7 @@ var iO;
 var initIP;
 const cmD = "control?cmd=";
 var coloumnSet;
-var myJson
+var myJson2
 // const cP = [
 //     " #e6b85b", " #a56f9f",
 //     " #b48555", " #102e42",
@@ -45,7 +45,7 @@ var myJson
 //##############################################################################################################
 //      FETCH AND MAKE TILES
 //##############################################################################################################
-async function fetchJson() {
+async function fetchJson(gN) {
     // //invert color scheme----------
     // try {
     //     for (const styleSheet of document.styleSheets) {
@@ -70,7 +70,6 @@ async function fetchJson() {
     if (!isittime) return;
 
     if (!jsonPath) { jsonPath = `/json`; }
-    responseTime = Date.now();
     response = await getUrl(jsonPath);
     myJson = await response.json();
     if (!isittime) return;
@@ -88,7 +87,7 @@ async function fetchJson() {
     //     sysInfo['Internal Temperature'] && {
     //         label: 'Temp',
     //         value: `${sysInfo['Internal Temperature']}°C`,
-    //         style: `color: ${sysInfo['Internal Temperature'] > 35 ? 'red' : 'inherit'};`
+    //         style: `color: ${sysInfo['Internal Temperature'] > 55 ? 'red' : 'inherit'};`
     //     },
     //     { label: 'Free Ram', value: sysInfo['Free RAM'] },
     //     { label: 'Free Stack', value: sysInfo['Free Stack'] },
@@ -116,17 +115,18 @@ async function fetchJson() {
         //let c = 0;
         const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
         //const tBGArray = cP.map(color => `background:${color}${bgColor === "0" ? "80" : ""}`);
-        
+
         for (const sensor of myJson.Sensors) {
             //myJson.Sensors.forEach(sensor => {
             var bigSpan = "";
             sensorName = sensor.TaskName;
+            taskEnabled = sensor.TaskEnabled.toString();
 
             if (sensorName.includes("?")) { //if a tile has a custom color
                 tBG = `background:#${sensorName.split("?")[1]}${bgColor === "0" ? "80" : ""}`;
                 sensorName = sensorName.split("?")[0];
             } else {
-                // if (sensor.TaskDeviceNumber != 1 || (sensorName).includes("dButtons")) {
+                // if if ((sensor.TaskDeviceNumber != 1 || !(sensorName).includes("dButtons")) && taskEnabled === "true") {
                 //     tBG = tBGArray[c];
                 //     c = (c + 1) % tBGArray.length; // Loop back to 0 when reaching the end
                 // } else {
@@ -141,7 +141,6 @@ async function fetchJson() {
             const htS2 = `<div id="${sensorName}" class="sensors" style="font-weight:bold;">${sensorName3}</div>`;
             exC = [87, 38, 41, 42].includes(sensor.TaskDeviceNumber); //all PluginNR in an array that need to be excluded 
             exC2 = !sensor.Type?.includes("Display")
-            taskEnabled = sensor.TaskEnabled.toString();
 
             if (taskEnabled === "true" && !sensorName.includes("XX") && !exC && exC2 && !hasParams) {
                 if (sensor.TaskValues) {
@@ -390,37 +389,38 @@ async function fetchJson() {
     //Things that only need to run once
     if (firstRun) {
         if (!document.cookie.includes("Snd=")) mC("Snd");
-    
+
         // Set full viewport height for iPhones
         if (/iPhone/i.test(window.navigator.userAgent)) {
-            document.body.style.height = "100vh";
+            document.body.style.height = "101vh";
         }
-    
+
         // Start fetching JSON data every 2 seconds
         fJ = setInterval(fetchJson, 2000);
-    
+
         unitNr1 = myJson.System["Unit Number"];
         initIP = myJson.WiFi["IP Address"] === "(IP unset)" ? "192.168.4.1" : myJson.WiFi["IP Address"];
-    
+
         nP2 = `http://${initIP}/devices`;
         nP = `http://${initIP}/tools`;
-    
+
         getNodes();
         longPressS();
         longPressN();
         addEonce();
-    
+
         firstRun = false;
     }
-    
+
     // Set unit symbol if unit number matches
     styleU = unitNr === unitNr1 ? "&#8858;&#xFE0E;" : "";
-    
+
     // Update unit display if there are no parameters
     if (!hasParams) {
         document.getElementById("unitId").innerHTML = `${styleU}${unit} <span class="numberUnit"> (${myJson.WiFi.RSSI})</span>`;
         document.getElementById("unitT").innerHTML = `${styleU}${unit}`;
     }
+    if (gN == "gN") getNodes(undefined, undefined, "ch");
     paramS();
     changeCss();
     resizeText();
@@ -915,7 +915,7 @@ function openNav(whatisit) {
     navOpen = 1;
     if (whatisit) manNav = 1;
     clearInterval(nIV);
-    nIV = setInterval(getNodes, 2000);
+    nIV = setInterval(getNodes, 10000);
     const sideNav = document.getElementById('mySidenav');
     if (sideNav.offsetLeft === -280) {
         getNodes();
@@ -951,10 +951,15 @@ function openSys() {
 //##############################################################################################################
 //      NODES - MAKE A LIST FOR THE SIDENAV
 //##############################################################################################################
-async function getNodes(sensorName, allNodes) {
+async function getNodes(sensorName, allNodes, ch) {
     let html4 = '';
     let i = -1;
-    myJson.nodes.forEach(node => {
+    if  (!ch) {
+        response = await getUrl(`/json`);
+        myJson2 = await response.json();
+        console.log("myJson2");
+    }
+    myJson2.nodes.forEach(node => {
         i++
         if (node.nr == myParam && hasParams) {
             nodeChange(i);
@@ -994,7 +999,7 @@ async function getNodes(sensorName, allNodes) {
 //      CHANGE THE ADDRESS ACCORDING TO THE SELECTED NODE
 //##############################################################################################################
 function nodeChange(event) {
-    const node = myJson.nodes[event];
+    const node = myJson2.nodes[event];
     if (node) {
         nNr = node.nr;
         nN = node.name;
@@ -1004,7 +1009,7 @@ function nodeChange(event) {
         //console.log("......nP2:"+nP2);
         jsonPath = `${baseUrl}/json`;
         window.history.replaceState(null, null, `?unit=${nNr}`);
-        fetchJson();
+        fetchJson("gN");
     }
     if (window.innerWidth < 450 && document.getElementById('sysInfo').offsetHeight === 0) {
         closeNav();
