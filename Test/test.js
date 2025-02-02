@@ -33,12 +33,12 @@ const cmD = "control?cmd=";
 var coloumnSet;
 var myJson2
 const cP = [
-    " #e6b85b", " #a56f9f",
-    " #b48555", " #102e42",
+    " #bd964a", " #a56f9f",
+    " #b37b47", " #1e567b",
     " #ac632f", " #4b9b8a",
-    " #116a6f", " #333c57",
+    " #116a6f", " #383861",
     " #a43f28", " #38b764",
-    " #698c5a", " #553630",
+    " #698c5a", "rgb(100, 64, 57)",
     " #5d275d"
 ];
 
@@ -1226,20 +1226,21 @@ function receiveNote(S) {
 //----------------------------------------------------------------------------------------------------------------
 
 // 1️ Inject Web App Manifest (inline)
+const favicon = document.querySelector("link[rel='icon']").getAttribute("href");
+
 const manifest = {
-    name: "easyfetch_local",
+    name: "easyfetch",
     short_name: "easyfetch",
-    start_url: `http://${window.location.hostname}${window.location.pathname}?unit=1`,
+    scope: "./",
+    start_url: "./",
     display: "standalone",
-    background_color: "#ffffff",
+    background_color: "#000000",
     theme_color: "#000000",
-    icons: [
-        {
-            src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Crect x='0' y='0' rx='6' ry='6' width='192' height='192' style='fill:%233c3c3b'/%3E%3C/svg%3E",
-            sizes: "192x192",
-            type: "image/svg+xml"
-        }
-    ]
+    icons: [192, 256, 384, 512, 57, 72, 76, 120, 152, 167, 180, 1024].map((x) => ({
+        src: favicon,
+        sizes: `${x}x${x}`,
+        purpose: "any"
+    }))
 };
 console.log(`http://${window.location.hostname}${window.location.pathname}?unit=1`);
 
