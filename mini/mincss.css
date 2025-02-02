@@ -441,7 +441,7 @@ input[type=number] {
 .open {
     background: none;
     display: flex;
-    max-width: 200px;
+    max-width: 250px;
     align-items: center;
     margin: auto;
     padding-bottom: 2vh;
