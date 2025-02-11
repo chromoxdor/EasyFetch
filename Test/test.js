@@ -287,7 +287,7 @@ async function fetchJson(gN) {
                                 slT2 = (slT1 - Math.floor(slT1)) * 100;
                                 slT2 = slT2.toFixed(1)
                                 slT1 = (Math.floor(slT1) / 10).toFixed(1);
-                                if (Math.floor(slT1) < 10) { slT1 = "&nbsp;" + slT1.toString() }
+                                //if (Math.floor(slT1) < 10) { slT1N = "&nbsp;" + slT1.toString() }
                                 htmlSlider1 = 'type="range" min="' + slMin + '" max="' + slMax + '"  step="' + slStep + '" value="';
                                 thermoSliderAddon = '<div class="noI" style="z-index: 2; position: absolute">' + slName + '</div>'
                                 html2 += '<div id="' + slName + '" class="slTimeSetWrap ' + sensorName + ' ' + sensor.TaskNumber + ',' + item.ValueNumber + '" style="font-weight:bold;">' + thermoSliderAddon + '<div class="slTimeText"> <div class="even">&#9728;&#xFE0E;<span class="isT"> ' + slT1 + '</span>°C</div><div class="even">&#9737;&#xFE0E;<span class="setT"> ' + slT2 + '</span>°C</div></div><div class="slTimeSet"><input class="slTHU thermO ' + XI + '" ' + htmlSlider1 + slT2 + '" id="setpoint"><input class="slider noI thT" ' + htmlSlider1 + slT1 + '" id="' + slName + '"></div></div>';
@@ -523,7 +523,7 @@ function changeCss() {
     }
     widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
-        if (list3.length) { for (let i = 0; i < list3.length; ++i) { list3[i].style.cssText = "display: grid; grid-template-columns: auto auto;"; } }
+        if (list3.length) { for (let i = 0; i < list3.length; ++i) { list3[i].style.setProperty('grid-template-columns', 'auto auto'); } }
         if (bigLength == 1 || (bigLength == 0 && numSet == 1)) {
             coloumnSet = 1
             y = x;
@@ -533,6 +533,7 @@ function changeCss() {
     };
 
     sList.style.setProperty('grid-template-columns', y, m);
+    for (let i = 0; i < list3.length; ++i) { list3[i].style.setProperty('grid-template-columns', y, m); }
 
     //calculate and add extra tiles
     if (numSet % coloumnSet != 0 && coloumnSet != 1) {

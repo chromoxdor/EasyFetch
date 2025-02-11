@@ -28,9 +28,7 @@ body {
 
 #container {
     display: flex;
-    position: absolute;
     height: 100vh;
-    width: 100vw;
     justify-content: center;
 }
 
@@ -62,13 +60,16 @@ iframe {
 }
 
 #allList {
-    display: flex;
+    display: grid;
     transform: translate3d(0, 0, 0);
+    /*safari blur issue fix*/
     grid-row-gap: 1vh;
     margin: auto;
     padding: 5px;
     transition: .8s ease-out;
     flex-direction: column;
+    align-content: center;
+    flex-wrap: wrap;
     padding-bottom: 40px;
     padding-top: 40px;
     color: #fff;
@@ -86,23 +87,19 @@ iframe {
     display: grid;
     gap: 1vh;
     transition: .8s ease-out;
-    justify-content: center
 }
 
 .bigNum {
-    display: flex;
-    grid-template-columns: auto auto auto auto;
+    display: grid;
     gap: 1vh;
-    width: -webkit-fill-available;
-    justify-content: start;
+    justify-content: center;
     transition: .8s ease-out
 }
 
-.bigNumOne {
-    justify-content: center !important;
+/* .bigNumOne {
+    justify-content: center;
     grid-template-columns: auto !important;
-    width: unset !important;
-}
+} */
 
 .bigNumWrap {
     width: -webkit-fill-available;
@@ -131,6 +128,7 @@ iframe {
     display: grid;
     gap: 1vh;
     transition: .8s ease-out;
+    min-width: 305px
 }
 
 #sliderList .sensorset {
@@ -597,9 +595,9 @@ input[type=number] {
 }
 
 @media screen and (max-height: 450px) {
-    #framie {
+    /* #framie {
         padding-bottom: 40px;
-    }
+    } */
 
     /* #opener {
         height: 40px
@@ -623,9 +621,9 @@ input[type=number] {
         height: 40px
     } */
 
-    #framie {
+    /* #framie {
         padding-bottom: 40px
-    }
+    } */
 
     .allExtra {
         grid-row-gap: 2.5px !important
