@@ -35,14 +35,12 @@ function handleRightClick(event) {
             // Only target the first child
             children.forEach(child => {
                 if (child.id.includes("efc")) { // Check if the ID contains "efc"
-                    target = child;
                     const childUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
-                    console.log("child-clicked on:", childUnderPointer);
+
                     // Reassign the target to the child under the pointer
-                    // if (childUnderPointer) {
-                    //     target = childUnderPointer;
-                    console.log("New target:", target);
-                    // }
+                    if (childUnderPointer) {
+                        target = childUnderPointer;
+                    }
                 }
             });
         }
@@ -77,33 +75,33 @@ function handleRightClick(event) {
             xCoord = event.clientX;
             yCoord = event.clientY;
         }
-        
+
         // Position and show the menu
         menu.style.display = "block";
-        
+
         // Check if the menu element exists and has a valid offsetWidth
         const menuElement = document.getElementById('custom-menu');
         if (menuElement && menuElement.offsetWidth > 0) {
             const menuWidth = menuElement.offsetWidth; // Get the menu width
             const menuHeight = menuElement.offsetHeight; // Get the menu height
-        
+
             let xPosition = xCoord; // Start with the pointer's x-coordinate
-        
+
             // Adjust x position if menu overflows on the right side
             if (xCoord + menuWidth > window.innerWidth) {
                 xPosition = window.innerWidth - menuWidth; // Position it to the left edge of the screen
             }
-        
+
             // Set the left position to the adjusted x-position
             menuElement.style.left = `${xPosition}px`;
-        
+
             let yPosition = yCoord + 5; // Start with the pointer's y-coordinate with an offset
-        
+
             // Adjust y position if menu overflows at the bottom
             if (yCoord + menuHeight > window.innerHeight) {
                 yPosition = window.innerHeight - menuHeight - 5; // Position it above the pointer if it overflows
             }
-        
+
             // Set the top position to the adjusted y-position
             menuElement.style.top = `${yPosition}px`;
         }
@@ -451,7 +449,7 @@ function addResetButton(container, deviceIndex, deviceName) {
     buttonEl.innerText = `reset ${deviceName}`; // Set button label to devicename
     buttonEl.style.backgroundColor = "#7d1414";
     buttonEl.style.color = "white";
-    buttonEl.style.padding  = "2px";
+    buttonEl.style.padding = "2px";
     buttonEl.addEventListener("click", () => deleteDevice(deviceIndex)); // Call deleteDevice with devicename
 
     container.appendChild(buttonEl);
