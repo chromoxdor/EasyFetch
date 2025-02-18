@@ -917,7 +917,10 @@ function loadScript(url, callback) {
 }
 
 function addPointerEvents() {
+    if (!pointerEventsStyle) {
+        
     pointerEventsStyle = document.createElement("style");
+    }
     pointerEventsStyle.innerHTML = "#container * { pointer-events: all !important; }";
     document.head.appendChild(pointerEventsStyle);
 }
@@ -925,6 +928,6 @@ function addPointerEvents() {
 function removePointerEvents() {
     if (pointerEventsStyle) {
         pointerEventsStyle.remove(); // Removes the style element from the document
-        pointerEventsStyle = null; // Reset the reference
+        //pointerEventsStyle = null; // Reset the reference
     }
 }
