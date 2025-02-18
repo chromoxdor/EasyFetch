@@ -449,6 +449,9 @@ function addResetButton(container, deviceIndex, deviceName) {
     // labelEl.innerText = "device:";
     container.appendChild(document.createElement("br"));
     buttonEl.innerText = `reset ${deviceName}`; // Set button label to devicename
+    buttonEl.style.backgroundColor = "#7d1414";
+    buttonEl.style.color = "white";
+    buttonEl.style.padding  = "2px";
     buttonEl.addEventListener("click", () => deleteDevice(deviceIndex)); // Call deleteDevice with devicename
 
     container.appendChild(buttonEl);
