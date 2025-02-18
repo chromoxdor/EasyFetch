@@ -92,7 +92,7 @@ iframe {
 .bigNum {
     display: grid;
     gap: 1vh;
-    justify-content: center;
+    justify-content: start;
     transition: .8s ease-out
 }
 

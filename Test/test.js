@@ -1,7 +1,6 @@
 var firstRun = 1;
 //var wasUsed;
 //var slA; //sliderAmount
-var bigLength = 0;
 var jsonPath;
 var nNr; //nodeNr
 var nP; //nodePath
@@ -31,16 +30,11 @@ var iO;
 var initIP;
 const cmD = "control?cmd=";
 var coloumnSet;
-var myJson2
-const cP = [
-    " #bd964a", " #a56f9f",
-    " #b37b47", " #1e567b",
-    " #ac632f", " #4b9b8a",
-    " #116a6f", " #383861",
-    " #a43f28", " #38b764",
-    " #698c5a", "rgb(100, 64, 57)",
-    " #5d275d"
-];
+var myJson2;
+var baseUrl = "";
+var runonce2 = true;
+var unit;
+var hiddenOverride = false;
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
@@ -59,7 +53,7 @@ async function fetchJson(gN) {
     } catch (err) {
         //console.error("Error processing style sheets:", err);
     }
-    if (!isittime) return;
+    if (!isittime) { return; }
     //-----------------------
     let urlParams = new URLSearchParams(window.location.search);
     myParam = urlParams.get('unit');
@@ -67,16 +61,22 @@ async function fetchJson(gN) {
     if (myParam == null) { hasParams = 0; }
     someoneEn = 0;
 
-    if (!isittime) return;
-
     if (!jsonPath) { jsonPath = `/json`; }
-    response = await getUrl(jsonPath);
+    const response = await getUrl(jsonPath);
     myJson = await response.json();
+
+    unit = myJson.WiFi.Hostname;
+    unitNr = myJson.System['Unit Number'];
+
+    //----------------------------------------------------------------------------------------------------------get EFC Data
+
+    await getEfcData(unit);
+
+    //----------------------------------------------------------------------------------------------------------get EFC Data
+    //console.log("selectionData", selectionData);
     if (!isittime) return;
     html = '';
     let html1 = '', html2 = '', html3 = '';
-    unit = myJson.WiFi.Hostname;
-    unitNr = myJson.System['Unit Number'];
     sysInfo = myJson.System
 
     const sysPairs = [
@@ -112,27 +112,17 @@ async function fetchJson(gN) {
         html += '<div class="sensorset clickables"><div  class="sensors" style="font-weight:bold;">no tasks configured...</div>';
     }
     else {
-        let c = 0;
-        const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
-        const tBGArray = cP.map(color => `background:${color}${bgColor === "0" ? "80" : ""}`);
-
+        //------------------------------------
+        // -----------------------------------------------------------------------    Sensors
         for (const sensor of myJson.Sensors) {
             //myJson.Sensors.forEach(sensor => {
             var bigSpan = "";
             sensorName = sensor.TaskName;
+            deviceName = sensor.TaskName;
             taskEnabled = sensor.TaskEnabled.toString();
+            const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
 
-            if (sensorName.includes("?")) { //if a tile has a custom color
-                tBG = `background:#${sensorName.split("?")[1]}${bgColor === "0" ? "80" : ""}`;
-                sensorName = sensorName.split("?")[0];
-            } else {
-                if ((sensor.TaskDeviceNumber != 1 || !(sensorName).includes("dButtons")) && taskEnabled === "true") {
-                    tBG = tBGArray[c];
-                    c = (c + 1) % tBGArray.length; // Loop back to 0 when reaching the end
-                } else {
-                    tBG = "";
-                }
-            }
+
             //this is a bit to confusing when creating events for now
             var sensorName3 = changeNN(sensorName) //replace "_" and "." in device and "BigValue" names
 
@@ -142,64 +132,107 @@ async function fetchJson(gN) {
             exC = [87, 38, 41, 42].includes(sensor.TaskDeviceNumber); //all PluginNR in an array that need to be excluded 
             exC2 = !sensor.Type?.includes("Display")
 
-            if (taskEnabled === "true" && !sensorName.includes("XX") && !exC && exC2 && !hasParams) {
+            let isHidden = (!hiddenOverride && selectionData[sensor.TaskNumber]?.["A"]?.["hide"] === 1);
+            if (taskEnabled === "true" && !isHidden && !exC && exC2 && !hasParams) {
                 if (sensor.TaskValues) {
                     someoneEn = 1;
-                    firstItem = true;
+                    let firstItem = false;
+                    let firstItemCheck = false;
+
+                    //----------------------------------------------------------------------------------------------   TaskValues 
                     for (const item of sensor.TaskValues) {
+                        //adding an ID for every Tile to be able to access the context menu
+                        let efcID = `efc:${deviceName}=${sensor.TaskDeviceNumber},${sensor.TaskNumber},${item.ValueNumber}`;
+
+
+                        // getting efc data
+
+                        let selectedTaskVal = selectionData?.[sensor.TaskNumber]?.[item.ValueNumber];
+                        let taskVal = selectedTaskVal?.["val"] || "";
+                        let overrideSelection = selectionData[sensor.TaskNumber]?.["A"]?.["val"];
+                        tBG = selectionData[sensor.TaskNumber]?.["A"]?.["color"] &&
+                            selectionData[sensor.TaskNumber]["A"]["color"] !== "#000000"
+                            ? `background:${selectionData[sensor.TaskNumber]["A"]["color"]}${bgColor === "0" ? "80" : ""}`
+                            : "";
+
+                        let kindN = selectedTaskVal?.["unit"] || "";
+
+                        let XI = selectedTaskVal?.["noI"] === 1 ? "noI" : "";
+
+                        const orderA = selectionData[sensor.TaskNumber]?.["A"]?.["order"] || "0";
+                        const order = selectedTaskVal?.["order"] || "0";
+
+                        const sendToValue = selectedTaskVal?.sendTo;
+                        const [sendToNr = "", gpio = ""] = (typeof sendToValue === "string" ? sendToValue.split(",") : []) || [];
+
+                        isHidden = (!hiddenOverride && selectedTaskVal?.["hide"] === 1);
+
+                        if (selectedTaskVal?.["range"]) {
+                            [slMin, slMax, slStep] = selectedTaskVal["range"].split(",");
+                        }
+
+                        // If the condition is not met, return default values
+                        if (taskVal === "thSlider") {
+                            slMin = 5;
+                            slMax = 35;
+                            slStep = 1;
+                        } else {
+                            slMin = 0;
+                            slMax = 2024;
+                            slStep = 1;
+                        }
+
+                        sensorName = overrideSelection && overrideSelection !== "none" ? overrideSelection
+                            : (!taskVal || taskVal === "none") ? sensor.TaskName
+                                : taskVal;
+
+                        if (!firstItemCheck && (!taskVal || taskVal === "" || taskVal === "none" || sensorName === "bigVal")) {
+                            firstItemCheck = true;
+                            firstItem = true;
+                        }
+
                         wasUsed = false;
-                        if (item.Value == "nan") { item.Value = 0; item.NrDecimals = 0; }
+
                         if (typeof item.Value == 'number') {
                             num2Value = item.Value.toFixed(item.NrDecimals);
                         }
                         else { num2Value = item.Value; }
-                        iN = item.Name.toString();
+                        itemName = item.Name.toString();
+                        itemNameChanged = changeNN(itemName);
 
-                        let XI = iN.endsWith("XI") ? " noI " : "";
-                        iN = XI ? iN.slice(0, -2) : iN;
-
-                        //split name into name and unit of measurement 
-                        itemN = iN.split("?")[0];
-                        kindN = iN.split("?")[1];
-                        if (!kindN) { kindN = ""; }
-                        if (kindN == "H") { kindN = "%"; }
-                        if (kindN == "T") {
-
-                            num2Value = num2Value.toString();
-                            num2Value = num2Value.replace('.', ':');
-                            if (item.NrDecimals == 4) {
-                                num2Value = num2Value.replace(/(.*)(.)(.)/, '$1.$2$3');
-                            }
-                            kindN = "";
-                        }
                         //empty button State
                         bS = "";
                         //buttons = html; sensor tiles = html1; slider = html2; big values = html3
                         //switch---------------------------------------------------------
                         if (sensor.TaskDeviceNumber == 1) {
                             wasUsed = true;
-                            if ((iN === "btnStateC" && item.Value < 2) || item.Value === 1) { bS = "on"; }
+                            if ((itemName === "btnStateC" && item.Value < 2) || item.Value === 1) { bS = "on"; }
                             else if (item.Value === 2) { bS = "alert"; }
 
-                            if (sensor.TaskDeviceGPIO1 && (iN === "State" || iN === "iState")) {
-                                if (iN === "iState") { item.Value = item.Value == 1 ? 0 : 1; }
+                            if (sensor.TaskDeviceGPIO1 && (itemName === "State" || itemName === "iState")) {
+                                if (itemName === "iState") { item.Value = item.Value == 1 ? 0 : 1; }
                                 const uttonGP = `${sensorName}|${sensor.TaskDeviceGPIO1}`;
-                                html += `<div class="btnTile ${bS} ${htS1} ${XI}buttonClick('${uttonGP}', '${item.Value}')">${htS2}`;
+                                html += `<div order="${orderA}" id="${efcID}A" class="btnTile ${bS} ${htS1} buttonClick('${uttonGP}', '${item.Value}')">${htS2}`;
 
-                            } else if (iN === "pState" && sensor.TaskDeviceGPIO1) {
+                            } else if (itemName === "pState" && sensor.TaskDeviceGPIO1) {
                                 const uttonGP = `${sensorName}?${sensor.TaskDeviceGPIO1}`;
-                                html += `<div class="${bS} btnTile push sensorset" onpointerdown="playSound(3000), pushClick('${uttonGP}',1)" onpointerup="pushClick('${uttonGP}',0)"><div id="${sensorName}" class="sensors" style="font-weight:bold;">${sensorName}</div></div>`;
+                                html += `<div order="${orderA}" id="${efcID}A" class="${bS} btnTile push sensorset" 
+                                            onpointerdown="if (event.button === 0) { playSound(3000); pushClick('${uttonGP}',1); }" 
+                                            onpointerup="pushClick('${uttonGP}',0)">
+                                            <div id="${sensorName}" class="sensors" style="font-weight:bold;">${sensorName}</div>
+                                        </div>`;
 
-                            } else if (itemN.includes("btnState")) {
-                                if (itemN === "ibtnState") { item.Value = item.Value == 1 ? 0 : 1; }
+                            } else if (itemName.includes("btnState")) {
+                                if (itemName === "ibtnState") { item.Value = item.Value == 1 ? 0 : 1; }
                                 if (kindN) { sensorName = `${sensorName}|${kindN}`; }
-                                html += `<div id="${sensorName}" class="btnTile ${XI} ${bS} ${htS1}buttonClick('${sensorName}', '${item.Value}')">${htS2}`;
+                                html += `<div order="${orderA}" id="${efcID}A" id="${sensorName}" class="btnTile ${XI} ${bS} ${htS1}buttonClick('${sensorName}', '${item.Value}')">${htS2}`;
                             } else {
                                 wasUsed = false;
                             }
                         }
                         //dummy---------------------------------------------------------
-                        if (sensor.TaskDeviceNumber == 33 && !(iN).includes("XX") && !(sensorName).includes("bigVal")) {
+                        if (sensor.TaskDeviceNumber !== 1 && !isHidden && !(sensorName).includes("bigVal")) {
+                            if (sensor.TaskDeviceNumber !== 33) XI = " noI ";
                             wasUsed = true;
                             //button coloring
                             if ((kindN === "C" && item.Value < 2) || item.Value === 1) { bS = "on"; }
@@ -212,58 +245,55 @@ async function fetchJson(gN) {
                                 const isAuto = item.Name.includes("noValAuto");
                                 const shouldAddTile = isAuto ? (window.innerWidth >= 450 && document.cookie.includes("Two=1")) : true;
                                 if (shouldAddTile) {
-                                    html += '<div class="sensorset btnTile"></div>';
+                                    html += `<div order="${order}" class="sensorset btnTile"></div>`;
                                 }
                             }
                             //virtual buttons
                             else if ((sensorName).includes("dButtons")) {
                                 if (item.Value > -1) {
-                                    itemNB = itemN.split("&")[0];
-                                    itemNB2 = changeNN(itemNB);
-                                    const [nr, gpio] = itemN.split("&")[1]?.split("G") || [];
+
                                     if (gpio) {
-                                        getRemoteGPIOState(sensor.TaskNumber, nr, gpio, myJson.System['Unit Number'], item.ValueNumber);
+                                        getRemoteGPIOState(sensor.TaskNumber, sendToNr, gpio, myJson.System['Unit Number'], item.ValueNumber);
                                     }
-                                    const clickHandler = nr === "A" ? `getNodes('${itemNB}')` : `buttonClick('${itemN}')`;
-                                    html += `<div class="btnTile ${XI} ${bS} ${htS1} ${clickHandler}"><div id="${itemNB}" class="sensors ${nr === "A" ? `nodes` : ``}" style="font-weight:bold;">${itemNB2}</div></div>`;
+                                    if (sendToNr) { itemName = `${itemName}&${sendToNr}G${gpio}`; }
+                                    const clickHandler = sendToNr === "A" ? `getNodes('${itemName}')` : `buttonClick('${itemName}')`;
+                                    html += `<div order="${order}" id="${efcID}" class="btnTile ${XI}${bS} ${htS1} ${clickHandler}"><div id="${itemName}" class="sensors ${sendToNr === "A" ? `nodes` : ``}" style="font-weight:bold;">${itemNameChanged}</div></div>`;
                                 }
                             }
                             //push buttons
                             else if (sensorName.includes("pButtons") && item.Value > -1) {
-                                const [itemNB, itemNB2] = [itemN.split("&")[0], changeNN(itemN.split("&")[0])];
-                                html += `<div class="${bS} btnTile push sensorset" onpointerdown="playSound(3000), pushClick('${itemN}',1)" onpointerup="pushClick('${itemN}',0)"><div id="${itemN}" class="sensors" style="font-weight:bold;">${itemNB2}</div></div>`;
+                                html += `<div order="${order}" id="${efcID}" class="${bS} btnTile push sensorset" 
+                                            onpointerdown="if (event.button === 0) { playSound(3000); pushClick('${itemName}',1); }" 
+                                            onpointerup="if (event.button === 0) {pushClick('${itemName}',0)}">
+                                            <div id="${itemName}" class="sensors" style="font-weight:bold;">${itemNameChanged}</div>
+                                        </div>`;
                             }
                             //number input
                             else if (sensorName.includes("vInput")) {
-                                itemN = itemN || "&nbsp;";
-                                itemNB2 = changeNN(itemN);
                                 html += `
-                                        <div class="sensorset clickables">
-                                            <div id="${itemN}" class="sensors" style="font-weight:bold;pointer-events:all" onclick="getInput(this.nextElementSibling.firstElementChild)">
-                                                ${itemNB2}
+                                        <div order="${order}" id="${efcID}" class="sensorset clickables">
+                                            <div id="${itemName}" class="sensors" style="font-weight:bold;pointer-events:all" onclick="getInput(this.nextElementSibling.firstElementChild)">
+                                                ${itemNameChanged}
                                             </div>
                                             <div class="valWrap">
-                                                <input type="number" class="vInputs ${sensor.TaskNumber},${item.ValueNumber}" id="${itemN}" name="${sensorName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
+                                                <input type="number" class="vInputs ${sensor.TaskNumber},${item.ValueNumber}" id="${itemName}" name="${sensorName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
                                                 <div class="kindInput">${kindN}</div>
                                             </div>
                                         </div>`;
                             }
                             //normal slider
                             else if ((sensorName).includes("vSlider")) {
-                                let { slName, slMin, slMax, slStep, slKind } = parseSliderData(iN, "sl");
-                                slName = changeNN(slName);
                                 num2Value = Number(num2Value).toFixed((slStep.toString().split('.')[1] || '').length);
-                                slName = slName === "noVal" ? "&nbsp;" : slName;
-                                slKind = slKind === "H" ? "%" : slKind || "";
-                                html2 += `<div class="sensorset ${XI}"><input type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${iN}" class="slider sL ${sensor.TaskNumber},${item.ValueNumber}`;
+                                itemName = itemName === "noVal" ? "&nbsp;" : itemName;
+                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset"><input type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${sensor.TaskNumber},${item.ValueNumber}`;
                                 //if (sensorName.includes("vSliderSw")) html2 += " swSlider";
                                 html2 += sensorName.includes("nvSlider")
-                                    ? ` noVal"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${slName}</div></div></div>`
-                                    : `"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${slName}</div><div class="sliderAmount" style="text-align: right;">${num2Value}${slKind}</div></div></div>`;
+                                    ? ` noVal"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${itemNameChanged}</div></div></div>`
+                                    : `"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${itemNameChanged}</div><div class="sliderAmount" style="text-align: right;">${num2Value}${kindN}</div></div></div>`;
                             }
                             //time slider
                             else if ((sensorName).includes("tSlider")) {
-                                if (item.NrDecimals !== 4) iN = "For the Time slider the value must have<br>4 decimals!";
+                                if (item.NrDecimals !== 4) itemName = "For the Time slider the value must have<br>4 decimals!";
                                 slT1 = item.Value.toFixed(4);
                                 slT2 = (slT1 + "").split(".")[1];
                                 slT1 = Math.floor(slT1);
@@ -273,32 +303,57 @@ async function fetchJson(gN) {
                                 hour2 = Math.floor(slT2 / 60);
                                 minute2 = slT2 % 60;
                                 const padded2 = minute2.toString().padStart(2, "0");
-                                iN = changeNN(iN);
-                                htmlSlider1 = '<input class="slTS slTHU" type="range" min="0" max="1440" step="5" value="';
-                                html2 += '<div id="' + iN + '" class="slTimeSetWrap ' + sensorName + ' ' + sensor.TaskNumber + ',' + item.ValueNumber + '" style="font-weight:bold;">' + iN + '<div class="slTimeText"> <span class="hAmount1">' + hour1 + '</span><span>:</span><span class="mAmount1">' + padded1 + '</span><span>-</span><span class="hAmount2">' + hour2 + '</span><span>:</span><span class="mAmount2">' + padded2 + '</span></div><div class="slTimeSet">' + htmlSlider1 + slT1 + '" id="' + iN + 'L">' + htmlSlider1 + slT2 + '" id="' + iN + 'R"></div></div>';
+                                itemName = changeNN(itemName);
+                                const htmlSlider1 = `<input class="slTS slTHU" type="range" min="0" max="1440" step="5" value="`;
+
+                                html2 += `
+                                  <div id="${efcID}" class="slTimeSetWrap ${sensorName} ${sensor.TaskNumber},${item.ValueNumber}" style="font-weight:bold;">
+                                    ${itemName}
+                                    <div class="slTimeText">
+                                      <span class="hAmount1">${hour1}</span>:<span class="mAmount1">${padded1}</span>-
+                                      <span class="hAmount2">${hour2}</span>:<span class="mAmount2">${padded2}</span>
+                                    </div>
+                                    <div class="slTimeSet">
+                                      ${htmlSlider1}${slT1}" id="${itemName}L">
+                                      ${htmlSlider1}${slT2}" id="${itemName}R">
+                                    </div>
+                                  </div>
+                                `;
 
                             }
                             // thermostat slider
-                            else if ((sensorName).includes("thermoSlider")) {
-                                if (item.NrDecimals !== 3) iN = "For the Time slider the value must have<br>3 decimals!";
-                                let { slName, slMin, slMax, slStep } = parseSliderData(iN, "th");
-                                slName = changeNN(slName);
+                            else if ((sensorName).includes("thSlider")) {
+                                if (item.NrDecimals !== 3) itemName = "For the Time slider the value must have<br>3 decimals!";
+                                itemName = changeNN(itemName);
                                 slT1 = item.Value.toFixed(3);
                                 slT2 = (slT1 - Math.floor(slT1)) * 100;
                                 slT2 = slT2.toFixed(1)
                                 slT1 = (Math.floor(slT1) / 10).toFixed(1);
                                 //if (Math.floor(slT1) < 10) { slT1N = "&nbsp;" + slT1.toString() }
-                                htmlSlider1 = 'type="range" min="' + slMin + '" max="' + slMax + '"  step="' + slStep + '" value="';
-                                thermoSliderAddon = '<div class="noI" style="z-index: 2; position: absolute">' + slName + '</div>'
-                                html2 += '<div id="' + slName + '" class="slTimeSetWrap ' + sensorName + ' ' + sensor.TaskNumber + ',' + item.ValueNumber + '" style="font-weight:bold;">' + thermoSliderAddon + '<div class="slTimeText"> <div class="even">&#9728;&#xFE0E;<span class="isT"> ' + slT1 + '</span>°C</div><div class="even">&#9737;&#xFE0E;<span class="setT"> ' + slT2 + '</span>°C</div></div><div class="slTimeSet"><input class="slTHU thermO ' + XI + '" ' + htmlSlider1 + slT2 + '" id="setpoint"><input class="slider noI thT" ' + htmlSlider1 + slT1 + '" id="' + slName + '"></div></div>';
+                                const htmlSlider1 = `type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="`;
+                                const thermoSliderAddon = `<div class="noI" style="z-index: 2; position: absolute">${itemName}</div>`;
+
+                                html2 += `
+                                  <div id="${efcID}" class="slTimeSetWrap ${sensorName} ${sensor.TaskNumber},${item.ValueNumber}" style="font-weight:bold;">
+                                    ${thermoSliderAddon}
+                                    <div class="slTimeText">
+                                      <div class="even">&#9728;&#xFE0E;<span class="isT">${slT1}</span>°C</div>
+                                      <div class="even">&#9737;&#xFE0E;<span class="setT">${slT2}</span>°C</div>
+                                    </div>
+                                    <div class="slTimeSet">
+                                      <input class="slTHU thermO ${XI}" ${htmlSlider1}${slT2}" id="setpoint">
+                                      <input class="slider noI thT" ${htmlSlider1}${slT1}" id="${itemName}">
+                                    </div>
+                                  </div>
+                                `;
                             }
                             //neopixel slider
                             else if (sensorName.includes("neoPixel")) {
-                                // Determine the type of the range based on the value of iN
-                                const rangeType = iN === 'h' ? '?H' : iN === 's' ? '?S' : iN === 'v' ? '?V' : '';
+                                // Determine the type of the range based on the value of itemName
+                                const rangeType = itemName === 'h' ? '?H' : itemName === 's' ? '?S' : itemName === 'v' ? '?V' : '';
 
                                 // Create the HTML element with a range input, depending on the type
-                                html2 += `<input type="range" max="${iN === 'h' ? 359 : 100}" min="0" value="${num2Value}" id="${sensorName}${rangeType}" class="sL npSl ${sensor.TaskNumber},${item.ValueNumber} np${iN.toUpperCase()} noVal">`;
+                                html2 += `<input type="range" max="${itemName === 'h' ? 359 : 100}" min="0" value="${num2Value}" id="${sensorName}${rangeType}" class="sL npSl ${sensor.TaskNumber},${item.ValueNumber} np${itemName.toUpperCase()} noVal">`;
                             }
                             else { wasUsed = false; }
                         }
@@ -309,57 +364,70 @@ async function fetchJson(gN) {
 
                             if (firstItem) {
                                 html3 += `<div class="bigNum">`;
-                                bigLength = Math.max(bigLength, sensor.TaskValues.length);
                             }
+        
+                            let htmlBig2 = `<div id="${efcID}" style="${tBG}" class="bigNumWrap `;
 
-                            let htmlBig2 = `<div style="${tBG}" class="bigNumWrap `;
-
-                            if (!iN.includes("XX")) {
-                                if (sensor.TaskValues.length === 3 && !sensor.TaskValues.some(item => iN === 'XX')) {
-                                    if (window.innerWidth < 450 || document.cookie.includes("Two=1")) {
-                                        bigSpan = "bigSpan";
-                                    }
-                                }
+                            if (!isHidden) {
+                                // if (sensor.TaskValues.length === 3) { //&& !sensor.TaskValues.some(item => isHidden)) {
+                                //     bigSpan = "big3";
+                                // }
 
                                 html3 += htmlBig2 + bigSpan + `">`;
-                                let htS3 = `${htmlBig1}${iN}</div><div id="`;
+                                let htS3 = `${htmlBig1}${itemName}</div><div id="`;
 
-                                if (["Clock", "Uhr"].some(v => iN.includes(v))) {
+                                if (["Clock", "Uhr"].some(v => itemName.includes(v))) {
                                     html3 += `${htS3}clock" class="valueBig">${clockBig}</div></div>`;
                                 }
-                                else if (["Datum"].some(v => iN.toLowerCase().includes(v))) {
+                                else if (["Datum"].some(v => itemName.toLowerCase().includes(v))) {
                                     html3 += `${htS3}date" class="valueBig">${dateD}.${dateM}</div></div>`;
                                 }
-                                else if (["Date"].some(v => iN.toLowerCase().includes(v))) {
+                                else if (["Date"].some(v => itemName.toLowerCase().includes(v))) {
                                     html3 += `${htS3}date" class="valueBig">${dateM}-${dateD}</div></div>`;
                                 }
-                                else if (["Year", "Jahr"].some(v => iN.toLowerCase().includes(v))) {
+                                else if (["Year", "Jahr"].some(v => itemName.toLowerCase().includes(v))) {
                                     html3 += `${htS3}year" class="valueBig">${dateY}</div></div>`;
                                 }
-                                else if (iN.includes("noVal")) {
+                                else if (itemName.includes("noVal")) {
                                     html3 += `${htmlBig1}</div><div class="valueBig"></span></div></div>`;
                                 }
                                 else {
-                                    itemN = changeNN(itemN);
-                                    html3 += `${htmlBig1}${itemN}</div><div class="valueBig">${num2Value}<span style="background:none;padding-right: 1%;">${kindN}</span></div></div>`;
+                                    itemName = changeNN(itemName);
+                                    html3 += `${htmlBig1}${itemName}</div><div class="valueBig">${num2Value}<span style="background:none;padding-right: 1%;">${kindN}</span></div></div>`;
                                 }
                             }
                         }
                         // if all items with a specific declaration are processed do the rest---------------------------------------------------------
                         if (!wasUsed) {
-                            //itemN = itemN.replace(/_/g, " ").replace(/\./g, "<br>"); //replace "_" and "." in value names of sensor tiles
+                            //output clock
                             if (sensor.TaskDeviceNumber == 43) {
                                 if (firstItem) {
-                                    if (item.Value === 1) { bS = "on"; } html += '<div class="btnTile ' + bS + ' sensorset clickables" onclick="playSound(3000); splitOn(' + sensor.TaskNumber + '); topF()""><div class="sensors" style="font-weight:bold;">' + sensorName + '</div><div class=even style="font-size: 20pt;">&#x23F2;&#xFE0E;</div></div></div>'
+                                    if (item.Value === 1) { bS = "on"; }
+                                    html += `<div order="${orderA}" id="${efcID}A" class="btnTile ${bS} sensorset clickables" onclick="playSound(3000); splitOn(${sensor.TaskNumber}); topF();">
+                                                <div class="sensors" style="font-weight:bold;">${sensorName}</div>
+                                                <div class="odd" style="font-size: 20pt;">&#x23F2;&#xFE0E;</div>
+                                            </div></div>`;
                                 }
                             }
                             else {
-                                if (firstItem === true) {
-                                    html1 += `<div class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
-                                } if (!item.Name.toString().includes("XX")) {
-                                    //else if (iN.includes("noVal")) { html += '<div class="values therest"><div>&nbsp;</div><div></div></div>'; }
-                                    if (sensor.TaskDeviceNumber == 81) { html1 += '<div class="cron"><div>' + itemN + '</div><div style="font-size: 10pt;">' + item.Value + '</div></div>'; }
-                                    else { html1 += '<div class=row><div class=odd>' + itemN + '</div><div class=even>' + num2Value + ' ' + kindN + '</div></div>'; }
+                                if (firstItem) {
+                                    html1 += `<div order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
+                                }
+
+                                if (!isHidden) {
+                                    if (sensor.TaskDeviceNumber === 81) {
+                                        html1 += `
+                                            <div id="${efcID}" class="cron">
+                                                <div>${itemName}</div>
+                                                <div style="font-size: 10pt;">${item.Value}</div>
+                                            </div>`;
+                                    } else {
+                                        html1 += `
+                                            <div id="${efcID}" class="row">
+                                                <div class="odd">${itemName}</div>
+                                                <div class="even">${num2Value} ${kindN}</div>
+                                            </div>`;
+                                    }
                                 }
                             }
                         }
@@ -374,7 +442,16 @@ async function fetchJson(gN) {
                         html1 = '';
                     }
                 }
-                else { html1 += '<div  class="sensorset clickables" onclick="buttonClick(\'' + sensorName + '\')"><div class="sensors" style="font-weight:bold;">' + sensorName + '</div><div></div><div></div></div>'; someoneEn = 1; document.getElementById('sensorList').innerHTML = html; }
+                else {
+                    html1 += `
+                      <div order="${order}" id="${efcID}" class="sensorset clickables" onclick="buttonClick('${sensorName}')">
+                        <div class="sensors" style="font-weight:bold;">${sensorName}</div>
+                        <div></div><div></div>
+                      </div>
+                    `;
+                    someoneEn = 1;
+                    document.getElementById('sensorList').innerHTML = html1;
+                }
             }
         };
         if (!someoneEn && !hasParams) {
@@ -383,7 +460,8 @@ async function fetchJson(gN) {
     }
     html += html1;
     document.getElementById('sysInfo').innerHTML = syshtml;
-    document.getElementById('sensorList').innerHTML = html;
+    orderFunction(html);
+    //document.getElementById('sensorList').innerHTML = html;
     document.getElementById('sliderList').innerHTML = html2;
     document.getElementById('bigNumber').innerHTML = html3;
     //Things that only need to run once
@@ -424,7 +502,35 @@ async function fetchJson(gN) {
     paramS();
     changeCss();
     resizeText();
-    longPressB();
+    if (!window.configMode) { longPressB(); }
+}
+
+//##############################################################################################################
+//      order the tiles
+//##############################################################################################################
+function orderFunction(html) {
+    // Create a temporary container to parse the HTML string
+    let tempContainer = document.createElement('div');
+    tempContainer.innerHTML = html;
+
+    // Get all the child div elements with the 'order' attribute
+    let divs = Array.from(tempContainer.querySelectorAll('div[order]'));
+
+    // Sort the divs by the 'order' attribute (empty order values go at the end)
+    divs.sort((a, b) => {
+        let orderA = a.getAttribute('order') === "0" ? Infinity : parseInt(a.getAttribute('order'));
+        let orderB = b.getAttribute('order') === "0" ? Infinity : parseInt(b.getAttribute('order'));
+        return orderA - orderB;
+    });
+    // Clear the existing content of the sensorList
+    let sensorList = document.getElementById('sensorList');
+    sensorList.innerHTML = '';  // Clears the container
+
+    // Append each sorted div to the container
+    divs.forEach(div => {
+        sensorList.appendChild(div);
+
+    });
 }
 
 //##############################################################################################################
@@ -436,44 +542,6 @@ async function getRemoteGPIOState(taskNum, unitToNum, gpioNum, unitFromNum, valu
         ? `${cmD}SendTo,${unitFromNum},'taskvalueset,${taskNum},${valueNum},[Plugin%23GPIO%23Pinstate%23${gpioNum}]'`
         : `${cmD}SendTo,${unitToNum},'SendTo,${unitFromNum},"taskvalueset,${taskNum},${valueNum},\\[Plugin%23GPIO%23Pinstate%23${gpioNum}\\]"'`;
     return await getUrl(url);
-}
-
-//##############################################################################################################
-//      min max step for sliders
-//##############################################################################################################
-
-function parseSliderData(iN, SLtype) {
-    let slName, slMin, slMax, slStep, slKind;
-
-    // Check if the string contains exactly 3 occurrences of "?"
-    if ((iN.match(/\?/g) || []).length >= 3) {
-
-        [slName, slMin, slMax, slStep, slKind] = iN.split("?");
-
-        // Check if the first character of slMin or slMax is "m" and replace it with "-"
-        if (slMin.charAt(0) === "m") {
-            slMin = "-" + slMin.slice(1);  // Replace "m" with "-" in slMin
-        }
-
-        if (slMax.charAt(0) === "m") {
-            slMax = "-" + slMax.slice(1);  // Replace "m" with "-" in slMax
-        }
-    } else {
-        slName = iN;
-        // If the condition is not met, return default values
-        if (SLtype === "th") {
-            slMin = 5;
-            slMax = 35;
-            slStep = 0.5;
-        } else {
-            slMin = 0;
-            slMax = 1024;
-            slStep = 1;
-        }
-    }
-
-    // Return the values as an object
-    return { slName, slMin, slMax, slStep, slKind };
 }
 
 //##############################################################################################################
@@ -497,6 +565,23 @@ function changeCss() {
     var list3 = document.querySelectorAll(".bigNum");
     var sList = document.getElementById("sensorList");
     var numSet = sList.getElementsByClassName('sensorset').length;
+    var bigLength = 0;
+
+    // Iterate through each "bigNum" div
+    list3.forEach(div => {
+        const childCount = div.children.length; // Count the number of children
+        if (childCount === 3) {
+            // Add the class "big3" to each child element
+            Array.from(div.children).forEach(child => {
+                child.classList.add('big3');
+            });
+        }
+        // Update the largestNumber if the current div has more children
+        if (div.children.length > bigLength) {
+            bigLength = childCount;
+        }
+    });
+
     z = 0;
     if (!list3.length) z = numSet; //if there are no big values orient on number of "normal" tiles
     if (bigLength == 4 || z > 9) {
@@ -523,6 +608,10 @@ function changeCss() {
     }
     widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
+
+        const elements = document.querySelectorAll(".big3");
+        elements.forEach(el => el.classList.add("bigSpan"));
+
         if (list3.length) { for (let i = 0; i < list3.length; ++i) { list3[i].style.setProperty('grid-template-columns', 'auto auto'); } }
         if (bigLength == 1 || (bigLength == 0 && numSet == 1)) {
             coloumnSet = 1
@@ -539,10 +628,10 @@ function changeCss() {
     if (numSet % coloumnSet != 0 && coloumnSet != 1) {
         calcTile = coloumnSet - (numSet - coloumnSet * Math.floor(numSet / coloumnSet));
         for (let i = 1; i <= calcTile; i++) {
-            html += '<div class="sensorset"></div>'
+            sList.innerHTML += '<div class="sensorset"></div>'
         }
     }
-    document.getElementById('sensorList').innerHTML = html;
+    document.getElementById('sensorList').innerHTML = sList.innerHTML;
     bigLength = 0;
 }
 
@@ -569,6 +658,9 @@ function paramS() {
         if (vVal < 20) vVal = 20;
         sID.style.backgroundImage = 'linear-gradient(to right, hsl(0,0%,' + vVal + '%),hsl(' + hVal + ',100%,50%))';
     });
+    if (window.efc) {
+        addContext();
+    }
 }
 
 //##############################################################################################################
@@ -597,6 +689,9 @@ function addEonce() {
             closeNav()
         }
     })
+    if (window.efc) {
+        createMenu();
+    }
 }
 
 //##############################################################################################################
@@ -871,35 +966,55 @@ function pushClick(sensorName, b) {
 //##############################################################################################################
 //      INPUT TILES EVENT
 //##############################################################################################################
-function getInput(ele, initalCLick) {
-    console.log("getInput", ele, initalCLick);
-    if (event.type === 'click') {
-        isittime = 0;
-        iIV = setTimeout(blurInput, 8000);
-        ele.addEventListener('blur', (event) => {
-            clearTimeout(iIV)
-            isittime = 1;
-            setTimeout(fetchJson, 400);
-        });
-    }
-    if (ele.value.length > 12) { ele.value = ele.value.slice(0, 12); }
-    if (event.key === 'Enter' || event.type === 'click' && !initalCLick) {
-        isittime = 1;
-        if (ele.value) {
-            playSound(4000);
-            const taskValueSetCmd = `taskvalueset,${ele.classList[1]},${ele.value}`;
-            if (unitNr === unitNr1) {
-                getUrl(taskValueSetCmd);
-            } else {
-                getUrl(`${cmD}SendTo,${nNr},"${taskValueSetCmd}"`);
-            }
-            buttonClick(ele.id);
+function getInput(ele, initialClick) {
+    ele.addEventListener('click', (e) => {
+        if (e.type === 'click') {
+            isittime = 0;
+            iIV = setTimeout(blurInput, 8000);
+            ele.addEventListener('blur', (event) => {
+                clearTimeout(iIV);
+                isittime = 1;
+                setTimeout(fetchJson, 400);
+            });
         }
-        else { setTimeout(fetchJson, 400); }
-        clearTimeout(iIV);
-    }
-    else if (event.key === 'Escape') { document.getElementById(ele.id).value = ""; }
-    else { clearTimeout(iIV); iIV = setTimeout(blurInput, 5000); }
+
+        // Truncate the value if it exceeds 12 characters
+        if (ele.value.length > 12) {
+            ele.value = ele.value.slice(0, 12);
+        }
+
+        // Handle 'Enter' or 'click' event with 'initialClick' flag
+        if ((e.key === 'Enter' || e.type === 'click' && !initialClick)) {
+            isittime = 1;
+
+            if (ele.value) {
+                playSound(4000);
+
+                // Dynamic task value command
+                const taskValueSetCmd = `taskvalueset,${ele.classList[1]},${ele.value}`;
+
+                if (unitNr === unitNr1) {
+                    getUrl(cmD + taskValueSetCmd);
+                } else {
+                    getUrl(`${cmD}SendTo,${nNr},"${taskValueSetCmd}"`);
+                }
+
+                buttonClick(ele.id);
+            } else {
+                setTimeout(fetchJson, 400);
+            }
+            clearTimeout(iIV);
+        }
+        // Handle Escape key press to clear the input value
+        else if (e.key === 'Escape') {
+            document.getElementById(ele.id).value = "";
+        }
+        // If no condition is met, set a timeout for blur
+        else {
+            clearTimeout(iIV);
+            iIV = setTimeout(blurInput, 5000);
+        }
+    });
 }
 
 //##############################################################################################################
@@ -956,8 +1071,8 @@ async function getNodes(sensorName, allNodes, ch) {
 
     let html4 = '';
     let i = -1;
-    
-    if  (!ch) {
+
+    if (!ch) {
         response = await getUrl(`/json`);
         myJson2 = await response.json();
         console.log("myJson2");
@@ -1003,10 +1118,12 @@ async function getNodes(sensorName, allNodes, ch) {
 //##############################################################################################################
 function nodeChange(event) {
     const node = myJson2.nodes[event];
+    selectionData = {};
+    runonce2 = true;
     if (node) {
         nNr = node.nr;
         nN = node.name;
-        const baseUrl = `http://${node.ip}`;
+        baseUrl = `http://${node.ip}`;
         nP = `${baseUrl}/tools`;
         nP2 = `${baseUrl}/devices`;
         //console.log("......nP2:"+nP2);
@@ -1109,6 +1226,7 @@ function mC(y) {
 }
 
 function longPressB() {
+    setLongPressDelay(600)
     const longButtons = document.querySelectorAll(".clickables");
     longButtons.forEach(longButton => {
         longButton.addEventListener('long-press', async function (e) {
@@ -1185,16 +1303,68 @@ function playSound(freQ) {
 }
 //timeout fetch requests
 async function getUrl(url) {
-    let controller = new AbortController();
-    setTimeout(() => controller.abort(), 2000);
-    try {
-        response = await fetch(url, {
-            signal: controller.signal
-        });
-    } catch {
-        receiveNote("R");
+    if (!window.configMode || url.endsWith("json")) {
+        console.log(url);
+        let controller = new AbortController();
+        setTimeout(() => controller.abort(), 2000);
+
+        try {
+            let response = await fetch(url, {
+
+                signal: controller.signal
+            });
+            return response; // Ensure response is returned if successful
+        } catch (error) {
+            receiveNote("R"); // Handle the error
+            return null; // Abort further execution by returning null
+        }
     }
-    return response;
+}
+
+async function getEfcData(unit) {
+
+    if (runonce2 && !hasParams) {
+        // If efc.json fetch fails, try to fetch mein_efc.json
+        try {
+            let response = await getUrl(`/main_efc.json`);
+
+            // If fetching mein_efc.json fails, throw an error
+            if (!response || !response.ok) {
+                throw new Error("Failed to fetch /main_efc.json");
+            }
+
+            // If mein_efc.json is fetched successfully, parse it
+            let mainEfcData = await response.json();
+            efcArray = mainEfcData;
+            console.log("Data from main_efc.json:", unit);
+
+            // Fill selectionData with the entry matching the unitname key
+            selectionData = mainEfcData.find(entry => entry.unit === unit);
+            console.log("selectionData after matching unitname:", selectionData);
+
+        } catch (error) {
+            console.log("Error fetching /main_efc.json:", error.message);
+            try {
+                // First, attempt to fetch efc.json
+                let response = await getUrl(`${baseUrl}/efc.json`);
+
+                // If fetching efc.json fails, throw an error and proceed to the next fetch
+                if (!response || !response.ok) {
+                    throw new Error("Failed to fetch /efc.json");
+                }
+
+                // If efc.json is fetched successfully, parse and assign to selectionData
+                selectionData = await response.json();
+                console.log("selectionData from efc.json:", selectionData);
+
+            } catch (error) {
+                console.log("Error fetching /efc.json:", error.message);
+            }
+        }
+        if (!selectionData) { selectionData = {}; }
+        // Finally, ensure runonce2 is set to false to prevent repeated execution
+        runonce2 = false;
+    }
 }
 
 document.addEventListener("visibilitychange", () => {
@@ -1293,4 +1463,4 @@ window.addEventListener("beforeinstallprompt", (event) => {
 // ----------------------------------------------------------------------------------------------------------------
 
 
-!function (e, t) { "use strict"; let n = null; const o = 10, a = 10; let i = { x: 0, y: 0 }; const s = "ontouchstart" in e || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0, u = "PointerEvent" in e || e.navigator && "msPointerEnabled" in e.navigator ? { down: "pointerdown", up: "pointerup", move: "pointermove", leave: "pointerleave" } : s ? { down: "touchstart", up: "touchend", move: "touchmove", leave: "touchleave" } : { down: "mousedown", up: "mouseup", move: "mousemove", leave: "mouseleave" }; "function" != typeof e.CustomEvent && (e.CustomEvent = function (e, n = { bubbles: !1, cancelable: !1, detail: void 0 }) { const o = t.createEvent("CustomEvent"); return o.initCustomEvent(e, n.bubbles, n.cancelable, n.detail), o }, e.CustomEvent.prototype = e.Event.prototype); const c = e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || (t => e.setTimeout(t, 1e3 / 60)); function r(e) { v(); const n = l(e), o = new CustomEvent("long-press", { bubbles: !0, cancelable: !0, detail: (a = n, { clientX: a.clientX, clientY: a.clientY, offsetX: a.offsetX, offsetY: a.offsetY, pageX: a.pageX, pageY: a.pageY, screenX: a.screenX, screenY: a.screenY }) }); var a; this.dispatchEvent(o) || t.addEventListener("click", d, !0) } function l(e) { return e.changedTouches ? e.changedTouches[0] : e } function m(o) { v(); const a = o.target, i = parseInt(function (e, n, o) { for (; e && e !== t.documentElement;) { const t = e.getAttribute(n); if (t) return t; e = e.parentNode } return o }(a, "data-long-press-delay", "1000"), 10); n = function (t, n) { if (!c) return e.setTimeout(t, n); const o = (new Date).getTime(), a = {}, i = () => { (new Date).getTime() - o >= n ? t() : a.value = c(i) }; return a.value = c(i), a }(r.bind(a, o), i) } function v() { var t; (t = n) && (e.cancelAnimationFrame || e.clearTimeout)(t.value), n = null } function d(e) { t.removeEventListener("click", d, !0), e.preventDefault(), e.stopImmediatePropagation() } t.addEventListener(u.down, (function (e) { const t = l(e); i = { x: t.clientX, y: t.clientY }, m(e) }), !0), t.addEventListener(u.move, (function (e) { const t = l(e); (Math.abs(i.x - t.clientX) > o || Math.abs(i.y - t.clientY) > a) && v() }), !0), t.addEventListener(u.up, v, !0), t.addEventListener(u.leave, v, !0), t.addEventListener("wheel", v, !0), t.addEventListener("scroll", v, !0), navigator.userAgent.toLowerCase().includes("android") || t.addEventListener("contextmenu", v, !0) }(window, document);
+!function (e, n) { "use strict"; let t = null; const o = 10, a = 10; let i = { x: 0, y: 0 }, s = 1e3; const c = "ontouchstart" in e || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0, r = "PointerEvent" in e || e.navigator && "msPointerEnabled" in e.navigator ? { down: "pointerdown", up: "pointerup", move: "pointermove", leave: "pointerleave" } : c ? { down: "touchstart", up: "touchend", move: "touchmove", leave: "touchleave" } : { down: "mousedown", up: "mouseup", move: "mousemove", leave: "mouseleave" }; function u(e) { v(); const t = l(e), o = new CustomEvent("long-press", { bubbles: !0, cancelable: !0, detail: (a = t, { clientX: a.clientX, clientY: a.clientY, offsetX: a.offsetX, offsetY: a.offsetY, pageX: a.pageX, pageY: a.pageY, screenX: a.screenX, screenY: a.screenY }) }); var a; this.dispatchEvent(o) || n.addEventListener("click", m, !0) } function l(e) { return e.changedTouches ? e.changedTouches[0] : e } function d(e, n = s) { v(); const o = e.target; t = setTimeout((() => u.call(o, e)), n) } function v() { t && (clearTimeout(t), t = null) } function m(e) { n.removeEventListener("click", m, !0), e.preventDefault(), e.stopImmediatePropagation() } n.addEventListener(r.down, (function (e) { const n = l(e); i = { x: n.clientX, y: n.clientY }, d(e) }), !0), n.addEventListener(r.move, (function (e) { const n = l(e); (Math.abs(i.x - n.clientX) > o || Math.abs(i.y - n.clientY) > a) && v() }), !0), n.addEventListener(r.up, v, !0), n.addEventListener(r.leave, v, !0), n.addEventListener("wheel", v, !0), n.addEventListener("scroll", v, !0), navigator.userAgent.toLowerCase().includes("android") || n.addEventListener("contextmenu", v, !0), e.setLongPressDelay = function (e) { s = e } }(window, document);
