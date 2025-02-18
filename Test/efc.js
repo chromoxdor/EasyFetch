@@ -7,12 +7,10 @@ var saveButton = null;
 var resetButton = null;
 var toggleButton = null;
 let efcArray = [];
+let pointerEventsStyle;
 
 
 function addContext() {
-    //setLongPressDelay(200)
-    // Handle touchstart to simulate right-click action with 2 fingers
-    //document.addEventListener("long-press", handleRightClick, true);
 
     // Handle right-click (contextmenu)
     document.addEventListener("contextmenu", handleRightClick, true);  // Use capturing phase for contextmenu
@@ -23,36 +21,33 @@ function handleRightClick(event) {
     console.log("Right-clicked", event);
     let target = event.target.closest('div[id^="efc"]');
     console.log("Target:", target);
+    addPointerEvents(); // Adds the style to access locked elements
 
-    const style = document.createElement("style");
-    style.innerHTML = "#container * { pointer-events: all !important; }";
-    document.head.appendChild(style);
-
-    //console.log("Target:", target);
-    // If no target is found, process the parent and enable pointer-events on the children
-    if (!target) {
+    // //console.log("Target:", target);
+    // // If no target is found, process the parent and enable pointer-events on the children
+    if (target === null) {
         let target2 = event.target;
-
+        console.log("Target2:", target2);
         // Enable pointer-events for all children of the target element that have the "efc" class
         const children = Array.from(target2.children);  // Convert HTMLCollection to an array
+        console.log("Children:", children);
         if (children.length > 0) {
             // Only target the first child
             children.forEach(child => {
                 if (child.id.includes("efc")) { // Check if the ID contains "efc"
+                    target = child;
                     const childUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
-                    //console.log("child-clicked on:", childUnderPointer);
+                    console.log("child-clicked on:", childUnderPointer);
                     // Reassign the target to the child under the pointer
-                    if (childUnderPointer) {
-                        target = childUnderPointer;
-                        //console.log("New target:", target);
-                    }
+                    // if (childUnderPointer) {
+                    //     target = childUnderPointer;
+                    console.log("New target:", target);
+                    // }
                 }
             });
         }
     }
-    setTimeout(() => {
-        document.head.removeChild(style);
-    }, 50);
+
 
     // Only proceed if target is valid (i.e., not null or undefined)
     if (target && target.id.startsWith("efc")) {
@@ -75,24 +70,32 @@ function handleRightClick(event) {
         // Clear and rebuild the context menu based on the device type
         rebuildContextMenu();
 
-        if (event.detail.clientX) { xCoord = event.detail.clientX; yCoord = event.detail.clientY; }
-        else { xCoord = event.clientX; yCoord = event.clientY; }
+        if (event.detail.clientX) {
+            xCoord = event.detail.clientX;
+            yCoord = event.detail.clientY;
+        } else {
+            xCoord = event.clientX;
+            yCoord = event.clientY;
+        }
+        
         // Position and show the menu
         menu.style.display = "block";
         menu.style.top = `${yCoord + 5}px`;
-
+        
         const menuElement = document.getElementById('custom-menu');
-
+        
         // Check if the element exists and has a valid offsetWidth
         if (menuElement && menuElement.offsetWidth > 0) {
-            const menueWidth = document.getElementById('custom-menu').offsetWidth;
-            let xWidth = 0;
-            if (xCoord + menueWidth > window.innerWidth) {
-                xWidth = xCoord - menueWidth
-            } else {
-                xWidth = xCoord
+            const menuWidth = menuElement.offsetWidth;  // Use menuElement directly
+            let xPosition = xCoord;  // Start with the pointer's x-coordinate
+        
+            // If the menu goes beyond the right edge of the window, adjust the x-position
+            if (xCoord + menuWidth > window.innerWidth) {
+                xPosition = window.innerWidth - menuWidth; // Position it to the left of the screen
             }
-            menu.style.left = `${xWidth}px`;
+        
+            // Set the left position to the dynamically adjusted xPosition
+            menuElement.style.left = `${xPosition}px`;
         }
     } else {
         updateSaveButton("hide");
@@ -129,14 +132,13 @@ function highlightMatchingDivs(elementId, elementClass) {
 function removeHighlighting() {
     // Select the container element
     const container = document.getElementById("allList");
-    console.log("Container:", container);
 
     // Remove transition style to avoid any animation effects
     container.style.setProperty("transition-property", "none");
 
     // Select all divs within the container and remove their outline
     const divs = container.querySelectorAll('div');
-    divs.forEach(div => div.style.outline = 'none');
+    divs.forEach(div => div.style.outline = '');
 
     setTimeout(() => {
         container.style.removeProperty("transition");
@@ -252,21 +254,22 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
             addCheckbox(formFields, " no input", "noI");
         }
     }
-    if (deviceType === 33) {
-        if (["vSlider", "nvSlider", "thSlider"].includes(selectedOption)) {
-            addTextInput(formFields, "range: ", "range", selectedOption);
-        }
 
-        if (["dButtons", "Slider"].includes(selectedOption)) {
-            addCheckbox(formFields, " no input", "noI");
-        }
+    if (["vSlider", "nvSlider", "thSlider"].includes(selectedOption)) {
+        addTextInput(formFields, "range: ", "range", selectedOption);
     }
+
+    if (["dButtons", "vSlider"].includes(selectedOption) && deviceType === 33) {
+        addCheckbox(formFields, " no input", "noI");
+    }
+
 
     if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1) {
         addTextInput(formFields, "unit: ", "unit");
     }
 
-    if (["dButtons", "pButtons", "vSlider", "nvSlider"].includes(selectedOption) && deviceType === 33) {
+    //if (["dButtons", "pButtons", "vSlider", "nvSlider"].includes(selectedOption) && deviceType === 33) {
+    if (["dButtons"].includes(selectedOption) && deviceType === 33) {
         addTextInput(formFields, "sendTo: ", "sendTo");
     }
 
@@ -278,7 +281,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
     if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || (deviceType === 33 && !["none", "vSlider", "nvSlider", "thSlider", "tSlider", "bigVal"].includes(selectedOption))) {
         addNumberInput(formFields, "order: ", "order");
     }
-
+    console.log("has no empty", selectionData);
     if (selectedOption !== "none" || hasNonEmptyValues(selectionData, deviceIndex)) {
         addResetButton(formFields, deviceIndex, deviceName);
     }
@@ -299,8 +302,6 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         // Loop through the form fields and populate them with saved values
         formFields.querySelectorAll("input, select").forEach(input => {
             let key = input.dataset.key;
-            console.log("dtatakex", key);  // Log key and value to see if it works
-
 
             if (savedData !== undefined && savedData[key] !== undefined) {
                 if (input.type === "checkbox") {
@@ -312,7 +313,6 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
                 } else if (input.tagName.toLowerCase() === "val") {
                     // For dropdown, set the saved value
                     input.value = savedData[key];
-                    console.log("Saved Value:", savedData[key]);  // Log the saved value
                 } else {
                     // For other inputs, set the saved value
                     input.value = savedData[key];
@@ -671,24 +671,20 @@ function saveToFile(param) {
 
     let dataStrArr = JSON.stringify(efcArray, null, 2);
 
-    // Load pako and then process both gzip files
+    // Load pako and then process gzip files
     loadScript("https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js", function () {
         console.log("Pako loaded successfully.");
 
-        // Compress both JSON files using pako.gzip
+        // Compress efc.json
         const compressedDataEfc = pako.gzip(dataStr);
-        const compressedDataMain = pako.gzip(dataStrArr);
+        console.log("Compressed efc.json:", compressedDataEfc);
 
-
-        // Create gzipped File objects
+        // Create gzipped File object for efc.json
         const fileEfc = new File([compressedDataEfc], 'efc.json.gz', { type: 'application/gzip' });
-        const fileMain = new File([compressedDataMain], 'main_efc.json.gz', { type: 'application/gzip' });
 
-        // Create FormData objects for each file
+        // Create FormData and append efc.json.gz
         const formDataEfc = new FormData();
-        const formDataMain = new FormData();
         formDataEfc.append('file', fileEfc);
-        formDataMain.append('file', fileMain);
 
         const uploadUrl = `${baseUrl}/upload`;
 
@@ -697,8 +693,26 @@ function saveToFile(param) {
             fetchFile(uploadUrl, formDataEfc);
         }
 
-        // Upload both gzipped files
-        fetchFile(`/upload`, formDataMain);
+        // Only compress and send main_efc.json.gz if isMain is false
+        if (isMain) {
+            console.log("Processing main_efc.json.gz ");
+
+            // Compress main_efc.json
+            const compressedDataMain = pako.gzip(dataStrArr);
+            console.log("Compressed main_efc.json:", compressedDataMain);
+
+            // Create gzipped File object for main_efc.json
+            const fileMain = new File([compressedDataMain], 'main_efc.json.gz', { type: 'application/gzip' });
+
+            // Create FormData and append main_efc.json.gz
+            const formDataMain = new FormData();
+            formDataMain.append('file', fileMain);
+
+            // Upload main_efc.json.gz
+            fetchFile(`/upload`, formDataMain);
+        } else {
+            console.log("Skipping main_efc.json.gz because isMain is true.");
+        }
     });
 
     updateSaveButton("hide");
@@ -769,6 +783,7 @@ function createMenu() {
         if (!menu.contains(event.target) && !event.target.className.includes("vInputs")) {
             menu.style.display = "none";
             removeHighlighting();
+            removePointerEvents();
             //document.querySelectorAll('div[id^="efc"]').forEach(el => el.style.outline = "");
             isittime = true;
         }
@@ -779,9 +794,10 @@ function createMenu() {
     menu.id = "custom-menu";
     menu.style.position = "absolute";
     menu.style.display = "none";
-    menu.style.background = "white";
+    menu.style.background = "#3a3a3ad9";
     menu.style.border = "1px solid #ccc";
     menu.style.padding = "10px";
+    menu.style.color = "white";
     document.body.appendChild(menu);
     createSaveButton();
     updateSaveButton("hide");   // Update the UI button
@@ -889,3 +905,15 @@ function loadScript(url, callback) {
     document.head.appendChild(script);
 }
 
+function addPointerEvents() {
+    pointerEventsStyle = document.createElement("style");
+    pointerEventsStyle.innerHTML = "#container * { pointer-events: all !important; }";
+    document.head.appendChild(pointerEventsStyle);
+}
+
+function removePointerEvents() {
+    if (pointerEventsStyle) {
+        pointerEventsStyle.remove(); // Removes the style element from the document
+        pointerEventsStyle = null; // Reset the reference
+    }
+}

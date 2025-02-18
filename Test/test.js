@@ -35,6 +35,7 @@ var baseUrl = "";
 var runonce2 = true;
 var unit;
 var hiddenOverride = false;
+var isMain = true;
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
@@ -1356,7 +1357,7 @@ async function getEfcData(unit) {
                 // If efc.json is fetched successfully, parse and assign to selectionData
                 selectionData = await response.json();
                 console.log("selectionData from efc.json:", selectionData);
-
+                isMain = false;
             } catch (error) {
                 console.log("Error fetching /efc.json:", error.message);
             }
