@@ -93,7 +93,8 @@ iframe {
     display: grid;
     gap: 1vh;
     justify-content: start;
-    transition: .8s ease-out
+    transition: .8s ease-out;
+    border-radius: 5px
 }
 
 /* .bigNumOne {
