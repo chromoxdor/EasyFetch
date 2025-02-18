@@ -170,17 +170,18 @@ async function fetchJson(gN) {
 
                         if (selectedTaskVal?.["range"]) {
                             [slMin, slMax, slStep] = selectedTaskVal["range"].split(",");
-                        }
-
-                        // If the condition is not met, return default values
-                        if (taskVal === "thSlider") {
-                            slMin = 5;
-                            slMax = 35;
-                            slStep = 1;
                         } else {
-                            slMin = 0;
-                            slMax = 2024;
-                            slStep = 1;
+
+                            // If the condition is not met, return default values
+                            if (taskVal === "thSlider") {
+                                slMin = 5;
+                                slMax = 35;
+                                slStep = 1;
+                            } else {
+                                slMin = 0;
+                                slMax = 1024;
+                                slStep = 1;
+                            }
                         }
 
                         sensorName = overrideSelection && overrideSelection !== "none" ? overrideSelection
@@ -366,7 +367,7 @@ async function fetchJson(gN) {
                             if (firstItem) {
                                 html3 += `<div class="bigNum">`;
                             }
-        
+
                             let htmlBig2 = `<div id="${efcID}" style="${tBG}" class="bigNumWrap `;
 
                             if (!isHidden) {
