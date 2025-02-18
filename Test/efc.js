@@ -80,22 +80,32 @@ function handleRightClick(event) {
         
         // Position and show the menu
         menu.style.display = "block";
-        menu.style.top = `${yCoord + 5}px`;
         
+        // Check if the menu element exists and has a valid offsetWidth
         const menuElement = document.getElementById('custom-menu');
-        
-        // Check if the element exists and has a valid offsetWidth
         if (menuElement && menuElement.offsetWidth > 0) {
-            const menuWidth = menuElement.offsetWidth;  // Use menuElement directly
-            let xPosition = xCoord;  // Start with the pointer's x-coordinate
+            const menuWidth = menuElement.offsetWidth; // Get the menu width
+            const menuHeight = menuElement.offsetHeight; // Get the menu height
         
-            // If the menu goes beyond the right edge of the window, adjust the x-position
+            let xPosition = xCoord; // Start with the pointer's x-coordinate
+        
+            // Adjust x position if menu overflows on the right side
             if (xCoord + menuWidth > window.innerWidth) {
-                xPosition = window.innerWidth - menuWidth; // Position it to the left of the screen
+                xPosition = window.innerWidth - menuWidth; // Position it to the left edge of the screen
             }
         
-            // Set the left position to the dynamically adjusted xPosition
+            // Set the left position to the adjusted x-position
             menuElement.style.left = `${xPosition}px`;
+        
+            let yPosition = yCoord + 5; // Start with the pointer's y-coordinate with an offset
+        
+            // Adjust y position if menu overflows at the bottom
+            if (yCoord + menuHeight > window.innerHeight) {
+                yPosition = window.innerHeight - menuHeight - 5; // Position it above the pointer if it overflows
+            }
+        
+            // Set the top position to the adjusted y-position
+            menuElement.style.top = `${yPosition}px`;
         }
     } else {
         updateSaveButton("hide");
