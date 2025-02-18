@@ -820,49 +820,49 @@ function updateJsonArray(newData) {
 //    getEfcData()
 //##############################################################################################################
 
-async function getEfcData() {
-    if (runonce2) {
-        // If efc.json fetch fails, try to fetch mein_efc.json
-        try {
-            let response = await getUrl(`/main_efc.json.gz`);
+// async function getEfcData() {
+//     if (runonce2) {
+//         // If efc.json fetch fails, try to fetch mein_efc.json
+//         try {
+//             let response = await getUrl(`/main_efc.gz`);
 
-            // If fetching mein_efc.json fails, throw an error
-            if (!response || !response.ok) {
-                throw new Error("Failed to fetch /main_efc.json");
-            }
+//             // If fetching mein_efc.json fails, throw an error
+//             if (!response || !response.ok) {
+//                 throw new Error("Failed to fetch /main_efc.json");
+//             }
 
-            // If mein_efc.json is fetched successfully, parse it
-            let mainEfcData = await response.json();
-            efcArray = mainEfcData;
+//             // If mein_efc.json is fetched successfully, parse it
+//             let mainEfcData = await response.json();
+//             efcArray = mainEfcData;
 
-            // Fill selectionData with the entry matching the unitname key
-            selectionData = mainEfcData.find(entry => entry.unit === unit);
-            console.log("selectionData after matching unitname:", selectionData);
+//             // Fill selectionData with the entry matching the unitname key
+//             selectionData = mainEfcData.find(entry => entry.unit === unit);
+//             console.log("selectionData after matching unitname:", selectionData);
 
-        } catch (error) {
-            console.log("Error fetching /main_efc.json:", error.message);
-            try {
-                // First, attempt to fetch efc.json
-                let response = await getUrl(`${baseUrl}/efc.json`);
+//         } catch (error) {
+//             console.log("Error fetching /main_efc.json:", error.message);
+//             try {
+//                 // First, attempt to fetch efc.json
+//                 let response = await getUrl(`${baseUrl}/efc.json`);
 
-                // If fetching efc.json fails, throw an error and proceed to the next fetch
-                if (!response || !response.ok) {
-                    throw new Error("Failed to fetch /efc.json");
-                }
+//                 // If fetching efc.json fails, throw an error and proceed to the next fetch
+//                 if (!response || !response.ok) {
+//                     throw new Error("Failed to fetch /efc.json");
+//                 }
 
-                // If efc.json is fetched successfully, parse and assign to selectionData
-                selectionData = await response.json();
-                console.log("selectionData from efc.json:", selectionData);
+//                 // If efc.json is fetched successfully, parse and assign to selectionData
+//                 selectionData = await response.json();
+//                 console.log("selectionData from efc.json:", selectionData);
 
-            } catch (error) {
-                console.log("Error fetching /efc.json:", error.message);
-            }
-        }
-        if (!selectionData) { selectionData = {}; }
-        // Finally, ensure runonce2 is set to false to prevent repeated execution
-        runonce2 = false;
-    }
-}
+//             } catch (error) {
+//                 console.log("Error fetching /efc.json:", error.message);
+//             }
+//         }
+//         if (!selectionData) { selectionData = {}; }
+//         // Finally, ensure runonce2 is set to false to prevent repeated execution
+//         runonce2 = false;
+//     }
+// }
 
 function removeEmptyKeys(obj) {
     // Iterate over each key in the object

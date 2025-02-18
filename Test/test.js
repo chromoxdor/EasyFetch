@@ -1326,7 +1326,7 @@ async function getEfcData(unit) {
     if (runonce2 && !hasParams) {
         // If efc.json fetch fails, try to fetch mein_efc.json
         try {
-            let response = await getUrl(`/main_efc.json`);
+            let response = await getUrl(`/main_efc.json.gz`);
 
             // If fetching mein_efc.json fails, throw an error
             if (!response || !response.ok) {
