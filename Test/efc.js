@@ -668,36 +668,36 @@ function saveToFile(param) {
         }
         console.log("Deleting file...");
     }
-    
+
     let dataStrArr = JSON.stringify(efcArray, null, 2);
-    const file = new File([dataStr], 'efc.json', { type: 'application/json' });
 
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const uploadUrl = `${baseUrl}/upload`;
-
-    console.log("uploadUrl:", unitNr, unitNr1);
-    if (unitNr !== unitNr1) {
-        fetchFile(uploadUrl, formData);
-    }
-
-    // Load pako and then process the gzip file
+    // Load pako and then process both gzip files
     loadScript("https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js", function () {
         console.log("Pako loaded successfully.");
 
-        // Compress the data using pako.gzip
-        const compressedData = pako.gzip(dataStrArr);
-        console.log("compressedData:", compressedData);
+        // Compress both JSON files using pako.gzip
+        const compressedDataEfc = pako.gzip(dataStr);
+        const compressedDataMain = pako.gzip(dataStrArr);
 
-        // Create the gzipped file
-        const fileMain = new File([compressedData], 'main_efc.json.gz', { type: 'application/gzip' });
 
-        // Create new FormData and append the compressed file
+        // Create gzipped File objects
+        const fileEfc = new File([compressedDataEfc], 'efc.json.gz', { type: 'application/gzip' });
+        const fileMain = new File([compressedDataMain], 'main_efc.json.gz', { type: 'application/gzip' });
+
+        // Create FormData objects for each file
+        const formDataEfc = new FormData();
         const formDataMain = new FormData();
+        formDataEfc.append('file', fileEfc);
         formDataMain.append('file', fileMain);
 
-        // Upload the gzipped file after it's created
+        const uploadUrl = `${baseUrl}/upload`;
+
+        console.log("uploadUrl:", unitNr, unitNr1);
+        if (unitNr !== unitNr1) {
+            fetchFile(uploadUrl, formDataEfc);
+        }
+
+        // Upload both gzipped files
         fetchFile(`/upload`, formDataMain);
     });
 

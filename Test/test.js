@@ -1346,7 +1346,7 @@ async function getEfcData(unit) {
             console.log("Error fetching /main_efc.json:", error.message);
             try {
                 // First, attempt to fetch efc.json
-                let response = await getUrl(`${baseUrl}/efc.json`);
+                let response = await getUrl(`${baseUrl}/efc.json.gz`);
 
                 // If fetching efc.json fails, throw an error and proceed to the next fetch
                 if (!response || !response.ok) {
