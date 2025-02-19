@@ -359,6 +359,10 @@ iframe {
     cursor: pointer;
 }
 
+#sensorList > * {
+    min-height: 60px
+}
+
 .valueBig {
     font-size: 27pt;
     text-align: right;
@@ -424,8 +428,7 @@ input[type=number] {
 }
 
 .btnTile {
-    background: #635d5d;
-    min-height: 60px;
+    background: #635d5d
 }
 
 .sensors {

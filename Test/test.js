@@ -137,7 +137,7 @@ async function fetchJson(gN) {
             if (taskEnabled === "true" && !isHidden && !exC && exC2 && !hasParams) {
 
                 const orderA = selectionData[sensor.TaskNumber]?.["A"]?.["order"] || "0";
-                let efcID = `efc:${deviceName}=${sensor.TaskDeviceNumber},${sensor.TaskNumber}`;
+                let efcIDA = `efc:${deviceName}=${sensor.TaskDeviceNumber},${sensor.TaskNumber}`;
 
                 if (sensor.TaskValues) {
                     someoneEn = 1;
@@ -147,7 +147,7 @@ async function fetchJson(gN) {
                     //----------------------------------------------------------------------------------------------   TaskValues 
                     for (const item of sensor.TaskValues) {
                         //adding an ID for every Tile to be able to access the context menu
-                        efcID = `${efcID},${item.ValueNumber}`;
+                        let efcID = `${efcIDA},${item.ValueNumber}`;
 
 
                         // getting efc data
