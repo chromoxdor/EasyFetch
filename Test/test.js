@@ -1121,6 +1121,7 @@ async function getNodes(sensorName, allNodes, ch) {
 function nodeChange(event) {
     const node = myJson2.nodes[event];
     selectionData = {};
+    updateSaveButton("hide");
     runonce2 = true;
     if (node) {
         nNr = node.nr;

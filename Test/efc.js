@@ -7,8 +7,7 @@ var saveButton = null;
 var resetButton = null;
 var toggleButton = null;
 let efcArray = [];
-let pointerEventsStyle;
-
+const pointerEventsStyle = document.createElement("style");
 
 function addContext() {
 
@@ -23,10 +22,10 @@ function handleRightClick(event) {
     console.log("Target:", target);
     addPointerEvents(); // Adds the style to access locked elements
 
-    // //console.log("Target:", target);
+    let target2;;
     // // If no target is found, process the parent and enable pointer-events on the children
     if (target === null) {
-        let target2 = event.target;
+        target2 = event.target;
         console.log("Target2:", target2);
         // Enable pointer-events for all children of the target element that have the "efc" class
         const children = Array.from(target2.children);  // Convert HTMLCollection to an array
@@ -34,12 +33,17 @@ function handleRightClick(event) {
         if (children.length > 0) {
             // Only target the first child
             children.forEach(child => {
+
                 if (child.id.includes("efc")) { // Check if the ID contains "efc"
                     const childUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
-
+                    console.log("childUnderPointer:", childUnderPointer);
                     // Reassign the target to the child under the pointer
+
                     if (childUnderPointer) {
                         target = childUnderPointer;
+                        if (target.classList.contains("sensors")) { target = childUnderPointer?.parentElement; }
+                        if (target2.id.startsWith("sliderList")) { target = childUnderPointer?.parentElement?.parentElement };
+                        console.log("TargetChild:", target);
                     }
                 }
             });
@@ -105,7 +109,7 @@ function handleRightClick(event) {
             // Set the top position to the adjusted y-position
             menuElement.style.top = `${yPosition}px`;
         }
-    } else {
+    } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
         updateSaveButton("hide");
         selectionData = {};
         runonce2 = true;
@@ -917,10 +921,6 @@ function loadScript(url, callback) {
 }
 
 function addPointerEvents() {
-    if (!pointerEventsStyle) {
-        
-    pointerEventsStyle = document.createElement("style");
-    }
     pointerEventsStyle.innerHTML = "#container * { pointer-events: all !important; }";
     document.head.appendChild(pointerEventsStyle);
 }
