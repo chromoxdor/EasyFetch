@@ -135,6 +135,10 @@ async function fetchJson(gN) {
 
             let isHidden = (!hiddenOverride && selectionData[sensor.TaskNumber]?.["A"]?.["hide"] === 1);
             if (taskEnabled === "true" && !isHidden && !exC && exC2 && !hasParams) {
+
+                const orderA = selectionData[sensor.TaskNumber]?.["A"]?.["order"] || "0";
+                let efcID = `efc:${deviceName}=${sensor.TaskDeviceNumber},${sensor.TaskNumber}`;
+
                 if (sensor.TaskValues) {
                     someoneEn = 1;
                     let firstItem = false;
@@ -143,7 +147,7 @@ async function fetchJson(gN) {
                     //----------------------------------------------------------------------------------------------   TaskValues 
                     for (const item of sensor.TaskValues) {
                         //adding an ID for every Tile to be able to access the context menu
-                        let efcID = `efc:${deviceName}=${sensor.TaskDeviceNumber},${sensor.TaskNumber},${item.ValueNumber}`;
+                        efcID = `${efcID},${item.ValueNumber}`;
 
 
                         // getting efc data
@@ -160,7 +164,7 @@ async function fetchJson(gN) {
 
                         let XI = selectedTaskVal?.["noI"] === 1 ? "noI" : "";
 
-                        const orderA = selectionData[sensor.TaskNumber]?.["A"]?.["order"] || "0";
+                        
                         const order = selectedTaskVal?.["order"] || "0";
 
                         const sendToValue = selectedTaskVal?.sendTo;
@@ -446,7 +450,7 @@ async function fetchJson(gN) {
                 }
                 else {
                     html1 += `
-                      <div order="${order}" id="${efcID}" class="sensorset clickables" onclick="buttonClick('${sensorName}')">
+                      <div order="${orderA}" id="${efcID},1A" class="sensorset clickables" onclick="buttonClick('${sensorName}')">
                         <div class="sensors" style="font-weight:bold;">${sensorName}</div>
                         <div></div><div></div>
                       </div>
