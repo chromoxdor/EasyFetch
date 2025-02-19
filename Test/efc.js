@@ -55,6 +55,7 @@ function handleRightClick(event) {
     if (target && target.id.startsWith("efc")) {
         console.log("Right-clicked on:", target.id);
         isittime = false;
+        updateSaveButton();
         // event.preventDefault();  // Block the default context menu
 
         currentDivId = target.id;
@@ -568,7 +569,9 @@ function updateSaveButton(param) {
     if (param !== "hide") {
         saveButton.style.display = "block";
         resetButton.style.display = "block";
+        if (hasHiddenProperty(selectionData)) {
         toggleButton.style.display = "block";
+        }
         window.configMode = true;
     } else {
         saveButton.style.display = "none";
@@ -931,3 +934,15 @@ function removePointerEvents() {
         //pointerEventsStyle = null; // Reset the reference
     }
 }
+
+function hasHiddenProperty(obj) {
+    for (const value of Object.values(obj)) {
+        if (typeof value === 'object' && value !== null) {
+            if (value.hide === 1 || hasHiddenProperty(value)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+

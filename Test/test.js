@@ -110,16 +110,19 @@ async function fetchJson(gN) {
     let [dateY, dateM, dateD] = dateBig.split('-');
 
     if (!myJson.Sensors.length) {
-        html += '<div class="sensorset clickables"><div  class="sensors" style="font-weight:bold;">no tasks configured...</div>';
+        html += '<div class="sensorset clickables" onclick="splitOn(); topF();"><div  class="sensors" style="font-weight:bold;">no tasks configured...</div>';
     }
     else {
         //------------------------------------
         // -----------------------------------------------------------------------    Sensors
         for (const sensor of myJson.Sensors) {
             //myJson.Sensors.forEach(sensor => {
+
+            const { TaskNumber, TaskDeviceNumber, TaskName, TaskDeviceGPIO1 } = sensor;
+
             var bigSpan = "";
-            sensorName = sensor.TaskName;
-            deviceName = sensor.TaskName;
+            sensorName = TaskName;
+            deviceName = TaskName;
             taskEnabled = sensor.TaskEnabled.toString();
             const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
 
@@ -130,14 +133,14 @@ async function fetchJson(gN) {
             const htS1 = `sensorset clickables" onclick="playSound(3000), `;
 
             const htS2 = `<div id="${sensorName}" class="sensors" style="font-weight:bold;">${sensorName3}</div>`;
-            exC = [87, 38, 41, 42].includes(sensor.TaskDeviceNumber); //all PluginNR in an array that need to be excluded 
+            exC = [87, 38, 41, 42].includes(TaskDeviceNumber); //all PluginNR in an array that need to be excluded 
             exC2 = !sensor.Type?.includes("Display")
 
-            let isHidden = (!hiddenOverride && selectionData[sensor.TaskNumber]?.["A"]?.["hide"] === 1);
+            let isHidden = (!hiddenOverride && selectionData[TaskNumber]?.["A"]?.["hide"] === 1);
             if (taskEnabled === "true" && !isHidden && !exC && exC2 && !hasParams) {
 
-                const orderA = selectionData[sensor.TaskNumber]?.["A"]?.["order"] || "0";
-                let efcIDA = `efc:${deviceName}=${sensor.TaskDeviceNumber},${sensor.TaskNumber}`;
+                const orderA = selectionData[TaskNumber]?.["A"]?.["order"] || "0";
+                let efcIDA = `efc:${deviceName}=${TaskDeviceNumber},${TaskNumber}`;
 
                 if (sensor.TaskValues) {
                     someoneEn = 1;
@@ -146,50 +149,43 @@ async function fetchJson(gN) {
 
                     //----------------------------------------------------------------------------------------------   TaskValues 
                     for (const item of sensor.TaskValues) {
+
+                        const { ValueNumber, Value, Name, NrDecimals } = item;
+
                         //adding an ID for every Tile to be able to access the context menu
-                        let efcID = `${efcIDA},${item.ValueNumber}`;
+                        let efcID = `${efcIDA},${ValueNumber}`;
 
 
                         // getting efc data
 
-                        let selectedTaskVal = selectionData?.[sensor.TaskNumber]?.[item.ValueNumber];
-                        let taskVal = selectedTaskVal?.["val"] || "";
-                        let overrideSelection = selectionData[sensor.TaskNumber]?.["A"]?.["val"];
-                        tBG = selectionData[sensor.TaskNumber]?.["A"]?.["color"] &&
-                            selectionData[sensor.TaskNumber]["A"]["color"] !== "#000000"
-                            ? `background:${selectionData[sensor.TaskNumber]["A"]["color"]}${bgColor === "0" ? "80" : ""}`
+                        let selectedTaskVal = selectionData?.[TaskNumber]?.[ValueNumber];
+
+                        let overrideSelection = selectionData[TaskNumber]?.["A"]?.["val"];
+                        
+                        tBG = selectionData[TaskNumber]?.["A"]?.["color"] &&
+                            selectionData[TaskNumber]["A"]["color"] !== "#000000"
+                            ? `background:${selectionData[TaskNumber]["A"]["color"]}${bgColor === "0" ? "80" : ""}`
                             : "";
 
+                        let taskVal = selectedTaskVal?.["val"] || "";
                         let kindN = selectedTaskVal?.["unit"] || "";
-
                         let XI = selectedTaskVal?.["noI"] === 1 ? "noI" : "";
-
-                        
-                        const order = selectedTaskVal?.["order"] || "0";
+                        let order = selectedTaskVal?.["order"] || "0";
 
                         const sendToValue = selectedTaskVal?.sendTo;
                         const [sendToNr = "", gpio = ""] = (typeof sendToValue === "string" ? sendToValue.split(",") : []) || [];
 
                         isHidden = (!hiddenOverride && selectedTaskVal?.["hide"] === 1);
 
+                        // Handle range values
                         if (selectedTaskVal?.["range"]) {
                             [slMin, slMax, slStep] = selectedTaskVal["range"].split(",");
                         } else {
-
-                            // If the condition is not met, return default values
-                            if (taskVal === "thSlider") {
-                                slMin = 5;
-                                slMax = 35;
-                                slStep = 1;
-                            } else {
-                                slMin = 0;
-                                slMax = 1024;
-                                slStep = 1;
-                            }
+                            [slMin, slMax, slStep] = taskVal === "thSlider" ? [5, 35, 1] : [0, 1024, 1];
                         }
 
                         sensorName = overrideSelection && overrideSelection !== "none" ? overrideSelection
-                            : (!taskVal || taskVal === "none") ? sensor.TaskName
+                            : (!taskVal || taskVal === "none") ? TaskName
                                 : taskVal;
 
                         if (!firstItemCheck && (!taskVal || taskVal === "" || taskVal === "none" || sensorName === "bigVal")) {
@@ -199,29 +195,29 @@ async function fetchJson(gN) {
 
                         wasUsed = false;
 
-                        if (typeof item.Value == 'number') {
-                            num2Value = item.Value.toFixed(item.NrDecimals);
+                        if (typeof Value == 'number') {
+                            num2Value = Value.toFixed(NrDecimals);
                         }
-                        else { num2Value = item.Value; }
-                        itemName = item.Name.toString();
+                        else { num2Value = Value; }
+                        itemName = Name.toString();
                         itemNameChanged = changeNN(itemName);
 
                         //empty button State
                         bS = "";
                         //buttons = html; sensor tiles = html1; slider = html2; big values = html3
                         //switch---------------------------------------------------------
-                        if (sensor.TaskDeviceNumber == 1) {
+                        if (TaskDeviceNumber == 1) {
                             wasUsed = true;
-                            if ((itemName === "btnStateC" && item.Value < 2) || item.Value === 1) { bS = "on"; }
-                            else if (item.Value === 2) { bS = "alert"; }
+                            if ((itemName === "btnStateC" && Value < 2) || Value === 1) { bS = "on"; }
+                            else if (Value === 2) { bS = "alert"; }
 
-                            if (sensor.TaskDeviceGPIO1 && (itemName === "State" || itemName === "iState")) {
-                                if (itemName === "iState") { item.Value = item.Value == 1 ? 0 : 1; }
-                                const uttonGP = `${sensorName}|${sensor.TaskDeviceGPIO1}`;
-                                html += `<div order="${orderA}" id="${efcID}A" class="btnTile ${bS} ${htS1} buttonClick('${uttonGP}', '${item.Value}')">${htS2}`;
+                            if (TaskDeviceGPIO1 && (itemName === "State" || itemName === "iState")) {
+                                if (itemName === "iState") { Value = Value == 1 ? 0 : 1; }
+                                const uttonGP = `${sensorName}|${TaskDeviceGPIO1}`;
+                                html += `<div order="${orderA}" id="${efcID}A" class="btnTile ${bS} ${htS1} buttonClick('${uttonGP}', '${Value}')">${htS2}`;
 
-                            } else if (itemName === "pState" && sensor.TaskDeviceGPIO1) {
-                                const uttonGP = `${sensorName}?${sensor.TaskDeviceGPIO1}`;
+                            } else if (itemName === "pState" && TaskDeviceGPIO1) {
+                                const uttonGP = `${sensorName}?${TaskDeviceGPIO1}`;
                                 html += `<div order="${orderA}" id="${efcID}A" class="${bS} btnTile push sensorset" 
                                             onpointerdown="if (event.button === 0) { playSound(3000); pushClick('${uttonGP}',1); }" 
                                             onpointerup="pushClick('${uttonGP}',0)">
@@ -229,26 +225,26 @@ async function fetchJson(gN) {
                                         </div>`;
 
                             } else if (itemName.includes("btnState")) {
-                                if (itemName === "ibtnState") { item.Value = item.Value == 1 ? 0 : 1; }
+                                if (itemName === "ibtnState") { Value = Value == 1 ? 0 : 1; }
                                 if (kindN) { sensorName = `${sensorName}|${kindN}`; }
-                                html += `<div order="${orderA}" id="${efcID}A" id="${sensorName}" class="btnTile ${XI} ${bS} ${htS1}buttonClick('${sensorName}', '${item.Value}')">${htS2}`;
+                                html += `<div order="${orderA}" id="${efcID}A" id="${sensorName}" class="btnTile ${XI} ${bS} ${htS1}buttonClick('${sensorName}', '${Value}')">${htS2}`;
                             } else {
                                 wasUsed = false;
                             }
                         }
                         //dummy---------------------------------------------------------
-                        if (sensor.TaskDeviceNumber !== 1 && !isHidden && !(sensorName).includes("bigVal")) {
-                            if (sensor.TaskDeviceNumber !== 33) XI = " noI ";
+                        if (TaskDeviceNumber !== 1 && !isHidden && !(sensorName).includes("bigVal")) {
+                            if (TaskDeviceNumber !== 33) XI = " noI ";
                             wasUsed = true;
                             //button coloring
-                            if ((kindN === "C" && item.Value < 2) || item.Value === 1) { bS = "on"; }
-                            else if (item.Value === 2) { bS = "alert"; }
+                            if ((kindN === "C" && Value < 2) || Value === 1) { bS = "on"; }
+                            else if (Value === 2) { bS = "alert"; }
                             //handle tile hiding of dummy tiles
-                            if (["dButtons", "vInput", "pButtons"].some(v => sensor.TaskName.includes(v)) && item.Name.includes("noVal")) {
+                            if (["dButtons", "vInput", "pButtons"].some(v => TaskName.includes(v)) && Name.includes("noVal")) {
                                 //novalAuto tiles are only shown on larger screens
                                 //When isAuto is true, shouldAddTile checks if the window width is at least 450 pixels and if the cookie contains "Two=1".
                                 //When isAuto is false, shouldAddTile is always true.
-                                const isAuto = item.Name.includes("noValAuto");
+                                const isAuto = Name.includes("noValAuto");
                                 const shouldAddTile = isAuto ? (window.innerWidth >= 450 && document.cookie.includes("Two=1")) : true;
                                 if (shouldAddTile) {
                                     html += `<div order="${order}" class="sensorset btnTile"></div>`;
@@ -256,10 +252,10 @@ async function fetchJson(gN) {
                             }
                             //virtual buttons
                             else if ((sensorName).includes("dButtons")) {
-                                if (item.Value > -1) {
+                                if (Value > -1) {
 
                                     if (gpio) {
-                                        getRemoteGPIOState(sensor.TaskNumber, sendToNr, gpio, myJson.System['Unit Number'], item.ValueNumber);
+                                        getRemoteGPIOState(TaskNumber, sendToNr, gpio, myJson.System['Unit Number'], ValueNumber);
                                     }
                                     if (sendToNr) { itemName = `${itemName}&${sendToNr}G${gpio}`; }
                                     const clickHandler = sendToNr === "A" ? `getNodes('${itemName}')` : `buttonClick('${itemName}')`;
@@ -267,7 +263,7 @@ async function fetchJson(gN) {
                                 }
                             }
                             //push buttons
-                            else if (sensorName.includes("pButtons") && item.Value > -1) {
+                            else if (sensorName.includes("pButtons") && Value > -1) {
                                 html += `<div order="${order}" id="${efcID}" class="${bS} btnTile push sensorset" 
                                             onpointerdown="if (event.button === 0) { playSound(3000); pushClick('${itemName}',1); }" 
                                             onpointerup="if (event.button === 0) {pushClick('${itemName}',0)}">
@@ -282,7 +278,7 @@ async function fetchJson(gN) {
                                                 ${itemNameChanged}
                                             </div>
                                             <div class="valWrap">
-                                                <input type="number" class="vInputs ${sensor.TaskNumber},${item.ValueNumber}" id="${itemName}" name="${sensorName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
+                                                <input type="number" class="vInputs ${TaskNumber},${ValueNumber}" id="${itemName}" name="${sensorName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
                                                 <div class="kindInput">${kindN}</div>
                                             </div>
                                         </div>`;
@@ -291,7 +287,7 @@ async function fetchJson(gN) {
                             else if ((sensorName).includes("vSlider")) {
                                 num2Value = Number(num2Value).toFixed((slStep.toString().split('.')[1] || '').length);
                                 itemName = itemName === "noVal" ? "&nbsp;" : itemName;
-                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset"><input type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${sensor.TaskNumber},${item.ValueNumber}`;
+                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset"><input type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${TaskNumber},${ValueNumber}`;
                                 //if (sensorName.includes("vSliderSw")) html2 += " swSlider";
                                 html2 += sensorName.includes("nvSlider")
                                     ? ` noVal"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${itemNameChanged}</div></div></div>`
@@ -299,8 +295,8 @@ async function fetchJson(gN) {
                             }
                             //time slider
                             else if ((sensorName).includes("tSlider")) {
-                                if (item.NrDecimals !== 4) itemName = "For the Time slider the value must have<br>4 decimals!";
-                                slT1 = item.Value.toFixed(4);
+                                if (NrDecimals !== 4) itemName = "For the Time slider the value must have<br>4 decimals!";
+                                slT1 = Value.toFixed(4);
                                 slT2 = (slT1 + "").split(".")[1];
                                 slT1 = Math.floor(slT1);
                                 hour1 = Math.floor(slT1 / 60);
@@ -313,7 +309,7 @@ async function fetchJson(gN) {
                                 const htmlSlider1 = `<input class="slTS slTHU" type="range" min="0" max="1440" step="5" value="`;
 
                                 html2 += `
-                                  <div id="${efcID}" class="slTimeSetWrap ${sensorName} ${sensor.TaskNumber},${item.ValueNumber}" style="font-weight:bold;">
+                                  <div id="${efcID}" class="slTimeSetWrap ${sensorName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
                                     ${itemName}
                                     <div class="slTimeText">
                                       <span class="hAmount1">${hour1}</span>:<span class="mAmount1">${padded1}</span>-
@@ -329,9 +325,9 @@ async function fetchJson(gN) {
                             }
                             // thermostat slider
                             else if ((sensorName).includes("thSlider")) {
-                                if (item.NrDecimals !== 3) itemName = "For the Time slider the value must have<br>3 decimals!";
+                                if (NrDecimals !== 3) itemName = "For the Thermo slider the value must have<br>3 decimals!";
                                 itemName = changeNN(itemName);
-                                slT1 = item.Value.toFixed(3);
+                                slT1 = Value.toFixed(3);
                                 slT2 = (slT1 - Math.floor(slT1)) * 100;
                                 slT2 = slT2.toFixed(1)
                                 slT1 = (Math.floor(slT1) / 10).toFixed(1);
@@ -340,7 +336,7 @@ async function fetchJson(gN) {
                                 const thermoSliderAddon = `<div class="noI" style="z-index: 2; position: absolute">${itemName}</div>`;
 
                                 html2 += `
-                                  <div id="${efcID}" class="slTimeSetWrap ${sensorName} ${sensor.TaskNumber},${item.ValueNumber}" style="font-weight:bold;">
+                                  <div id="${efcID}" class="slTimeSetWrap ${sensorName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
                                     ${thermoSliderAddon}
                                     <div class="slTimeText">
                                       <div class="even">&#9728;&#xFE0E;<span class="isT">${slT1}</span>°C</div>
@@ -359,7 +355,7 @@ async function fetchJson(gN) {
                                 const rangeType = itemName === 'h' ? '?H' : itemName === 's' ? '?S' : itemName === 'v' ? '?V' : '';
 
                                 // Create the HTML element with a range input, depending on the type
-                                html2 += `<input type="range" max="${itemName === 'h' ? 359 : 100}" min="0" value="${num2Value}" id="${sensorName}${rangeType}" class="sL npSl ${sensor.TaskNumber},${item.ValueNumber} np${itemName.toUpperCase()} noVal">`;
+                                html2 += `<input type="range" max="${itemName === 'h' ? 359 : 100}" min="0" value="${num2Value}" id="${sensorName}${rangeType}" class="sL npSl ${TaskNumber},${ValueNumber} np${itemName.toUpperCase()} noVal">`;
                             }
                             else { wasUsed = false; }
                         }
@@ -406,10 +402,10 @@ async function fetchJson(gN) {
                         // if all items with a specific declaration are processed do the rest---------------------------------------------------------
                         if (!wasUsed) {
                             //output clock
-                            if (sensor.TaskDeviceNumber == 43) {
+                            if (TaskDeviceNumber == 43) {
                                 if (firstItem) {
-                                    if (item.Value === 1) { bS = "on"; }
-                                    html += `<div order="${orderA}" id="${efcID}A" class="btnTile ${bS} sensorset clickables" onclick="playSound(3000); splitOn(${sensor.TaskNumber}); topF();">
+                                    if (Value === 1) { bS = "on"; }
+                                    html += `<div order="${orderA}" id="${efcID}A" class="btnTile ${bS} sensorset clickables" onclick="playSound(3000); splitOn(${TaskNumber}); topF();">
                                                 <div class="sensors" style="font-weight:bold;">${sensorName}</div>
                                                 <div class="odd" style="font-size: 20pt;">&#x23F2;&#xFE0E;</div>
                                             </div></div>`;
@@ -421,11 +417,11 @@ async function fetchJson(gN) {
                                 }
 
                                 if (!isHidden) {
-                                    if (sensor.TaskDeviceNumber === 81) {
+                                    if (TaskDeviceNumber === 81) {
                                         html1 += `
                                             <div id="${efcID}" class="cron">
                                                 <div>${itemName}</div>
-                                                <div style="font-size: 10pt;">${item.Value}</div>
+                                                <div style="font-size: 10pt;">${Value}</div>
                                             </div>`;
                                     } else {
                                         html1 += `
@@ -440,9 +436,11 @@ async function fetchJson(gN) {
                         firstItem = false;
 
                     };
+
                     html += '</div>';
                     html1 += '</div>';
                     html3 += '</div>';
+                    //sorting button and value tiles
                     if (!document.cookie.includes("Sort=1")) {
                         html += html1;
                         html1 = '';
@@ -450,7 +448,7 @@ async function fetchJson(gN) {
                 }
                 else {
                     html1 += `
-                      <div order="${orderA}" id="${efcID},1A" class="sensorset clickables" onclick="buttonClick('${sensorName}')">
+                      <div order="${orderA}" id="${efcIDA},1A" class="sensorset clickables" onclick="buttonClick('${sensorName}')">
                         <div class="sensors" style="font-weight:bold;">${sensorName}</div>
                         <div></div><div></div>
                       </div>
@@ -461,7 +459,7 @@ async function fetchJson(gN) {
             }
         };
         if (!someoneEn && !hasParams) {
-            html += '<div class="sensorset clickables" onclick="splitOn(); topF()"> <div class="sensors" style="font-weight:bold;">no tasks enabled or visible...</div>';
+            html += '<div class="sensorset clickables" onclick="splitOn(); topF();"> <div class="sensors" style="font-weight:bold;">no tasks enabled or visible...</div>';
         }
     }
     html += html1;
@@ -475,9 +473,9 @@ async function fetchJson(gN) {
         if (!document.cookie.includes("Snd=")) mC("Snd");
 
         // Set full viewport height for iPhones
-        if (/iPhone/i.test(window.navigator.userAgent)) {
-            document.body.style.height = "100vh";
-        }
+        // if (/iPhone/i.test(window.navigator.userAgent)) {
+        //     document.body.style.height = "100vh";
+        // }
 
         // Start fetching JSON data every 2 seconds
         fJ = setInterval(fetchJson, 2000);
@@ -519,23 +517,23 @@ function orderFunction(html) {
     let tempContainer = document.createElement('div');
     tempContainer.innerHTML = html;
 
-    // Get all the child div elements with the 'order' attribute
-    let divs = Array.from(tempContainer.querySelectorAll('div[order]'));
+    // Get only the direct child divs of tempContainer
+    let divs = Array.from(tempContainer.children);
 
-    // Sort the divs by the 'order' attribute (empty order values go at the end)
+    // Sort the divs by the 'order' attribute (missing or invalid values go to the end)
     divs.sort((a, b) => {
-        let orderA = a.getAttribute('order') === "0" ? Infinity : parseInt(a.getAttribute('order'));
-        let orderB = b.getAttribute('order') === "0" ? Infinity : parseInt(b.getAttribute('order'));
+        let orderA = a.hasAttribute('order') ? parseInt(a.getAttribute('order')) || Infinity : Infinity;
+        let orderB = b.hasAttribute('order') ? parseInt(b.getAttribute('order')) || Infinity : Infinity;
         return orderA - orderB;
     });
-    // Clear the existing content of the sensorList
+
+    // Clear the existing content of sensorList
     let sensorList = document.getElementById('sensorList');
     sensorList.innerHTML = '';  // Clears the container
 
     // Append each sorted div to the container
     divs.forEach(div => {
         sensorList.appendChild(div);
-
     });
 }
 
