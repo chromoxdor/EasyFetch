@@ -323,7 +323,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         }
 
 
-        if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1 || contextIsAlready) {
+        if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1 || contextIsAlready && deviceType !== "A") {
             addTextInput(formFields, "unit: ", "unit");
         }
 

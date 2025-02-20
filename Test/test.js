@@ -372,7 +372,7 @@ async function fetchJson(gN) {
                         }
                         //big values---------------------------------------------------------
 
-                        if (sensorName.includes("bigVal") && !taskVal.includes("bigVS")) {
+                        if (sensorName.includes("bigVal")) {
                             wasUsed = true;
 
 
@@ -411,7 +411,7 @@ async function fetchJson(gN) {
                                 }
                             }
                         }
-                        if (taskVal.includes("bigVS")) {
+                        if (taskVal.includes("bigVS") && !sensorName.includes("bigVal")) {
                             const htmlBig2 = `<div order="${order}" id="efc:bigSingle=${TaskDeviceNumber},${TaskNumber},${ValueNumber}" style="${tBGS}" class="bigNumWrap bigSingles `;
                             htmlBigS += htmlBig2 + bigSpan + `">`;
                             if (isHidden) {
