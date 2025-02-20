@@ -36,6 +36,7 @@ var runonce2 = true;
 var unit;
 var hiddenOverride = false;
 var isMain = true;
+let diV = '</div>';
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
@@ -77,7 +78,11 @@ async function fetchJson(gN) {
     //console.log("selectionData", selectionData);
     if (!isittime) return;
     html = '';
-    let html1 = '', html2 = '', html3 = '';
+    let html1 = '', html2 = '', html3 = '', htmlBigS = '';
+    let htmlBigFirst = `<div class="bigNum">`
+    let htmlBig1 = `<div class="valuesBig" style="font-weight:bold;text-align:left;">`;
+
+
     sysInfo = myJson.System
 
     const sysPairs = [
@@ -109,7 +114,7 @@ async function fetchJson(gN) {
     clockBig = clockBig.split(':').slice(0, -1).join(':');
     let [dateY, dateM, dateD] = dateBig.split('-');
 
-    if (!myJson.Sensors.length) {
+    if (!myJson.Sensors.length && !hasParams) {
         html += '<div class="sensorset clickables" onclick="splitOn(); topF();"><div  class="sensors" style="font-weight:bold;">no tasks configured...</div>';
     }
     else {
@@ -126,6 +131,11 @@ async function fetchJson(gN) {
             taskEnabled = sensor.TaskEnabled.toString();
             const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
 
+            tBGS = selectionData?.["S"]?.["SBC"] &&
+            selectionData?.["S"]?.["SBC"] !== "#000000"
+            ? `background:${selectionData?.["S"]?.["SBC"]}${bgColor === "0" ? "80" : ""}`
+            : "";
+
 
             //this is a bit to confusing when creating events for now
             var sensorName3 = changeNN(sensorName) //replace "_" and "." in device and "BigValue" names
@@ -137,6 +147,7 @@ async function fetchJson(gN) {
             exC2 = !sensor.Type?.includes("Display")
 
             let isHidden = (!hiddenOverride && selectionData[TaskNumber]?.["A"]?.["hide"] === 1);
+
             if (taskEnabled === "true" && !isHidden && !exC && exC2 && !hasParams) {
 
                 const orderA = selectionData[TaskNumber]?.["A"]?.["order"] || "0";
@@ -146,6 +157,7 @@ async function fetchJson(gN) {
                     someoneEn = 1;
                     let firstItem = false;
                     let firstItemCheck = false;
+                    let firstBigVal = true;
 
                     //----------------------------------------------------------------------------------------------   TaskValues 
                     for (const item of sensor.TaskValues) {
@@ -161,7 +173,7 @@ async function fetchJson(gN) {
                         let selectedTaskVal = selectionData?.[TaskNumber]?.[ValueNumber];
 
                         let overrideSelection = selectionData[TaskNumber]?.["A"]?.["val"];
-                        
+
                         tBG = selectionData[TaskNumber]?.["A"]?.["color"] &&
                             selectionData[TaskNumber]["A"]["color"] !== "#000000"
                             ? `background:${selectionData[TaskNumber]["A"]["color"]}${bgColor === "0" ? "80" : ""}`
@@ -188,11 +200,10 @@ async function fetchJson(gN) {
                             : (!taskVal || taskVal === "none") ? TaskName
                                 : taskVal;
 
-                        if (!firstItemCheck && (!taskVal || taskVal === "" || taskVal === "none" || sensorName === "bigVal")) {
+                        if (!firstItemCheck && (!taskVal || taskVal === "" || taskVal === "none" || sensorName === "bigVal" || taskVal === "bigVS")) {
                             firstItemCheck = true;
                             firstItem = true;
                         }
-
                         wasUsed = false;
 
                         if (typeof Value == 'number') {
@@ -287,7 +298,7 @@ async function fetchJson(gN) {
                             else if ((sensorName).includes("vSlider")) {
                                 num2Value = Number(num2Value).toFixed((slStep.toString().split('.')[1] || '').length);
                                 itemName = itemName === "noVal" ? "&nbsp;" : itemName;
-                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset"><input type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${TaskNumber},${ValueNumber}`;
+                                html2 += `<div id="${efcID}" class="${XI} sensorset"><input type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${TaskNumber},${ValueNumber}`;
                                 //if (sensorName.includes("vSliderSw")) html2 += " swSlider";
                                 html2 += sensorName.includes("nvSlider")
                                     ? ` noVal"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${itemNameChanged}</div></div></div>`
@@ -316,8 +327,8 @@ async function fetchJson(gN) {
                                       <span class="hAmount2">${hour2}</span>:<span class="mAmount2">${padded2}</span>
                                     </div>
                                     <div class="slTimeSet">
-                                      ${htmlSlider1}${slT1}" id="${itemName}L">
-                                      ${htmlSlider1}${slT2}" id="${itemName}R">
+                                      ${htmlSlider1}${slT1}" id="${itemName}:L">
+                                      ${htmlSlider1}${slT2}" id="${itemName}:R">
                                     </div>
                                   </div>
                                 `;
@@ -350,22 +361,24 @@ async function fetchJson(gN) {
                                 `;
                             }
                             //neopixel slider
-                            else if (sensorName.includes("neoPixel")) {
+                            else if (sensorName.includes("nPix")) {
                                 // Determine the type of the range based on the value of itemName
-                                const rangeType = itemName === 'h' ? '?H' : itemName === 's' ? '?S' : itemName === 'v' ? '?V' : '';
+                                const rangeType = ['H', 'S', 'V'].includes(kindN.toUpperCase()) ? kindN.toUpperCase() : 'H';
 
                                 // Create the HTML element with a range input, depending on the type
-                                html2 += `<input type="range" max="${itemName === 'h' ? 359 : 100}" min="0" value="${num2Value}" id="${sensorName}${rangeType}" class="sL npSl ${TaskNumber},${ValueNumber} np${itemName.toUpperCase()} noVal">`;
+                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset" style="padding:0;"><input type="range" max="${rangeType === 'H' ? 359 : 100}" min="0" value="${num2Value}" id="${sensorName}?${rangeType}" class="sL npSl ${TaskNumber},${ValueNumber} np${rangeType} noVal"></div>`;
                             }
                             else { wasUsed = false; }
                         }
                         //big values---------------------------------------------------------
-                        if (sensorName.includes("bigVal")) {
-                            wasUsed = true;
-                            let htmlBig1 = `<div class="valuesBig" style="font-weight:bold;text-align:left;">`;
 
-                            if (firstItem) {
-                                html3 += `<div class="bigNum">`;
+                        if (sensorName.includes("bigVal") && !taskVal.includes("bigVS")) {
+                            wasUsed = true;
+
+
+                            if (firstBigVal) {
+                                firstBigVal = false;
+                                html3 += htmlBigFirst;
                             }
 
                             let htmlBig2 = `<div id="${efcID}" style="${tBG}" class="bigNumWrap `;
@@ -394,10 +407,19 @@ async function fetchJson(gN) {
                                     html3 += `${htmlBig1}</div><div class="valueBig"></span></div></div>`;
                                 }
                                 else {
-                                    itemName = changeNN(itemName);
                                     html3 += `${htmlBig1}${itemName}</div><div class="valueBig">${num2Value}<span style="background:none;padding-right: 1%;">${kindN}</span></div></div>`;
                                 }
                             }
+                        }
+                        if (taskVal.includes("bigVS")) {
+                            const htmlBig2 = `<div order="${order}" id="efc:bigSingle=${TaskDeviceNumber},${TaskNumber},${ValueNumber}" style="${tBGS}" class="bigNumWrap bigSingles `;
+                            htmlBigS += htmlBig2 + bigSpan + `">`;
+                            if (isHidden) {
+                                htmlBigS += `${htmlBig1}</div><div class="valueBig"></div></div>`;
+                            } else {
+                                htmlBigS += `${htmlBig1}${itemName}</div><div class="valueBig">${num2Value}<span style="background:none;padding-right: 1%;">${kindN}</span></div></div>`;
+                            }
+
                         }
                         // if all items with a specific declaration are processed do the rest---------------------------------------------------------
                         if (!wasUsed) {
@@ -411,23 +433,23 @@ async function fetchJson(gN) {
                                             </div></div>`;
                                 }
                             }
-                            else {
+                            else if (overrideSelection !== "bigVal") {
                                 if (firstItem) {
                                     html1 += `<div order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
                                 }
 
-                                if (!isHidden) {
+                                if (!isHidden || taskVal.includes("bigVS")) {
                                     if (TaskDeviceNumber === 81) {
                                         html1 += `
                                             <div id="${efcID}" class="cron">
-                                                <div>${itemName}</div>
+                                                <div>${itemNameChanged}</div>
                                                 <div style="font-size: 10pt;">${Value}</div>
                                             </div>`;
                                     } else {
                                         html1 += `
                                             <div id="${efcID}" class="row">
-                                                <div class="odd">${itemName}</div>
-                                                <div class="even">${num2Value} ${kindN}</div>
+                                                <div class="odd">${itemNameChanged}</div>
+                                                <div class="even">${num2Value}${kindN}</div>
                                             </div>`;
                                     }
                                 }
@@ -436,10 +458,11 @@ async function fetchJson(gN) {
                         firstItem = false;
 
                     };
+                    html += diV
+                    html1 += diV;
+                    html3 += diV;
 
-                    html += '</div>';
-                    html1 += '</div>';
-                    html3 += '</div>';
+
                     //sorting button and value tiles
                     if (!document.cookie.includes("Sort=1")) {
                         html += html1;
@@ -463,9 +486,19 @@ async function fetchJson(gN) {
         }
     }
     html += html1;
+    //wrap bigValues singleMode
+    if (htmlBigS) {
+        let htmlBigSingles = '';
+
+        htmlBigSingles = htmlBigFirst + orderFunction(htmlBigS, "bigNum"); + diV;
+
+        html3 += htmlBigSingles;
+    }
+
+
     document.getElementById('sysInfo').innerHTML = syshtml;
-    orderFunction(html);
-    //document.getElementById('sensorList').innerHTML = html;
+
+    document.getElementById('sensorList').innerHTML = orderFunction(html);
     document.getElementById('sliderList').innerHTML = html2;
     document.getElementById('bigNumber').innerHTML = html3;
     //Things that only need to run once
@@ -513,28 +546,19 @@ async function fetchJson(gN) {
 //      order the tiles
 //##############################################################################################################
 function orderFunction(html) {
-    // Create a temporary container to parse the HTML string
     let tempContainer = document.createElement('div');
     tempContainer.innerHTML = html;
 
-    // Get only the direct child divs of tempContainer
     let divs = Array.from(tempContainer.children);
 
-    // Sort the divs by the 'order' attribute (missing or invalid values go to the end)
     divs.sort((a, b) => {
-        let orderA = a.hasAttribute('order') ? parseInt(a.getAttribute('order')) || Infinity : Infinity;
-        let orderB = b.hasAttribute('order') ? parseInt(b.getAttribute('order')) || Infinity : Infinity;
-        return orderA - orderB;
+        let orderA = a.hasAttribute('order') ? parseInt(a.getAttribute('order')) || 0 : 0;
+        let orderB = b.hasAttribute('order') ? parseInt(b.getAttribute('order')) || 0 : 0;
+
+        return (orderB > 0) - (orderA > 0) || (orderA < 0) - (orderB < 0) || (orderB - orderA);
     });
 
-    // Clear the existing content of sensorList
-    let sensorList = document.getElementById('sensorList');
-    sensorList.innerHTML = '';  // Clears the container
-
-    // Append each sorted div to the container
-    divs.forEach(div => {
-        sensorList.appendChild(div);
-    });
+    return divs.map(div => div.outerHTML).join('');
 }
 
 //##############################################################################################################
@@ -553,14 +577,14 @@ async function getRemoteGPIOState(taskNum, unitToNum, gpioNum, unitFromNum, valu
 //##############################################################################################################
 
 function changeNN(nn) {
-    return nn.replace(/_/g, " ").replace(/\./g, "<br>"); //replace "_" and "." in device and "BigValue" names
+    return nn.replace(/_/g, " ").replace(/\./g, "-<br>"); //replace "_" and "." in device and "BigValue" names
 }
 
 //##############################################################################################################
 //      ADJUST THE STYLING
 //##############################################################################################################
 function changeCss() {
-    let x = "auto ";
+    let x = " auto";
     let m = "";
     let coloumnSet, y, z;
     var numSl = document.querySelectorAll('input[type=range]').length;
@@ -588,6 +612,7 @@ function changeCss() {
 
     z = 0;
     if (!list3.length) z = numSet; //if there are no big values orient on number of "normal" tiles
+    console.log(bigLength, numSet, z);
     if (bigLength == 4 || z > 9) {
         y = x + x + x + x;
         coloumnSet = 4;
@@ -600,33 +625,47 @@ function changeCss() {
         y = x + x;
         coloumnSet = 2;
     }
-    else if (bigLength == 1 || z < 2) {
+    else if ((bigLength == 1 && numSet < 2) || (z < 2 && !bigLength)) {
         y = x;
-        m = "important"
-        if (list3.length) { for (let i = 0; i < list3.length; ++i) { list3[i].classList.add('bigNumOne'); } }
+        // m = "important" 
+        if (list3.length) {
+            list3.forEach(item => item.classList.add('bigNumOne'));
+        }
         coloumnSet = 1;
     }
     else {
         y = x + x;
         coloumnSet = 2;
     }
+
+
     widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
 
         const elements = document.querySelectorAll(".big3");
         elements.forEach(el => el.classList.add("bigSpan"));
 
-        if (list3.length) { for (let i = 0; i < list3.length; ++i) { list3[i].style.setProperty('grid-template-columns', 'auto auto'); } }
-        if (bigLength == 1 || (bigLength == 0 && numSet == 1)) {
-            coloumnSet = 1
-            y = x;
-            m = "!important"
-        }
-        else { coloumnSet = 2; y = x + x }
-    };
+        // if (list3.length) {
+        //     list3.forEach(item => {
+        //         item.style.setProperty('grid-template-columns', 'auto auto');
+        //     });
+        // }
 
-    sList.style.setProperty('grid-template-columns', y, m);
-    for (let i = 0; i < list3.length; ++i) { list3[i].style.setProperty('grid-template-columns', y, m); }
+        // if (bigLength == 1 || (bigLength == 0 && numSet == 1)) {
+        //     coloumnSet = 1
+        //     y = x;
+        //     //m = "!important"
+        // }
+        // else { coloumnSet = 2; y = x + x }
+        if (bigLength > 1 || numSet > 1) {
+        coloumnSet = 2; y = x + x
+        }
+    }
+console.log(coloumnSet, y);
+    sList.style.setProperty('grid-template-columns', y);
+    list3.forEach(item => {
+        item.style.setProperty('grid-template-columns', y);
+    });
 
     //calculate and add extra tiles
     if (numSet % coloumnSet != 0 && coloumnSet != 1) {
@@ -635,6 +674,11 @@ function changeCss() {
             sList.innerHTML += '<div class="sensorset"></div>'
         }
     }
+
+    if (coloumnSet == 2 && bigLength == 1) {
+        document.getElementsByClassName('bigNum')[0].appendChild(Object.assign(document.createElement('div'), { className: 'bigNumWrap' }));
+    }
+
     document.getElementById('sensorList').innerHTML = sList.innerHTML;
     bigLength = 0;
 }
@@ -657,7 +701,9 @@ function paramS() {
     });
     neoS = document.querySelectorAll(".npS");
     neoS.forEach(sID => {
+        console.log("sasasasasas", sID.id);
         hVal = document.getElementById(sID.id.split("?")[0] + '?H')?.value;
+        console.log("sas...w.d..wd.asasasas", hVal);
         vVal = document.getElementById(sID.id.split("?")[0] + '?V')?.value || 20;
         if (vVal < 20) vVal = 20;
         sID.style.backgroundImage = 'linear-gradient(to right, hsl(0,0%,' + vVal + '%),hsl(' + hVal + ',100%,50%))';
@@ -788,8 +834,12 @@ function updateSlider(event) {
 function sliderChTS(event) {
     playSound(4000);
     const slider = event.target;
+    console.log(slider);
     const slTName = slider.parentNode.parentNode;
-    const sliderId = slider.id;
+    console.log(slTName);
+    const slTNameID = slTName.id.match(/:(\w+)=/)[1];
+    const sliderId = slider.id.split(":")[0];
+    const LorR = slider.id.split(":")[1];
     const slClass2 = slTName.classList[2];
     const slClass1 = slTName.classList[1];
     const sliderValue = event.target.value;
@@ -798,7 +848,7 @@ function sliderChTS(event) {
         const isT = parseFloat(slider.closest(".slTimeSetWrap").querySelector(".isT").textContent);
         const setTvalue = (isT * 10) + (sliderValue / 100);
         const commandBase = `taskvalueset,${slClass2},${setTvalue}`;
-        const eventBase = `event,${slTName.id}Event=${sliderValue * 10}`;
+        const eventBase = `event,${slTNameID}Event=${sliderValue * 10}`;
 
         if (unitNr === unitNr1) {
             getUrl(`${cmD}${commandBase}`);
@@ -809,18 +859,19 @@ function sliderChTS(event) {
         }
         // timeslider
     } else {
-        const isLeft = sliderId === `${slTName.id}L`;
-        const secVal = document.getElementById(isLeft ? `${slTName.id}R` : `${slTName.id}L`).value;
+        const isLeft = LorR === "L";
+        const secVal = document.getElementById(isLeft ? `${sliderId}:R` : `${sliderId}:L`).value;
+        console.log(secVal);
         const paddedSecVal = secVal.toString().padStart(4, "0");
         const combinedValue = isLeft
             ? `${sliderValue}.${paddedSecVal}`
             : `${secVal}.${sliderValue.toString().padStart(4, "0")}`;
         const commandBase = `taskvalueset,${slClass2},${combinedValue}`;
-        const eventBase = `event,${slClass1}Event=${slClass2.split(",")[1]}`;
+        const eventBase = `event,${sliderId}Event=${combinedValue}`;
 
         if (unitNr === unitNr1) {
-            getUrl(`${cmD}"${commandBase}"`);
-            getUrl(`${cmD}"${eventBase}"`);
+            getUrl(`${cmD}${commandBase}`);
+            getUrl(`${cmD}${eventBase}`);
         } else {
             getUrl(`${cmD}SendTo,${nNr},"${commandBase}"`);
             getUrl(`${cmD}SendTo,${nNr},"${eventBase}"`);

@@ -144,8 +144,8 @@ function highlightMatchingDivs(elementId, elementClass) {
 
     if (exactMatches.length > 0) { // Ensure elements exist
         exactMatches.forEach(match => {
-            if (elementClass.includes("bigNumWrap") &&
-                !elementClass.includes("bigSingles") &&
+            if ((elementClass.includes("bigNumWrap") ||
+                elementClass.includes("bigSingles")) &&
                 !contextIsAlready) {
                 if (match.parentElement) { // Check before using parentElement
                     match.parentElement.style.setProperty("transition", "none", "important");
@@ -180,17 +180,18 @@ function removeHighlighting() {
 function parseDivId(divId) {
     if (divId.startsWith("efc")) {
         let [deviceName, devIndex] = divId.split("=");
-        let match = devIndex.match(/(\d+),(\d+),(\d+)(A?)$/);  // Separate number and optional "A"
+        let match = devIndex.match(/(\d+),(\d+),(\d+)([A-Z]?)$/); // Capture any capital letter at the end
 
-        if (!match) return null;  // Return null if the format doesn't match
+        if (!match) return null;
 
         return {
             deviceName: deviceName.split(":")[1],
             deviceType: parseInt(match[1]),
             deviceIndex: match[2],
-            valueIndex: match[4] === "A" ? "A" : match[3]  // If "A" is present, set valueIndex to "A"
+            valueIndex: match[4] || match[3]  // Use the letter if present, otherwise the third number
         };
     }
+    return null;
 }
 
 // **Rebuilds context menu dynamically based on deviceType**
@@ -215,7 +216,7 @@ function rebuildContextMenu(tID, tClass) {
 
     // check if the context menu is already open when the bigVal is selected 
     // if true then give access to the underlying child
-    if (savedData2 === "bigVal") {
+    if (savedData2 === "bigVal" || savedData) {
         if (tempName !== deviceName) {
             contextIsAlready = false;
             tempName = deviceName
@@ -230,13 +231,15 @@ function rebuildContextMenu(tID, tClass) {
     highlightMatchingDivs(tID, tClass);
 
     // If deviceIndex ends with "A", add extra options
-    if ((valueIndex.endsWith("A") && deviceType !== 1) || (savedData2 === "bigVal" && !contextIsAlready)) {
-        options += `
+    if ((valueIndex === "A" && deviceType !== 1) || (savedData2 === "bigVal" && !contextIsAlready)) {
+        options = `
             <option value="none">None</option>
             <option value="bigVal">big values</option>
         `;
-        valueIndex = "A";
         deviceType = "A";
+    }
+    else if (deviceName === "bigSingle" && !contextIsAlready) {
+        deviceType = "S";
     }
     else if (deviceType === 33) {
         options = `
@@ -249,11 +252,9 @@ function rebuildContextMenu(tID, tClass) {
             <option value="tSlider">time slider</option>
             <option value="thSlider">thermo slider</option>
             <option value="nPix">neopixel slider</option>
-          
-            
         `;
 
-        if (checkBigSinglesLength() < 4  || checkBigSinglesLength() == 4 && savedData?.val === "bigVS") {
+        if (checkBigSinglesLength() < 4 || checkBigSinglesLength() == 4 && savedData?.val === "bigVS") {
             options += `<option value="bigVS">big value</option>`;
         }
 
@@ -263,13 +264,12 @@ function rebuildContextMenu(tID, tClass) {
             <option value="none">None</option>
             <option value="vSlider">slider</option>
         `;
-        if (checkBigSinglesLength() < 4  || checkBigSinglesLength() == 4 && savedData?.val === "bigVS") {
+        if (checkBigSinglesLength() < 4 || checkBigSinglesLength() == 4 && savedData?.val === "bigVS") {
             options += `<option value="bigVS">big value</option>`;
         }
     }
-
     dropdown.innerHTML = options;
-    if (singleTile || contextIsAlready) { dropdown.style.display = "none"; }
+    if (singleTile || (contextIsAlready && savedData2 === "bigVal")  || deviceType === "S") { dropdown.style.display = "none"; }
     menu.appendChild(dropdown);
     menu.appendChild(document.createElement("br"));
 
@@ -282,10 +282,10 @@ function rebuildContextMenu(tID, tClass) {
 
     let dropdownKey = dropdown.dataset.key;
 
-    if (savedData2 === "bigVal" && valueIndex === "A") {
-        console.log("deviceIndex ends with A");
+    if (savedData2 === "bigVal" && deviceType === "A") {
         savedData = selectionData[deviceIndex]?.["A"]
     }
+
     if (savedData !== undefined && savedData[dropdownKey] !== undefined) {
         dropdown.value = savedData[dropdownKey];
         if (singleTile) { dropdown.value = ""; }
@@ -304,44 +304,48 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
     formFields.style.display = "grid";
 
     // **DeviceType Specific Fields**
-    if (deviceType === "A") {
-        if (["dButtons", "pButtons"].includes(selectedOption)) {
+    if (deviceType === "S") {
+        addColorPicker(formFields, "color: ", "SBC");
+    }
+    else {
+        if (deviceType === "A") {
+            if (["dButtons", "pButtons"].includes(selectedOption)) {
+                addCheckbox(formFields, " no input", "noI");
+            }
+        }
+
+        if (["vSlider", "nvSlider", "thSlider"].includes(selectedOption)) {
+            addTextInput(formFields, "range: ", "range", selectedOption);
+        }
+
+        if (["dButtons", "vSlider"].includes(selectedOption) && deviceType === 33) {
             addCheckbox(formFields, " no input", "noI");
         }
+
+
+        if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1 || contextIsAlready) {
+            addTextInput(formFields, "unit: ", "unit");
+        }
+
+        //if (["dButtons", "pButtons", "vSlider", "nvSlider"].includes(selectedOption) && deviceType === 33) {
+        if (["dButtons"].includes(selectedOption) && deviceType === 33) {
+            addTextInput(formFields, "sendTo: ", "sendTo");
+        }
+
+        if (deviceType === "A" && !singleTile) {
+            addColorPicker(formFields, "color: ", "color");
+        }
+
+        if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || selectedOption === "bigVS" || (deviceType === 33 && !["none", "vSlider", "nvSlider", "thSlider", "tSlider", "bigVal"].includes(selectedOption))) {
+            addNumberInput(formFields, "order: ", "order");
+        }
+
+        if ((selectedOption !== "none" || hasNonEmptyValues(selectionData, deviceIndex)) && !contextIsAlready) {
+            addResetButton(formFields, deviceIndex, deviceName);
+        }
+
+        addCheckbox(formFields, " hide ", "hide");
     }
-
-    if (["vSlider", "nvSlider", "thSlider"].includes(selectedOption)) {
-        addTextInput(formFields, "range: ", "range", selectedOption);
-    }
-
-    if (["dButtons", "vSlider"].includes(selectedOption) && deviceType === 33) {
-        addCheckbox(formFields, " no input", "noI");
-    }
-
-
-    if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1 || contextIsAlready) {
-        addTextInput(formFields, "unit: ", "unit");
-    }
-
-    //if (["dButtons", "pButtons", "vSlider", "nvSlider"].includes(selectedOption) && deviceType === 33) {
-    if (["dButtons"].includes(selectedOption) && deviceType === 33) {
-        addTextInput(formFields, "sendTo: ", "sendTo");
-    }
-
-
-    if (deviceType === "A" && !singleTile) {
-        addColorPicker(formFields, "color: ", "color");
-    }
-
-    if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || selectedOption === "bigVS" || (deviceType === 33 && !["none", "vSlider", "nvSlider", "thSlider", "tSlider", "bigVal"].includes(selectedOption))) {
-        addNumberInput(formFields, "order: ", "order");
-    }
-
-    if ((selectedOption !== "none" || hasNonEmptyValues(selectionData, deviceIndex)) && !contextIsAlready) {
-        addResetButton(formFields, deviceIndex, deviceName);
-    }
-
-    addCheckbox(formFields, " hide ", "hide");
 
     menu.appendChild(formFields);
 
@@ -352,7 +356,12 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
 
         if (deviceType === "A") { valueIndex = "A"; }
         // Get the saved data for this deviceIndex and valueIndex
-        let savedData = selectionData[deviceIndex] ? selectionData[deviceIndex][valueIndex] : {};
+        let savedData
+        if (deviceType !== "S") {
+            savedData = selectionData[deviceIndex] ? selectionData[deviceIndex][valueIndex] : {};
+        } else {
+            savedData = selectionData?.["S"];
+        }
 
         // Loop through the form fields and populate them with saved values
         formFields.querySelectorAll("input, select").forEach(input => {
@@ -529,7 +538,7 @@ function saveSelections(ignoreDropdown) {
     let parsed = parseDivId(currentDivId);
     if (!parsed) return;
 
-    let { deviceIndex, valueIndex } = parsed;
+    let { deviceName, deviceIndex, valueIndex } = parsed;
 
     // Initialize selectionData structure if it doesn't exist
     if (!selectionData[deviceIndex]) {
@@ -587,7 +596,11 @@ function saveSelections(ignoreDropdown) {
         valueIndex = "A";
     }
     if (!ignoreDropdown) {
-        selectionData[deviceIndex][valueIndex] = formData;
+        if (deviceName === "bigSingle" && !contextIsAlready) {
+            selectionData["S"] = formData;
+        } else {
+            selectionData[deviceIndex][valueIndex] = formData;
+        }
     }
     removeEmptyKeys(selectionData)
     console.log("Updated Selection Data:", selectionData);
