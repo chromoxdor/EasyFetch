@@ -97,10 +97,9 @@ iframe {
     border-radius: 5px
 }
 
-/* .bigNumOne {
+.bigNumOne {
     justify-content: center;
-    grid-template-columns: auto !important;
-} */
+}
 
 .bigNumWrap {
     width: -webkit-fill-available;
@@ -441,6 +440,7 @@ input[type=number] {
 .row {
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
 }
 
 .odd {

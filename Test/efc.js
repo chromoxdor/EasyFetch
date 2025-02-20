@@ -128,15 +128,33 @@ function highlightMatchingDivs(elementId, elementClass) {
     });
 
     // Select the div that exactly matches the given ID
-    let exactMatch = document.getElementById(elementId);
-    if (exactMatch) {
-        if (elementClass.includes("bigNumWrap") && !contextIsAlready) {
-            exactMatch.parentElement.style.setProperty("transition", "none", "important");
-            exactMatch.parentElement.style.outline = "2px solid red"; // Different color for the exact match
-        } else {
-            exactMatch.style.outline = "2px solid red"; // Different color for the exact match
+    // let exactMatch = document.getElementById(elementId);
 
-        }
+    // if (exactMatch) {
+    //     if (elementClass.includes("bigNumWrap") && !elementClass.includes("bigSingles") && !contextIsAlready) {
+    //         exactMatch.parentElement.style.setProperty("transition", "none", "important");
+    //         exactMatch.parentElement.style.outline = "2px solid red"; // Different color for the exact match
+    //     } else {
+    //         exactMatch.style.outline = "2px solid red"; // Different color for the exact match
+
+    //     }
+    // }
+
+    let exactMatches = document.querySelectorAll(`[id="${elementId}"]`);
+
+    if (exactMatches.length > 0) { // Ensure elements exist
+        exactMatches.forEach(match => {
+            if (elementClass.includes("bigNumWrap") &&
+                !elementClass.includes("bigSingles") &&
+                !contextIsAlready) {
+                if (match.parentElement) { // Check before using parentElement
+                    match.parentElement.style.setProperty("transition", "none", "important");
+                    match.parentElement.style.outline = "2px solid red";
+                }
+            } else {
+                match.style.outline = "2px solid red";
+            }
+        });
     }
 }
 
@@ -230,18 +248,28 @@ function rebuildContextMenu(tID, tClass) {
             <option value="nvSlider">no value Slider</option>
             <option value="tSlider">time slider</option>
             <option value="thSlider">thermo slider</option>
+            <option value="nPix">neopixel slider</option>
+          
             
         `;
+
+        if (checkBigSinglesLength() < 4  || checkBigSinglesLength() == 4 && savedData?.val === "bigVS") {
+            options += `<option value="bigVS">big value</option>`;
+        }
+
     }
     else {
         options = `
             <option value="none">None</option>
             <option value="vSlider">slider</option>
         `;
+        if (checkBigSinglesLength() < 4  || checkBigSinglesLength() == 4 && savedData?.val === "bigVS") {
+            options += `<option value="bigVS">big value</option>`;
+        }
     }
 
     dropdown.innerHTML = options;
-    if (singleTile) { dropdown.style.display = "none"; }
+    if (singleTile || contextIsAlready) { dropdown.style.display = "none"; }
     menu.appendChild(dropdown);
     menu.appendChild(document.createElement("br"));
 
@@ -305,11 +333,11 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         addColorPicker(formFields, "color: ", "color");
     }
 
-    if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || (deviceType === 33 && !["none", "vSlider", "nvSlider", "thSlider", "tSlider", "bigVal"].includes(selectedOption))) {
+    if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || selectedOption === "bigVS" || (deviceType === 33 && !["none", "vSlider", "nvSlider", "thSlider", "tSlider", "bigVal"].includes(selectedOption))) {
         addNumberInput(formFields, "order: ", "order");
     }
 
-    if (selectedOption !== "none" || hasNonEmptyValues(selectionData, deviceIndex)) {
+    if ((selectedOption !== "none" || hasNonEmptyValues(selectionData, deviceIndex)) && !contextIsAlready) {
         addResetButton(formFields, deviceIndex, deviceName);
     }
 
@@ -954,3 +982,6 @@ function hasHiddenProperty(obj) {
     return false;
 }
 
+function checkBigSinglesLength() {
+    return document.querySelectorAll(".bigSingles").length;
+}
