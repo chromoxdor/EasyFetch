@@ -8,6 +8,8 @@ var resetButton = null;
 var toggleButton = null;
 let efcArray = [];
 const pointerEventsStyle = document.createElement("style");
+var contextIsAlready = false;
+let tempName = "";
 
 function addContext() {
 
@@ -17,16 +19,16 @@ function addContext() {
 
 function handleRightClick(event) {
     event.preventDefault();
-    console.log("Right-clicked", event);
+    removeHighlighting();
+
+    //console.log("Right-clicked", event);
     let target = event.target.closest('div[id^="efc"]');
-    console.log("Target:", target);
     addPointerEvents(); // Adds the style to access locked elements
 
     let target2;;
     // // If no target is found, process the parent and enable pointer-events on the children
     if (target === null) {
         target2 = event.target;
-        console.log("Target2:", target2);
         // Enable pointer-events for all children of the target element that have the "efc" class
         const children = Array.from(target2.children);  // Convert HTMLCollection to an array
         console.log("Children:", children);
@@ -43,7 +45,7 @@ function handleRightClick(event) {
                         target = childUnderPointer;
                         if (target.classList.contains("sensors")) { target = childUnderPointer?.parentElement; }
                         if (target2.id.startsWith("sliderList")) { target = childUnderPointer?.parentElement?.parentElement };
-                        console.log("TargetChild:", target);
+                        //console.log("TargetChild:", target);
                     }
                 }
             });
@@ -53,25 +55,21 @@ function handleRightClick(event) {
 
     // Only proceed if target is valid (i.e., not null or undefined)
     if (target && target.id.startsWith("efc")) {
-        console.log("Right-clicked on:", target.id);
+        //console.log("Right-clicked on:", target.id);
         isittime = false;
         updateSaveButton();
-        // event.preventDefault();  // Block the default context menu
-
         currentDivId = target.id;
 
-
         // Remove previous highlights
-        removeHighlighting();
+
         //document.querySelectorAll('div[id^="efc"]').forEach(el => el.style.outline = "");
 
         // Apply highlight
         //target.style.outline = "2px solid #ffcc00"; // Yellow border
-        highlightMatchingDivs(target.id, target.className);
-
+        //highlightMatchingDivs(target.id, target.className);
 
         // Clear and rebuild the context menu based on the device type
-        rebuildContextMenu();
+        rebuildContextMenu(target.id, target.className);
 
         if (event.detail.clientX) {
             xCoord = event.detail.clientX;
@@ -122,7 +120,6 @@ function handleRightClick(event) {
 function highlightMatchingDivs(elementId, elementClass) {
     // Extract everything before the last comma
     let baseId = elementId.substring(0, elementId.lastIndexOf(","));
-
     if (!baseId) return; // Exit if no valid baseId found
 
     // Select all divs whose id starts with the extracted baseId
@@ -133,11 +130,12 @@ function highlightMatchingDivs(elementId, elementClass) {
     // Select the div that exactly matches the given ID
     let exactMatch = document.getElementById(elementId);
     if (exactMatch) {
-        if (!elementClass.includes("bigNumWrap")) {
-            exactMatch.style.outline = "2px solid red"; // Different color for the exact match
-        } else {
+        if (elementClass.includes("bigNumWrap") && !contextIsAlready) {
             exactMatch.parentElement.style.setProperty("transition", "none", "important");
             exactMatch.parentElement.style.outline = "2px solid red"; // Different color for the exact match
+        } else {
+            exactMatch.style.outline = "2px solid red"; // Different color for the exact match
+
         }
     }
 }
@@ -162,7 +160,6 @@ function removeHighlighting() {
 
 // **Extracts deviceName, deviceType, deviceIndex, and valueIndex from div ID**
 function parseDivId(divId) {
-    console.log("divId:", divId);
     if (divId.startsWith("efc")) {
         let [deviceName, devIndex] = divId.split("=");
         let match = devIndex.match(/(\d+),(\d+),(\d+)(A?)$/);  // Separate number and optional "A"
@@ -179,12 +176,11 @@ function parseDivId(divId) {
 }
 
 // **Rebuilds context menu dynamically based on deviceType**
-function rebuildContextMenu() {
+function rebuildContextMenu(tID, tClass) {
     let parsed = parseDivId(currentDivId);
     if (!parsed) return;
 
     let { deviceName, deviceType, deviceIndex, valueIndex } = parsed;
-    console.log(deviceName, deviceType, deviceIndex, valueIndex);
     const singleTile = [43, 1, 81].includes(deviceType); // Check if devicetype is in the array
 
     // Get the saved data for this deviceIndex and valueIndex
@@ -199,10 +195,24 @@ function rebuildContextMenu() {
     dropdown.dataset.key = "val"; // Add data-key for the select element
     let options = "";
 
+    // check if the context menu is already open when the bigVal is selected 
+    // if true then give access to the underlying child
+    if (savedData2 === "bigVal") {
+        if (tempName !== deviceName) {
+            contextIsAlready = false;
+            tempName = deviceName
+        }
+        else {
+            contextIsAlready = true;
+        }
+    } else {
+        contextIsAlready = false;
+        tempName = "";
+    }
+    highlightMatchingDivs(tID, tClass);
 
     // If deviceIndex ends with "A", add extra options
-    if ((valueIndex.endsWith("A") && deviceType !== 1) || savedData2 === "bigVal") {
-        console.log("deviceIndex ends with A");
+    if ((valueIndex.endsWith("A") && deviceType !== 1) || (savedData2 === "bigVal" && !contextIsAlready)) {
         options += `
             <option value="none">None</option>
             <option value="bigVal">big values</option>
@@ -243,17 +253,21 @@ function rebuildContextMenu() {
     });
 
     let dropdownKey = dropdown.dataset.key;
-    if (savedData2 === "bigVal") { savedData = selectionData[deviceIndex]?.["A"] }
+
+    if (savedData2 === "bigVal" && valueIndex === "A") {
+        console.log("deviceIndex ends with A");
+        savedData = selectionData[deviceIndex]?.["A"]
+    }
     if (savedData !== undefined && savedData[dropdownKey] !== undefined) {
         dropdown.value = savedData[dropdownKey];
         if (singleTile) { dropdown.value = ""; }
     }
+
     updateMenuFields(deviceType, dropdown.value, deviceName, deviceIndex, valueIndex, singleTile); // Initial call
 }
 
 // **Updates additional fields based on dropdown selection**
 function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, valueIndex, singleTile) {
-    console.log("d2.......", deviceName);
     let formFields = document.getElementById("dynamic-fields");
     if (formFields) menu.removeChild(formFields);
 
@@ -277,7 +291,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
     }
 
 
-    if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1) {
+    if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1 || contextIsAlready) {
         addTextInput(formFields, "unit: ", "unit");
     }
 
@@ -294,7 +308,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
     if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || (deviceType === 33 && !["none", "vSlider", "nvSlider", "thSlider", "tSlider", "bigVal"].includes(selectedOption))) {
         addNumberInput(formFields, "order: ", "order");
     }
-    console.log("has no empty", selectionData);
+
     if (selectedOption !== "none" || hasNonEmptyValues(selectionData, deviceIndex)) {
         addResetButton(formFields, deviceIndex, deviceName);
     }
@@ -541,12 +555,10 @@ function saveSelections(ignoreDropdown) {
     }
 
     // Store the formData in the selectionData object
-    if (selectionData[deviceIndex]?.["A"]?.["val"] === "bigVal") {
+    if (selectionData[deviceIndex]?.["A"]?.["val"] === "bigVal" && !contextIsAlready) {
         valueIndex = "A";
     }
-    console.log("ignoreDropdown", ignoreDropdown); // Log the dropdown value
     if (!ignoreDropdown) {
-        console.log("ignoreDropdownwqweqweqweqwqwq", ignoreDropdown);
         selectionData[deviceIndex][valueIndex] = formData;
     }
     removeEmptyKeys(selectionData)
@@ -570,7 +582,7 @@ function updateSaveButton(param) {
         saveButton.style.display = "block";
         resetButton.style.display = "block";
         if (hasHiddenProperty(selectionData)) {
-        toggleButton.style.display = "block";
+            toggleButton.style.display = "block";
         }
         window.configMode = true;
     } else {
@@ -674,10 +686,8 @@ function createSaveButton() {
 
 function saveToFile(param) {
     'use strict';
-
     updateJsonArray(selectionData);
     let dataStr = JSON.stringify(selectionData, null, 2);
-    console.log("param:", param);
 
     if (param === "del") {
         dataStr = "{}";
@@ -739,7 +749,6 @@ function saveToFile(param) {
 
 
 function fetchFile(uploadUrl, formData) {
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2000);
 
@@ -791,8 +800,6 @@ function createMenu() {
                 setLongPressDelay(600);
                 document.removeEventListener("long-press", handleRightClick, true);
             }
-            // Handle touchstart to simulate right-click action with 2 fingers
-
         }
     }, true); // Use capturing phase for touch events
 
@@ -800,6 +807,7 @@ function createMenu() {
     document.addEventListener("click", (event) => {
         if (!menu.contains(event.target) && !event.target.className.includes("vInputs")) {
             menu.style.display = "none";
+            tempName = ""; // Reset the tempName variable for second right click bigVals
             removeHighlighting();
             removePointerEvents();
             //document.querySelectorAll('div[id^="efc"]').forEach(el => el.style.outline = "");
@@ -821,12 +829,12 @@ function createMenu() {
     updateSaveButton("hide");   // Update the UI button
 }
 
-function jsonpRequest(url, callback) {
-    let script = document.createElement('script');
-    script.src = `${url}?callback=${callback}`;
-    console.log("script.src:", script);
-    document.body.appendChild(script);
-}
+// function jsonpRequest(url, callback) {
+//     let script = document.createElement('script');
+//     script.src = `${url}?callback=${callback}`;
+//     console.log("script.src:", script);
+//     document.body.appendChild(script);
+// }
 
 // Define the callback function that will handle the response
 function handleData(data) {
