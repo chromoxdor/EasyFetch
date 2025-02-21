@@ -366,7 +366,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         }
 
         // Loop through the form fields and populate them with saved values
-        formFields.querySelectorAll("input, select").forEach(input => {
+        formFields.querySelectorAll("input, select, button").forEach(input => {
             let key = input.dataset.key;
 
             if (savedData !== undefined && savedData[key] !== undefined) {
@@ -458,22 +458,62 @@ function addTextInput(container, label, key, selectedOption) {
 function addNumberInput(container, label, key) {
     let labelEl = document.createElement("label");
     labelEl.innerText = label;
+    labelEl.style.marginRight = "5px";
 
     let input = document.createElement("input");
     input.type = "number";
     input.dataset.key = key;
+    input.style.width = "4ch";
+    input.style.textAlign = "center";
 
     if (key === "order") {
-        input.min = "0";   // Ensure min/max are set as string values
+        input.min = "0";
         input.max = "255";
         input.step = "1";
-        input.value = "0"; // Start with the minimum value to avoid empty input
-        input.style.width = "4ch";
-    }
+        input.value = "0";
 
-    // Append to the container (normal DOM element)
-    container.appendChild(labelEl);
-    container.appendChild(input);
+        let inputWrapper = document.createElement("div");
+        inputWrapper.style.display = "inline-flex";
+        inputWrapper.style.alignItems = "center";
+        inputWrapper.style.gap = "5px";
+
+        let minusBtn = document.createElement("button");
+        minusBtn.innerText = "−";
+        minusBtn.type = "button";
+        minusBtn.style.width = "25px";
+
+        let plusBtn = document.createElement("button");
+        plusBtn.innerText = "+";
+        plusBtn.type = "button";
+        plusBtn.style.width = "25px";
+
+        // Helper function to update value and trigger input event
+        function updateValue(change) {
+          
+            let newValue = parseInt(input.value) + change;
+            input.value = newValue;
+            // Trigger an 'input' event so external scripts detect the change
+            //input.dispatchEvent(new Event("input"));
+            saveSelections(false);
+        }
+
+        // increase value
+        plusBtn.addEventListener("click", () => updateValue(1));
+
+        // decrease value (allows going below 0)
+        minusBtn.addEventListener("click", () => updateValue(-1));
+
+        inputWrapper.appendChild(minusBtn);
+        inputWrapper.appendChild(input);
+        inputWrapper.appendChild(plusBtn);
+
+        container.appendChild(labelEl);
+        container.appendChild(inputWrapper);
+    } else {
+        // For non-"order" keys, just append input normally
+        container.appendChild(labelEl);
+        container.appendChild(input);
+    }
 }
 
 function addCheckbox(container, label, key) {
