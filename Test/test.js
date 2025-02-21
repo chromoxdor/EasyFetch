@@ -551,19 +551,15 @@ function orderFunction(html) {
 
     let divs = [...tempContainer.children];
 
-    divs.sort((a, b) => {
-        let orderA = parseInt(a.getAttribute('order')) || 0;
-        let orderB = parseInt(b.getAttribute('order')) || 0;
+    let positiveDivs = divs.filter(div => (parseInt(div.getAttribute('order')) || 0) > 0)
+        .sort((a, b) => parseInt(a.getAttribute('order')) - parseInt(b.getAttribute('order')));
 
-        // Positive numbers first (ascending), then zeroes, then negative numbers (descending)
-        return orderA > 0 && orderB > 0 ? orderA - orderB :
-               orderA < 0 && orderB < 0 ? orderB - orderA :
-               orderA > 0 ? -1 :
-               orderB > 0 ? 1 :
-               orderA < 0 ? 1 : -1;
-    });
+    let zeroDivs = divs.filter(div => (parseInt(div.getAttribute('order')) || 0) === 0);
 
-    return divs.map(div => div.outerHTML).join('');
+    let negativeDivs = divs.filter(div => (parseInt(div.getAttribute('order')) || 0) < 0)
+        .sort((a, b) => parseInt(b.getAttribute('order')) - parseInt(a.getAttribute('order')));
+
+    return [...positiveDivs, ...zeroDivs, ...negativeDivs].map(div => div.outerHTML).join('');
 }
 //##############################################################################################################
 //      get remote GPIO state
