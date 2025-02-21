@@ -121,9 +121,10 @@ function highlightMatchingDivs(elementId, elementClass) {
     // Extract everything before the last comma
     let baseId = elementId.substring(0, elementId.lastIndexOf(","));
     if (!baseId) return; // Exit if no valid baseId found
+console.log("baseId:", baseId);
 
     // Select all divs whose id starts with the extracted baseId
-    document.querySelectorAll(`div[id^="${baseId}"]`).forEach(div => {
+    document.querySelectorAll(`div[id*="${baseId.split("=")[1]}"]`).forEach(div => {
         div.style.outline = "2px solid #ffcc00"; // Default highlight for matching elements
     });
 

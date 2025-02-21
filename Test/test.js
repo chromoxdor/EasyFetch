@@ -132,9 +132,9 @@ async function fetchJson(gN) {
             const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
 
             tBGS = selectionData?.["S"]?.["SBC"] &&
-            selectionData?.["S"]?.["SBC"] !== "#000000"
-            ? `background:${selectionData?.["S"]?.["SBC"]}${bgColor === "0" ? "80" : ""}`
-            : "";
+                selectionData?.["S"]?.["SBC"] !== "#000000"
+                ? `background:${selectionData?.["S"]?.["SBC"]}${bgColor === "0" ? "80" : ""}`
+                : "";
 
 
             //this is a bit to confusing when creating events for now
@@ -490,7 +490,7 @@ async function fetchJson(gN) {
     if (htmlBigS) {
         let htmlBigSingles = '';
 
-        htmlBigSingles = htmlBigFirst + orderFunction(htmlBigS, "bigNum"); + diV;
+        htmlBigSingles = htmlBigFirst + htmlBigS + diV;
 
         html3 += htmlBigSingles;
     }
@@ -549,18 +549,22 @@ function orderFunction(html) {
     let tempContainer = document.createElement('div');
     tempContainer.innerHTML = html;
 
-    let divs = Array.from(tempContainer.children);
+    let divs = [...tempContainer.children];
 
     divs.sort((a, b) => {
-        let orderA = a.hasAttribute('order') ? parseInt(a.getAttribute('order')) || 0 : 0;
-        let orderB = b.hasAttribute('order') ? parseInt(b.getAttribute('order')) || 0 : 0;
+        let orderA = parseInt(a.getAttribute('order')) || 0;
+        let orderB = parseInt(b.getAttribute('order')) || 0;
 
-        return (orderB > 0) - (orderA > 0) || (orderA < 0) - (orderB < 0) || (orderB - orderA);
+        // Positive numbers first (ascending), then zeroes, then negative numbers (descending)
+        return orderA > 0 && orderB > 0 ? orderA - orderB :
+               orderA < 0 && orderB < 0 ? orderB - orderA :
+               orderA > 0 ? -1 :
+               orderB > 0 ? 1 :
+               orderA < 0 ? 1 : -1;
     });
 
     return divs.map(div => div.outerHTML).join('');
 }
-
 //##############################################################################################################
 //      get remote GPIO state
 //##############################################################################################################
@@ -593,22 +597,12 @@ function changeCss() {
     var list3 = document.querySelectorAll(".bigNum");
     var sList = document.getElementById("sensorList");
     var numSet = sList.getElementsByClassName('sensorset').length;
-    var bigLength = 0;
+    //var bigLength = 0;
 
-    // Iterate through each "bigNum" div
-    list3.forEach(div => {
-        const childCount = div.children.length; // Count the number of children
-        if (childCount === 3) {
-            // Add the class "big3" to each child element
-            Array.from(div.children).forEach(child => {
-                child.classList.add('big3');
-            });
-        }
-        // Update the largestNumber if the current div has more children
-        if (div.children.length > bigLength) {
-            bigLength = childCount;
-        }
-    });
+    // find the largest group size
+    let bigLength = Math.max(...Array.from(list3, div => div.children.length));
+
+   
 
     z = 0;
     if (!list3.length) z = numSet; //if there are no big values orient on number of "normal" tiles
@@ -638,30 +632,47 @@ function changeCss() {
         coloumnSet = 2;
     }
 
-
+let isttwo = false;
     widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
+       isttwo = true;
 
-        const elements = document.querySelectorAll(".big3");
-        elements.forEach(el => el.classList.add("bigSpan"));
 
-        // if (list3.length) {
-        //     list3.forEach(item => {
-        //         item.style.setProperty('grid-template-columns', 'auto auto');
-        //     });
-        // }
-
-        // if (bigLength == 1 || (bigLength == 0 && numSet == 1)) {
-        //     coloumnSet = 1
-        //     y = x;
-        //     //m = "!important"
-        // }
-        // else { coloumnSet = 2; y = x + x }
         if (bigLength > 1 || numSet > 1) {
-        coloumnSet = 2; y = x + x
+            coloumnSet = 2; y = x + x
         }
-    }
-console.log(coloumnSet, y);
+        bigLength = 2;
+    } 
+    
+
+         // append missing tiles with order starting from 1
+    list3.forEach(group => {
+        let orderCounter = 4;
+
+        while (group.children.length < bigLength) {
+            let newDiv = document.createElement('div');
+            newDiv.className = 'bigNumWrap';
+            newDiv.setAttribute('order', orderCounter++); // Assign increasing order
+            group.appendChild(newDiv);
+        }
+    });
+
+    // order child elements after all groups are equalized
+    list3.forEach(div => {
+        div.innerHTML = orderFunction(div.innerHTML); // Apply ordering after adding missing tiles
+
+        let children = Array.from(div.children);
+        if (children.length === 3) {
+            children.forEach(child => child.classList.add('big3'));
+        }
+    });
+
+    if (isttwo){
+        const elements = document.querySelectorAll(".big3");
+        elements.forEach(el => el.classList.add("bigSpan"));}
+
+    
+    console.log(coloumnSet, y);
     sList.style.setProperty('grid-template-columns', y);
     list3.forEach(item => {
         item.style.setProperty('grid-template-columns', y);
