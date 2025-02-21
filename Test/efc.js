@@ -217,7 +217,7 @@ function rebuildContextMenu(tID, tClass) {
 
     // check if the context menu is already open when the bigVal is selected 
     // if true then give access to the underlying child
-    if (savedData2 === "bigVal" || savedData) {
+    if (savedData2 === "bigVal" || savedData?.val === "bigVS") {
         if (tempName !== deviceName) {
             contextIsAlready = false;
             tempName = deviceName
@@ -337,7 +337,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
             addColorPicker(formFields, "color: ", "color");
         }
 
-        if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || selectedOption === "bigVS" || (deviceType === 33 && !["none", "vSlider", "nvSlider", "thSlider", "tSlider", "bigVal"].includes(selectedOption))) {
+        if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || contextIsAlready || selectedOption === "bigVS" || (deviceType === 33 && !["none", "vSlider", "nvSlider", "thSlider", "tSlider"].includes(selectedOption))) {
             addNumberInput(formFields, "order: ", "order");
         }
 

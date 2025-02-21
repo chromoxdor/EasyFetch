@@ -381,7 +381,7 @@ async function fetchJson(gN) {
                                 html3 += htmlBigFirst;
                             }
 
-                            let htmlBig2 = `<div id="${efcID}" style="${tBG}" class="bigNumWrap `;
+                            let htmlBig2 = `<div order="${order}" id="${efcID}" style="${tBG}" class="bigNumWrap `;
 
                             if (!isHidden) {
                                 // if (sensor.TaskValues.length === 3) { //&& !sensor.TaskValues.some(item => isHidden)) {
