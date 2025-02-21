@@ -298,7 +298,7 @@ async function fetchJson(gN) {
                             else if ((sensorName).includes("vSlider")) {
                                 num2Value = Number(num2Value).toFixed((slStep.toString().split('.')[1] || '').length);
                                 itemName = itemName === "noVal" ? "&nbsp;" : itemName;
-                                html2 += `<div id="${efcID}" class="${XI} sensorset"><input type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${TaskNumber},${ValueNumber}`;
+                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset"><input type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${TaskNumber},${ValueNumber}`;
                                 //if (sensorName.includes("vSliderSw")) html2 += " swSlider";
                                 html2 += sensorName.includes("nvSlider")
                                     ? ` noVal"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${itemNameChanged}</div></div></div>`
@@ -320,7 +320,7 @@ async function fetchJson(gN) {
                                 const htmlSlider1 = `<input class="slTS slTHU" type="range" min="0" max="1440" step="5" value="`;
 
                                 html2 += `
-                                  <div id="${efcID}" class="slTimeSetWrap ${sensorName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
+                                  <div order="${order}" id="${efcID}" class="slTimeSetWrap ${sensorName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
                                     ${itemName}
                                     <div class="slTimeText">
                                       <span class="hAmount1">${hour1}</span>:<span class="mAmount1">${padded1}</span>-
@@ -347,7 +347,7 @@ async function fetchJson(gN) {
                                 const thermoSliderAddon = `<div class="noI" style="z-index: 2; position: absolute">${itemName}</div>`;
 
                                 html2 += `
-                                  <div id="${efcID}" class="slTimeSetWrap ${sensorName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
+                                  <div order="${order}" id="${efcID}" class="slTimeSetWrap ${sensorName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
                                     ${thermoSliderAddon}
                                     <div class="slTimeText">
                                       <div class="even">&#9728;&#xFE0E;<span class="isT">${slT1}</span>°C</div>
@@ -499,7 +499,7 @@ async function fetchJson(gN) {
     document.getElementById('sysInfo').innerHTML = syshtml;
 
     document.getElementById('sensorList').innerHTML = orderFunction(html);
-    document.getElementById('sliderList').innerHTML = html2;
+    document.getElementById('sliderList').innerHTML = orderFunction(html2);
     document.getElementById('bigNumber').innerHTML = html3;
     //Things that only need to run once
     if (firstRun) {
@@ -600,7 +600,8 @@ function changeCss() {
     //var bigLength = 0;
 
     // find the largest group size
-    let bigLength = Math.max(...Array.from(list3, div => div.children.length));
+
+   let bigLength = Math.max(...Array.from(list3, div => div.children.length));
 
    
 
@@ -619,7 +620,7 @@ function changeCss() {
         y = x + x;
         coloumnSet = 2;
     }
-    else if ((bigLength == 1 && numSet < 2) || (z < 2 && !bigLength)) {
+    else if ((bigLength == 1 && numSet < 2) || (z < 2 && !list3.length)) {
         y = x;
         // m = "important" 
         if (list3.length) {
@@ -632,6 +633,7 @@ function changeCss() {
         coloumnSet = 2;
     }
 
+    console.log(bigLength, numSet, z, y, coloumnSet);   
 let isttwo = false;
     widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
@@ -640,8 +642,9 @@ let isttwo = false;
 
         if (bigLength > 1 || numSet > 1) {
             coloumnSet = 2; y = x + x
+            bigLength = 2;
         }
-        bigLength = 2;
+       
     } 
     
 

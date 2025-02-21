@@ -269,6 +269,7 @@ function rebuildContextMenu(tID, tClass) {
             options += `<option value="bigVS">big value</option>`;
         }
     }
+
     dropdown.innerHTML = options;
     if (singleTile || (contextIsAlready && savedData2 === "bigVal")  || deviceType === "S") { dropdown.style.display = "none"; }
     menu.appendChild(dropdown);
@@ -337,7 +338,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
             addColorPicker(formFields, "color: ", "color");
         }
 
-        if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || contextIsAlready || selectedOption === "bigVS" || (deviceType === 33 && !["none", "vSlider", "nvSlider", "thSlider", "tSlider"].includes(selectedOption))) {
+        if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || contextIsAlready || selectedOption === "bigVS" || (deviceType === 33 && !["none"].includes(selectedOption))) {
             addNumberInput(formFields, "order: ", "order");
         }
 
