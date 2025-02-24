@@ -181,6 +181,7 @@ async function fetchJson(gN) {
 
                         let taskVal = selectedTaskVal?.["val"] || "";
                         let kindN = selectedTaskVal?.["unit"] || "";
+                        let kindNP = `<span style="background:none;padding-left: 2px;">${kindN}</span>`
                         let XI = selectedTaskVal?.["noI"] === 1 ? "noI" : "";
                         let order = selectedTaskVal?.["order"] || "0";
 
@@ -290,7 +291,7 @@ async function fetchJson(gN) {
                                             </div>
                                             <div class="valWrap">
                                                 <input type="number" class="vInputs ${TaskNumber},${ValueNumber}" id="${itemName}" name="${sensorName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
-                                                <div class="kindInput">${kindN}</div>
+                                                <div class="kindInput">${kindNP}</div>
                                             </div>
                                         </div>`;
                             }
@@ -302,7 +303,7 @@ async function fetchJson(gN) {
                                 //if (sensorName.includes("vSliderSw")) html2 += " swSlider";
                                 html2 += sensorName.includes("nvSlider")
                                     ? ` noVal"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${itemNameChanged}</div></div></div>`
-                                    : `"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${itemNameChanged}</div><div class="sliderAmount" style="text-align: right;">${num2Value}${kindN}</div></div></div>`;
+                                    : `"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${itemNameChanged}</div><div class="sliderAmount" style="text-align: right;">${num2Value}${kindNP}</div></div></div>`;
                             }
                             //time slider
                             else if ((sensorName).includes("tSlider")) {
@@ -407,7 +408,7 @@ async function fetchJson(gN) {
                                     html3 += `${htmlBig1}</div><div class="valueBig"></span></div></div>`;
                                 }
                                 else {
-                                    html3 += `${htmlBig1}${itemName}</div><div class="valueBig">${num2Value}<span style="background:none;padding-right: 1%;">${kindN}</span></div></div>`;
+                                    html3 += `${htmlBig1}${itemName}</div><div class="valueBig">${num2Value}${kindNP}</div></div>`;
                                 }
                             }
                         }
@@ -417,7 +418,7 @@ async function fetchJson(gN) {
                             if (isHidden) {
                                 htmlBigS += `${htmlBig1}</div><div class="valueBig"></div></div>`;
                             } else {
-                                htmlBigS += `${htmlBig1}${itemName}</div><div class="valueBig">${num2Value}<span style="background:none;padding-right: 1%;">${kindN}</span></div></div>`;
+                                htmlBigS += `${htmlBig1}${itemName}</div><div class="valueBig">${num2Value}${kindNP}</div></div>`;
                             }
 
                         }
@@ -449,7 +450,7 @@ async function fetchJson(gN) {
                                         html1 += `
                                             <div id="${efcID}" class="row">
                                                 <div class="odd">${itemNameChanged}</div>
-                                                <div class="even">${num2Value}${kindN}</div>
+                                                <div class="even">${num2Value}${kindNP}</div>
                                             </div>`;
                                     }
                                 }
