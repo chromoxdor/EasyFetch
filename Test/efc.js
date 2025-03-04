@@ -1046,17 +1046,35 @@ function checkBigSinglesLength() {
     return document.querySelectorAll(".bigSingles").length;
 }
 
-var chartInstances = {}; // Store chart instances uniquely
+//##############################################################################################################
+//      CHART FUNCTIONS
+//##############################################################################################################
 
-function makeChart() {
-    loadScript("https://cdn.jsdelivr.net/npm/chart.js", function () {
-        if (!cD) return;
-        const colorArray = [
+var chartInstances = {}; // Store chart instances uniquely
+var colorArray;
+
+function getColorScheme() {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        return [
+            "rgba(163, 255, 83, 0.3)",
+            "rgba(71, 209, 255, 0.3)",
+            "rgba(255, 75, 102, 0.3)",
+            "rgba(255, 78, 255, 0.3)"
+        ];
+    } else {
+        return [
             "rgba(34, 165, 89, 0.3)",
             "rgba(34, 36, 165, 0.3)",
             "rgba(255, 99, 133, 0.3)",
             "rgba(115, 46, 133, 0.3)"
         ];
+    }
+}
+
+function makeChart() {
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js", function () {
+        if (!cD) return;
+        colorArray = getColorScheme();
 
         cD.forEach(chart => {
             if (!chart.chart) return;
@@ -1099,7 +1117,7 @@ function makeChart() {
                             legend: { display: false },
                             tooltip: { enabled: true, displayColors: false },
                         },
-                        scales: { x: { display: false }},
+                        scales: { x: { display: false } },
                         elements: {
                             line: { tension: 0.2 },
                             point: { radius: 0, hoverRadius: 6 }
