@@ -1054,20 +1054,22 @@ var chartInstances = {}; // Store chart instances uniquely
 var colorArray;
 
 function getColorScheme() {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        return [
-            "rgba(163, 255, 83, 0.3)",
-            "rgba(71, 209, 255, 0.3)",
-            "rgba(255, 75, 102, 0.3)",
-            "rgba(255, 78, 255, 0.3)"
-        ];
-    } else {
+    const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
+    if (bgColor === "0") {
         return [
             "rgba(34, 165, 89, 0.3)",
             "rgba(34, 36, 165, 0.3)",
             "rgba(255, 99, 133, 0.3)",
             "rgba(115, 46, 133, 0.3)"
         ];
+    } else {
+        return [
+            "rgba(96, 248, 91, 0.3)",
+            "rgba(71, 209, 255, 0.3)",
+            "rgba(255, 75, 102, 0.3)",
+            "rgba(255, 78, 255, 0.3)"
+        ];
+
     }
 }
 
@@ -1140,15 +1142,18 @@ function makeChart() {
 }
 
 function updateYAxisVisibility() {
+    const shouldShow = document.getElementById('allList').offsetWidth > 400;
+    const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
     Object.values(chartInstances).forEach(chart => {
         if (!chart) return;
 
-        const shouldShow = document.getElementById('allList').offsetWidth > 400;
+
 
         // Loop through all Y-axes and update visibility
         Object.keys(chart.options.scales).forEach(scaleKey => {
             if (scaleKey.startsWith("y-")) { // Only target Y-axes
                 chart.options.scales[scaleKey].display = shouldShow;
+                chart.options.scales[scaleKey].ticks.color = bgColor === "0" ? "grey" : "white";
             }
             if (scaleKey.startsWith("y-r")) { // Only target Y-axes
                 chart.options.scales[scaleKey].position = "right";
