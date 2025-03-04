@@ -121,7 +121,7 @@ function highlightMatchingDivs(elementId, elementClass) {
     // Extract everything before the last comma
     let baseId = elementId.substring(0, elementId.lastIndexOf(","));
     if (!baseId) return; // Exit if no valid baseId found
-console.log("baseId:", baseId);
+    console.log("baseId:", baseId);
 
     // Select all divs whose id starts with the extracted baseId
     document.querySelectorAll(`div[id*="${baseId.split("=")[1]}"]`).forEach(div => {
@@ -264,6 +264,7 @@ function rebuildContextMenu(tID, tClass) {
         options = `
             <option value="none">None</option>
             <option value="vSlider">slider</option>
+            <option value="chart">chart</option>
         `;
         if (checkBigSinglesLength() < 4 || checkBigSinglesLength() == 4 && savedData?.val === "bigVS") {
             options += `<option value="bigVS">big value</option>`;
@@ -271,7 +272,7 @@ function rebuildContextMenu(tID, tClass) {
     }
 
     dropdown.innerHTML = options;
-    if (singleTile || (contextIsAlready && savedData2 === "bigVal")  || deviceType === "S") { dropdown.style.display = "none"; }
+    if (singleTile || (contextIsAlready && savedData2 === "bigVal") || deviceType === "S") { dropdown.style.display = "none"; }
     menu.appendChild(dropdown);
     menu.appendChild(document.createElement("br"));
 
@@ -327,6 +328,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
 
         if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1 || contextIsAlready && deviceType !== "A") {
             addTextInput(formFields, "unit: ", "unit");
+            addCheckbox(formFields, " hide name", "noV");
         }
 
         //if (["dButtons", "pButtons", "vSlider", "nvSlider"].includes(selectedOption) && deviceType === 33) {
@@ -335,6 +337,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         }
 
         if (deviceType === "A" && !singleTile) {
+            addCheckbox(formFields, "chart: ", "chart");
             addColorPicker(formFields, "color: ", "color");
         }
 
@@ -346,7 +349,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
             addResetButton(formFields, deviceIndex, deviceName);
         }
 
-        addCheckbox(formFields, " hide ", "hide");
+        addCheckbox(formFields, " hide entry", "hide");
     }
 
     menu.appendChild(formFields);
@@ -489,7 +492,7 @@ function addNumberInput(container, label, key) {
 
         // Helper function to update value and trigger input event
         function updateValue(change) {
-          
+
             let newValue = parseInt(input.value) + change;
             input.value = newValue;
             // Trigger an 'input' event so external scripts detect the change
@@ -869,6 +872,8 @@ function fetchFile(uploadUrl, formData) {
 // **Initialize**
 function createMenu() {
 
+    document.getElementById('areaChart')?.addEventListener("resize", updateYAxisVisibility);
+
     // Handle touchstart to simulate right-click action with 2 fingers
     document.addEventListener('touchstart', function (e) {
         if (e.touches.length == 2) {
@@ -1039,4 +1044,99 @@ function hasHiddenProperty(obj) {
 
 function checkBigSinglesLength() {
     return document.querySelectorAll(".bigSingles").length;
+}
+
+var chartInstances = {}; // Store chart instances uniquely
+
+function makeChart() {
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js", function () {
+        if (!cD) return;
+        const colorArray = [
+            "rgba(34, 165, 89, 0.3)",
+            "rgba(34, 36, 165, 0.3)",
+            "rgba(255, 99, 133, 0.3)",
+            "rgba(115, 46, 133, 0.3)"
+        ];
+
+        cD.forEach(chart => {
+            if (!chart.chart) return;
+
+            let cdD = chart.chart.data;
+            let chartId = `${chart.device}chart`; // Unique ID for each chart
+            let canvas = document.getElementById(chartId);
+
+            if (!canvas) return; // Ensure the canvas exists
+            // Apply colors
+            cdD.datasets.forEach((dataset, index) => {
+                const color = colorArray[index % colorArray.length];
+                dataset.backgroundColor = color;
+                dataset.borderColor = color;
+                dataset.tension = 0.3;
+                dataset.fill = true;
+                dataset.pointRadius = 6;
+                dataset.pointHoverRadius = 6;
+                dataset.pointBackgroundColor = "rgba(0, 0, 0, 0)";
+                dataset.pointBorderColor = "rgba(0, 0, 0, 0)";
+                dataset.pointHoverBackgroundColor = color;
+                dataset.pointHoverBorderColor = color;
+            });
+
+            if (!chartInstances[chartId]) {
+                console.log("Creating new chart instance for", chartId);
+                // Create a new chart instance for this device
+                chartInstances[chartId] = new Chart(canvas.getContext('2d'), {
+                    type: 'line',
+                    data: cdD,
+                    options: {
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: true, displayColors: false },
+                        },
+                        scales: { x: { display: false }},
+                        elements: {
+                            line: { tension: 0.2 },
+                            point: { radius: 0, hoverRadius: 6 }
+                        }
+                    }
+                });
+
+                updateYAxisVisibility();
+            } else {
+                console.log("Updating existing chart instance for", chartId);
+                // Update existing chart data
+                let existingChart = chartInstances[chartId];
+                existingChart.data.labels = cdD.labels;
+                existingChart.data.datasets = cdD.datasets;
+                existingChart.update();
+                updateYAxisVisibility();
+            }
+        });
+    });
+}
+
+function updateYAxisVisibility() {
+    Object.values(chartInstances).forEach(chart => {
+        if (!chart) return;
+
+        const shouldShow = document.getElementById('allList').offsetWidth > 400;
+
+        // Loop through all Y-axes and update visibility
+        Object.keys(chart.options.scales).forEach(scaleKey => {
+            if (scaleKey.startsWith("y-")) { // Only target Y-axes
+                chart.options.scales[scaleKey].display = shouldShow;
+            }
+            if (scaleKey.startsWith("y-r")) { // Only target Y-axes
+                chart.options.scales[scaleKey].position = "right";
+            }
+        });
+
+        chart.update();
+    });
 }

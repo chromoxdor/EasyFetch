@@ -37,6 +37,12 @@ var unit;
 var hiddenOverride = false;
 var isMain = true;
 let diV = '</div>';
+var cD = [];
+let html2 = "";
+let htmlold = "";
+let shouldShowOld = false;
+var selectionData = {}; // Store selections by deviceType > deviceIndex > valueIndex
+
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
@@ -63,9 +69,19 @@ async function fetchJson(gN) {
     if (myParam == null) { hasParams = 0; }
     someoneEn = 0;
 
+    let stats = window.efc ? "?showpluginstats=1" : "";
     if (!jsonPath) { jsonPath = `/json`; }
-    const response = await getUrl(jsonPath);
-    myJson = await response.json();
+
+    let myJson;
+
+    try {
+        const response = await getUrl(jsonPath + stats);
+        myJson = await response.json();
+    } catch (error) {
+        console.error("Error parsing JSON, falling back to empty stats", error);
+        const response = await getUrl(jsonPath);
+        myJson = await response.json();
+    }
 
     unit = myJson.WiFi.Hostname;
     unitNr = myJson.System['Unit Number'];
@@ -78,7 +94,7 @@ async function fetchJson(gN) {
     //console.log("selectionData", selectionData);
     if (!isittime) return;
     html = '';
-    let html1 = '', html2 = '', html3 = '', htmlBigS = '';
+    let html1 = '', html11 = '', html3 = '', htmlBigS = '';
     let htmlBigFirst = `<div class="bigNum">`
     let htmlBig1 = `<div class="valuesBig" style="font-weight:bold;text-align:left;">`;
 
@@ -123,8 +139,14 @@ async function fetchJson(gN) {
         for (const sensor of myJson.Sensors) {
             //myJson.Sensors.forEach(sensor => {
 
-            const { TaskNumber, TaskDeviceNumber, TaskName, TaskDeviceGPIO1 } = sensor;
+            const { TaskNumber, TaskDeviceNumber, TaskName, TaskDeviceGPIO1, PluginStats } = sensor;
 
+            if (PluginStats) {
+                const existing = cD.find(item => item.device === TaskName);
+                existing ? (existing.chart = PluginStats) : cD.push({ device: TaskName, chart: PluginStats });
+            }
+
+            //console.log("chartData", cD);
             var bigSpan = "";
             sensorName = TaskName;
             deviceName = TaskName;
@@ -151,7 +173,12 @@ async function fetchJson(gN) {
             if (taskEnabled === "true" && !isHidden && !exC && exC2 && !hasParams) {
 
                 const orderA = selectionData[TaskNumber]?.["A"]?.["order"] || "0";
+                const chart = selectionData[TaskNumber]?.["A"]?.["chart"] || 0;
                 let efcIDA = `efc:${deviceName}=${TaskDeviceNumber},${TaskNumber}`;
+                //chart
+                if (chart && window.efc) {
+                    html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:150px; padding:0;" ><canvas id="${TaskName}chart"></canvas></div>`;
+                }
 
                 if (sensor.TaskValues) {
                     someoneEn = 1;
@@ -163,6 +190,7 @@ async function fetchJson(gN) {
                     for (const item of sensor.TaskValues) {
 
                         const { ValueNumber, Value, Name, NrDecimals } = item;
+
 
                         //adding an ID for every Tile to be able to access the context menu
                         let efcID = `${efcIDA},${ValueNumber}`;
@@ -185,6 +213,7 @@ async function fetchJson(gN) {
                         let XI = selectedTaskVal?.["noI"] === 1 ? "noI" : "";
                         let order = selectedTaskVal?.["order"] || "0";
 
+
                         const sendToValue = selectedTaskVal?.sendTo;
                         const [sendToNr = "", gpio = ""] = (typeof sendToValue === "string" ? sendToValue.split(",") : []) || [];
 
@@ -197,13 +226,16 @@ async function fetchJson(gN) {
                             [slMin, slMax, slStep] = taskVal === "thSlider" ? [5, 35, 1] : [0, 1024, 1];
                         }
 
-                        sensorName = overrideSelection && overrideSelection !== "none" ? overrideSelection
-                            : (!taskVal || taskVal === "none") ? TaskName
-                                : taskVal;
+                        if (overrideSelection && overrideSelection !== "none" && overrideSelection !== "chart") {
+                            sensorName = overrideSelection;
+                        } else if (!taskVal || taskVal === "none") {
+                            sensorName = TaskName;
+                        } else {
+                            sensorName = taskVal;
+                        }
 
-                        if (!firstItemCheck && (!taskVal || taskVal === "" || taskVal === "none" || sensorName === "bigVal" || taskVal === "bigVS")) {
-                            firstItemCheck = true;
-                            firstItem = true;
+                        if (!firstItemCheck && (!taskVal || ["", "none", "bigVS"].includes(taskVal) || sensorName === "bigVal")) {
+                            firstItemCheck = firstItem = true;
                         }
                         wasUsed = false;
 
@@ -211,7 +243,13 @@ async function fetchJson(gN) {
                             num2Value = Value.toFixed(NrDecimals);
                         }
                         else { num2Value = Value; }
-                        itemName = Name.toString();
+
+                        if (selectedTaskVal?.["noV"] === 1) {
+                            itemName = "";
+                        }
+                        else {
+                            itemName = Name.toString();
+                        }
                         itemNameChanged = changeNN(itemName);
 
                         //empty button State
@@ -422,6 +460,8 @@ async function fetchJson(gN) {
                             }
 
                         }
+
+
                         // if all items with a specific declaration are processed do the rest---------------------------------------------------------
                         if (!wasUsed) {
                             //output clock
@@ -439,7 +479,7 @@ async function fetchJson(gN) {
                                     html1 += `<div order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
                                 }
 
-                                if (!isHidden || taskVal.includes("bigVS")) {
+                                if (!isHidden || taskVal.includes("bigVS") || taskVal.includes("chart")) {
                                     if (TaskDeviceNumber === 81) {
                                         html1 += `
                                             <div id="${efcID}" class="cron">
@@ -490,17 +530,22 @@ async function fetchJson(gN) {
     //wrap bigValues singleMode
     if (htmlBigS) {
         let htmlBigSingles = '';
-
         htmlBigSingles = htmlBigFirst + htmlBigS + diV;
-
         html3 += htmlBigSingles;
     }
 
-
     document.getElementById('sysInfo').innerHTML = syshtml;
-
     document.getElementById('sensorList').innerHTML = orderFunction(html);
-    document.getElementById('sliderList').innerHTML = orderFunction(html2);
+
+    const shouldShow = document.getElementById('allList')?.offsetWidth > 400;
+    if (htmlold !== html2 || shouldShow !== shouldShowOld) {
+        document.getElementById('sliderList').innerHTML = orderFunction(html2);
+        chartInstances = {};
+    }
+    shouldShowOld = shouldShow
+    htmlold = html2;
+    html2 = "";
+
     document.getElementById('bigNumber').innerHTML = html3;
     //Things that only need to run once
     if (firstRun) {
@@ -540,6 +585,7 @@ async function fetchJson(gN) {
     paramS();
     changeCss();
     resizeText();
+   if (window.efc) makeChart();
     if (!window.configMode) { longPressB(); }
 }
 
@@ -588,7 +634,7 @@ function changeCss() {
     let x = " auto";
     let m = "";
     let coloumnSet, y, z;
-    var numSl = document.querySelectorAll('input[type=range]').length;
+    var numSl = document.querySelectorAll('.chart, input[type=range]').length;
     if (!numSl) { document.getElementById("allList").classList.add('allExtra'); }
     else { document.getElementById("allList").classList.remove('allExtra'); }
     var list3 = document.querySelectorAll(".bigNum");
@@ -598,13 +644,12 @@ function changeCss() {
 
     // find the largest group size
 
-   let bigLength = Math.max(...Array.from(list3, div => div.children.length));
+    let bigLength = Math.max(...Array.from(list3, div => div.children.length));
 
-   
+
 
     z = 0;
     if (!list3.length) z = numSet; //if there are no big values orient on number of "normal" tiles
-    console.log(bigLength, numSet, z);
     if (bigLength == 4 || z > 9) {
         y = x + x + x + x;
         coloumnSet = 4;
@@ -630,22 +675,21 @@ function changeCss() {
         coloumnSet = 2;
     }
 
-    console.log(bigLength, numSet, z, y, coloumnSet);   
-let isttwo = false;
+    let isttwo = false;
     widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
-       isttwo = true;
+        isttwo = true;
 
 
         if (bigLength > 1 || numSet > 1) {
             coloumnSet = 2; y = x + x
             bigLength = 2;
         }
-       
-    } 
-    
 
-         // append missing tiles with order starting from 1
+    }
+
+
+    // append missing tiles with order starting from 1
     list3.forEach(group => {
         let orderCounter = 4;
 
@@ -667,11 +711,12 @@ let isttwo = false;
         }
     });
 
-    if (isttwo){
+    if (isttwo) {
         const elements = document.querySelectorAll(".big3");
-        elements.forEach(el => el.classList.add("bigSpan"));}
+        elements.forEach(el => el.classList.add("bigSpan"));
+    }
 
-    
+
     console.log(coloumnSet, y);
     sList.style.setProperty('grid-template-columns', y);
     list3.forEach(item => {
@@ -712,9 +757,7 @@ function paramS() {
     });
     neoS = document.querySelectorAll(".npS");
     neoS.forEach(sID => {
-        console.log("sasasasasas", sID.id);
         hVal = document.getElementById(sID.id.split("?")[0] + '?H')?.value;
-        console.log("sas...w.d..wd.asasasas", hVal);
         vVal = document.getElementById(sID.id.split("?")[0] + '?V')?.value || 20;
         if (vVal < 20) vVal = 20;
         sID.style.backgroundImage = 'linear-gradient(to right, hsl(0,0%,' + vVal + '%),hsl(' + hVal + ',100%,50%))';
@@ -1141,7 +1184,6 @@ async function getNodes(sensorName, allNodes, ch) {
     if (!ch) {
         response = await getUrl(`/json`);
         myJson2 = await response.json();
-        console.log("myJson2");
     }
     myJson2.nodes.forEach(node => {
         i++
@@ -1185,7 +1227,8 @@ async function getNodes(sensorName, allNodes, ch) {
 function nodeChange(event) {
     const node = myJson2.nodes[event];
     selectionData = {};
-    updateSaveButton("hide");
+    cD = [];
+    if (window.efc) updateSaveButton("hide");
     runonce2 = true;
     if (node) {
         nNr = node.nr;
@@ -1370,7 +1413,7 @@ function playSound(freQ) {
 }
 //timeout fetch requests
 async function getUrl(url) {
-    if (!window.configMode || url.endsWith("json")) {
+    if (!window.configMode || url.endsWith("/json?showpluginstats=1")) {
         console.log(url);
         let controller = new AbortController();
         setTimeout(() => controller.abort(), 2000);
