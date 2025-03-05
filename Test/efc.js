@@ -16,7 +16,9 @@ let tempName = "";
         const divContent = document.getElementById("dateV")?.textContent.trim();
 
         if (divContent !== expectedVersion) {
-            alert(`Your version (${divContent}) of easyfetch is outdated.\n Please Update to: ${expectedVersion}`);
+            alert(`Your version (${divContent}) of easyfetch is outdated.
+                \n Please Update to: ${expectedVersion}
+                \n Fixed: config menu was blocking functions through nodechange`);
         }
     });
 
