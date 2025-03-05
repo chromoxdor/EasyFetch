@@ -71,20 +71,18 @@ async function fetchJson(gN) {
     someoneEn = 0;
 
     let stats = window.efc ? "?showpluginstats=1" : "";
-    if (!jsonPath) { jsonPath = `/json`; }
-
+    if (!jsonPath) { jsonPath = "/json"; }
     let myJson;
 
-    try {
-        if (jStats) {
-        const response = await getUrl(jsonPath + stats);
-        myJson = await response.json();
+    if (jStats) {
+        try {
+            const response = await getUrl(jsonPath + stats);
+            myJson = await response.json();
+        } catch (error) {
+            console.error("Error parsing JSON, falling back to empty stats", error);
+            jStats = false
         }
-    } catch (error) {
-        console.error("Error parsing JSON, falling back to empty stats", error);
-        jStats = false
-    }
-    if (!jStats) {
+    } else {
         const response = await getUrl(jsonPath);
         myJson = await response.json();
     }
@@ -591,7 +589,7 @@ async function fetchJson(gN) {
     paramS();
     changeCss();
     resizeText();
-   if (window.efc) makeChart();
+    if (window.efc) makeChart();
     if (!window.configMode) { longPressB(); }
 }
 
@@ -1420,7 +1418,7 @@ function playSound(freQ) {
 }
 //timeout fetch requests
 async function getUrl(url) {
-    if (!window.configMode) {
+    if (!window.configMode || url.includes("/json")) {
         console.log(url);
         let controller = new AbortController();
         setTimeout(() => controller.abort(), 2000);
