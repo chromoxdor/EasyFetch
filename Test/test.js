@@ -42,6 +42,7 @@ let html2 = "";
 let htmlold = "";
 let shouldShowOld = false;
 var selectionData = {}; // Store selections by deviceType > deviceIndex > valueIndex
+var jStats = true;
 
 
 //##############################################################################################################
@@ -75,10 +76,15 @@ async function fetchJson(gN) {
     let myJson;
 
     try {
+        if (jStats) {
         const response = await getUrl(jsonPath + stats);
         myJson = await response.json();
+        }
     } catch (error) {
         console.error("Error parsing JSON, falling back to empty stats", error);
+        jStats = false
+    }
+    if (!jStats) {
         const response = await getUrl(jsonPath);
         myJson = await response.json();
     }
@@ -1230,6 +1236,7 @@ function nodeChange(event) {
     cD = [];
     if (window.efc) updateSaveButton("hide");
     runonce2 = true;
+    jStats = true;
     if (node) {
         nNr = node.nr;
         nN = node.name;
@@ -1413,7 +1420,7 @@ function playSound(freQ) {
 }
 //timeout fetch requests
 async function getUrl(url) {
-    if (!window.configMode || url.endsWith("/json?showpluginstats=1")) {
+    if (!window.configMode) {
         console.log(url);
         let controller = new AbortController();
         setTimeout(() => controller.abort(), 2000);
