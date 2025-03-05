@@ -684,12 +684,10 @@ function changeCss() {
     if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
         isttwo = true;
 
-
         if (bigLength > 1 || numSet > 1) {
             coloumnSet = 2; y = x + x
             bigLength = 2;
         }
-
     }
 
 
@@ -1230,10 +1228,8 @@ async function getNodes(sensorName, allNodes, ch) {
 //##############################################################################################################
 function nodeChange(event) {
     const node = myJson2.nodes[event];
-    selectionData = {};
     cD = [];
-    if (window.efc) updateSaveButton("hide");
-    runonce2 = true;
+    if (window.efc) exitConfig();
     jStats = true;
     if (node) {
         nNr = node.nr;

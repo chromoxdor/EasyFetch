@@ -11,6 +11,16 @@ const pointerEventsStyle = document.createElement("style");
 var contextIsAlready = false;
 let tempName = "";
 
+    document.addEventListener("DOMContentLoaded", function () {
+        const expectedVersion = "20250305/efc_chart3"; // Set the correct version
+        const divContent = document.getElementById("dateV")?.textContent.trim();
+
+        if (divContent !== expectedVersion) {
+            alert(`Your version (${divContent}) of easyfetch is outdated.\n Please Update to: ${expectedVersion}`);
+        }
+    });
+
+
 function addContext() {
 
     // Handle right-click (contextmenu)
@@ -25,7 +35,7 @@ function handleRightClick(event) {
     let target = event.target.closest('div[id^="efc"]');
     addPointerEvents(); // Adds the style to access locked elements
 
-    let target2;;
+    let target2;
     // // If no target is found, process the parent and enable pointer-events on the children
     if (target === null) {
         target2 = event.target;
@@ -47,14 +57,19 @@ function handleRightClick(event) {
                         if (target2.id.startsWith("sliderList")) { target = childUnderPointer?.parentElement?.parentElement };
                         //console.log("TargetChild:", target);
                     }
-                }
+                } 
             });
+        //    if (children[0].className === "numberUnit") {
+        //         console.log("Targeteklwekdlwkedlwdkwlk:", children[0].className);
+        //         target = target2;
+        //         console.log("Targeteklwekdlwkedlwdkwlk:", target);
+        // } 
         }
     }
 
 
     // Only proceed if target is valid (i.e., not null or undefined)
-    if (target && target.id.startsWith("efc")) {
+    if (target && (target.id.startsWith("efc") || target.id === "unitId")) {
         //console.log("Right-clicked on:", target.id);
         isittime = false;
         updateSaveButton();
@@ -109,9 +124,7 @@ function handleRightClick(event) {
             menuElement.style.top = `${yPosition}px`;
         }
     } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
-        updateSaveButton("hide");
-        selectionData = {};
-        runonce2 = true;
+        exitConfig();
         console.log("No valid target found");
     }
 
@@ -316,6 +329,9 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
                 addCheckbox(formFields, " no input", "noI");
             }
         }
+        if (deviceType === "C") {
+            addNumberInput(formFields, " columns", "cols");
+        }
 
         if (["vSlider", "nvSlider", "thSlider"].includes(selectedOption)) {
             addTextInput(formFields, "range: ", "range", selectedOption);
@@ -337,7 +353,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         }
 
         if (deviceType === "A" && !singleTile) {
-            addCheckbox(formFields, "chart: ", "chart");
+            addCheckbox(formFields, " chart", "chart");
             addColorPicker(formFields, "color: ", "color");
         }
 
@@ -524,6 +540,7 @@ function addCheckbox(container, label, key) {
     let input = document.createElement("input");
     input.type = "checkbox";
     input.dataset.key = key;
+    labelEl.style.padding = "5px 0";
     labelEl.appendChild(input);
     labelEl.appendChild(document.createTextNode(label));
     container.appendChild(labelEl);
@@ -882,11 +899,7 @@ function createMenu() {
                 setLongPressDelay(200);
                 document.addEventListener("long-press", handleRightClick, true);
             } else {
-                updateSaveButton("hide");
-                selectionData = {};
-                runonce2 = true;
-                setLongPressDelay(600);
-                document.removeEventListener("long-press", handleRightClick, true);
+                exitConfig();
             }
         }
     }, true); // Use capturing phase for touch events
@@ -1044,6 +1057,14 @@ function hasHiddenProperty(obj) {
 
 function checkBigSinglesLength() {
     return document.querySelectorAll(".bigSingles").length;
+}
+
+function exitConfig() {
+    updateSaveButton("hide");
+    selectionData = {};
+    runonce2 = true;
+    setLongPressDelay(600);
+    document.removeEventListener("long-press", handleRightClick, true);
 }
 
 //##############################################################################################################
