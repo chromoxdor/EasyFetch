@@ -11,18 +11,18 @@ const pointerEventsStyle = document.createElement("style");
 var contextIsAlready = false;
 let tempName = "";
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const expectedVersion = "20250311/efc_chart1"; // Set the correct version
-        const divContent = document.getElementById("dateV")?.textContent.trim();
+    // document.addEventListener("DOMContentLoaded", function () {
+    //     const expectedVersion = "20250311/efc_chart1"; // Set the correct version
+    //     const divContent = document.getElementById("dateV")?.textContent.trim();
 
-        if (divContent !== expectedVersion) {
-            alert(`Your version (${divContent}) of easyfetch is outdated.
-                \n Please Update to: ${expectedVersion}
-                \n Fixed: - naming of events was not right
-                \n - JSON check was not robust`);
-                fetchJson();
-        }
-    });
+    //     if (divContent !== expectedVersion) {
+    //         alert(`Your version (${divContent}) of easyfetch is outdated.
+    //             \n Please Update to: ${expectedVersion}
+    //             \n Fixed: - naming of events was not right
+    //             \n - JSON check was not robust`);
+    //             fetchJson();
+    //     }
+    // });
 
 
 function addContext() {
