@@ -43,7 +43,7 @@ let htmlold = "";
 let shouldShowOld = false;
 var selectionData = {}; // Store selections by deviceType > deviceIndex > valueIndex
 var jStats = true;
-
+let statsAbortController = new AbortController();
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
@@ -73,26 +73,31 @@ async function fetchJson(gN) {
     let stats = window.efc ? "?showpluginstats=1" : "";
     if (!jsonPath) { jsonPath = "/json"; }
     let myJson;
-
-    if (jStats) {
-        try {
-            const response = await getUrl(jsonPath + stats);
-            myJson = await response.json();
-        } catch (error) {
-            console.error("Error parsing JSON, falling back to empty stats", error);
-            jStats = false
-        }
-    } else {
-        const response = await getUrl(jsonPath);
+    
+    console.log("--------------------------------------jsonPath", jsonPath);
+    statsAbortController?.abort(); 
+    statsAbortController = new AbortController();
+    try {
+        const response = await getUrl(jsonPath + (jStats ? stats : ""), { signal: statsAbortController.signal });
+        if (statsAbortController.signal.aborted) return;
         myJson = await response.json();
+        unit = gN || myJson.WiFi.Hostname;
+        unitNr = myJson.System['Unit Number'];
+        await getEfcData(unit);
+    } catch (error) {
+        if (error.name === "AbortError") return;
+        if (error.toString().includes("double-quoted")) {
+        console.error("Error parsing JSON, falling back to empty stats", error.name);
+        jStats = false;
+        }
     }
-
-    unit = myJson.WiFi.Hostname;
-    unitNr = myJson.System['Unit Number'];
 
     //----------------------------------------------------------------------------------------------------------get EFC Data
 
-    await getEfcData(unit);
+    if (unit !== selectionData.unit) {
+        runonce2 = true;
+        await getEfcData(unit);
+    }
 
     //----------------------------------------------------------------------------------------------------------get EFC Data
     //console.log("selectionData", selectionData);
@@ -332,7 +337,7 @@ async function fetchJson(gN) {
                                                 ${itemNameChanged}
                                             </div>
                                             <div class="valWrap">
-                                                <input type="number" class="vInputs ${TaskNumber},${ValueNumber}" id="${itemName}" name="${sensorName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
+                                                <input type="number" class="vInputs ${TaskNumber},${ValueNumber}" id="${itemName}" name="${deviceName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
                                                 <div class="kindInput">${kindNP}</div>
                                             </div>
                                         </div>`;
@@ -363,7 +368,7 @@ async function fetchJson(gN) {
                                 const htmlSlider1 = `<input class="slTS slTHU" type="range" min="0" max="1440" step="5" value="`;
 
                                 html2 += `
-                                  <div order="${order}" id="${efcID}" class="slTimeSetWrap ${sensorName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
+                                  <div order="${order}" id="${efcID}" class="slTimeSetWrap ${deviceName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
                                     ${itemName}
                                     <div class="slTimeText">
                                       <span class="hAmount1">${hour1}</span>:<span class="mAmount1">${padded1}</span>-
@@ -390,7 +395,7 @@ async function fetchJson(gN) {
                                 const thermoSliderAddon = `<div class="noI" style="z-index: 2; position: absolute">${itemName}</div>`;
 
                                 html2 += `
-                                  <div order="${order}" id="${efcID}" class="slTimeSetWrap ${sensorName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
+                                  <div order="${order}" id="${efcID}" class="slTimeSetWrap ${deviceName} ${TaskNumber},${ValueNumber}" style="font-weight:bold;">
                                     ${thermoSliderAddon}
                                     <div class="slTimeText">
                                       <div class="even">&#9728;&#xFE0E;<span class="isT">${slT1}</span>°C</div>
@@ -409,7 +414,7 @@ async function fetchJson(gN) {
                                 const rangeType = ['H', 'S', 'V'].includes(kindN.toUpperCase()) ? kindN.toUpperCase() : 'H';
 
                                 // Create the HTML element with a range input, depending on the type
-                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset" style="padding:0;"><input type="range" max="${rangeType === 'H' ? 359 : 100}" min="0" value="${num2Value}" id="${sensorName}?${rangeType}" class="sL npSl ${TaskNumber},${ValueNumber} np${rangeType} noVal"></div>`;
+                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset" style="padding:0;"><input type="range" max="${rangeType === 'H' ? 359 : 100}" min="0" value="${num2Value}" id="${deviceName}?${rangeType}" class="sL npSl ${TaskNumber},${ValueNumber} np${rangeType} noVal"></div>`;
                             }
                             else { wasUsed = false; }
                         }
@@ -585,11 +590,11 @@ async function fetchJson(gN) {
         document.getElementById("unitId").innerHTML = `${styleU}${unit} <span class="numberUnit"> (${myJson.WiFi.RSSI})</span>`;
         document.getElementById("unitT").innerHTML = `${styleU}${unit}`;
     }
-    if (gN == "gN") getNodes(undefined, undefined, "ch");
+    if (gN) getNodes(undefined, undefined, "ch");
     paramS();
     changeCss();
     resizeText();
-    if (window.efc) makeChart();
+    if (window.efc && cD) makeChart();
     if (!window.configMode) { longPressB(); }
 }
 
@@ -1229,6 +1234,8 @@ async function getNodes(sensorName, allNodes, ch) {
 function nodeChange(event) {
     const node = myJson2.nodes[event];
     cD = [];
+    selectionData = {};
+    runonce2 = true;
     if (window.efc) exitConfig();
     jStats = true;
     if (node) {
@@ -1240,7 +1247,7 @@ function nodeChange(event) {
         //console.log("......nP2:"+nP2);
         jsonPath = `${baseUrl}/json`;
         window.history.replaceState(null, null, `?unit=${nNr}`);
-        fetchJson("gN");
+        fetchJson(nN);
     }
     if (window.innerWidth < 450 && document.getElementById('sysInfo').offsetHeight === 0) {
         closeNav();
@@ -1417,7 +1424,7 @@ async function getUrl(url) {
     if (!window.configMode || url.includes("/json")) {
         console.log(url);
         let controller = new AbortController();
-        setTimeout(() => controller.abort(), 2000);
+        setTimeout(() => controller.abort(), 1000);
 
         try {
             let response = await fetch(url, {
@@ -1432,48 +1439,52 @@ async function getUrl(url) {
     }
 }
 
+let efcAbortController = new AbortController(); // Stores the latest controller
+
 async function getEfcData(unit) {
+    // Abort the previous request if it exists
+    efcAbortController.abort();
+    efcAbortController = new AbortController(); // Create a new controller for the current request
 
     if (runonce2 && !hasParams) {
-        // If efc.json fetch fails, try to fetch mein_efc.json
         try {
-            let response = await getUrl(`/main_efc.json.gz`);
+            let response = await getUrl(`/main_efc.json.gz`, { signal: efcAbortController.signal });
 
-            // If fetching mein_efc.json fails, throw an error
             if (!response || !response.ok) {
                 throw new Error("Failed to fetch /main_efc.json");
             }
 
-            // If mein_efc.json is fetched successfully, parse it
             let mainEfcData = await response.json();
             efcArray = mainEfcData;
             console.log("Data from main_efc.json:", unit);
 
-            // Fill selectionData with the entry matching the unitname key
             selectionData = mainEfcData.find(entry => entry.unit === unit);
             console.log("selectionData after matching unitname:", selectionData);
-
         } catch (error) {
+            if (error.name === "AbortError") {
+                console.log("Fetch aborted for:", unit);
+                return;
+            }
             console.log("Error fetching /main_efc.json:", error.message);
             try {
-                // First, attempt to fetch efc.json
-                let response = await getUrl(`${baseUrl}/efc.json.gz`);
+                let response = await getUrl(`${baseUrl}/efc.json.gz`, { signal: efcAbortController.signal });
 
-                // If fetching efc.json fails, throw an error and proceed to the next fetch
                 if (!response || !response.ok) {
                     throw new Error("Failed to fetch /efc.json");
                 }
 
-                // If efc.json is fetched successfully, parse and assign to selectionData
                 selectionData = await response.json();
                 console.log("selectionData from efc.json:", selectionData);
                 isMain = false;
             } catch (error) {
+                if (error.name === "AbortError") {
+                    console.log("Fetch aborted for:", unit);
+                    return;
+                }
                 console.log("Error fetching /efc.json:", error.message);
             }
         }
-        if (!selectionData) { selectionData = {}; }
-        // Finally, ensure runonce2 is set to false to prevent repeated execution
+        if (!selectionData) selectionData = {unit: unit};
         runonce2 = false;
     }
 }

@@ -12,13 +12,15 @@ var contextIsAlready = false;
 let tempName = "";
 
     document.addEventListener("DOMContentLoaded", function () {
-        const expectedVersion = "20250305/efc_chart3"; // Set the correct version
+        const expectedVersion = "20250311/efc_chart1"; // Set the correct version
         const divContent = document.getElementById("dateV")?.textContent.trim();
 
         if (divContent !== expectedVersion) {
             alert(`Your version (${divContent}) of easyfetch is outdated.
                 \n Please Update to: ${expectedVersion}
-                \n Fixed: config menu was blocking functions through nodechange`);
+                \n Fixed: - naming of events was not right
+                \n - JSON check was not robust`);
+                fetchJson();
         }
     });
 
@@ -1062,8 +1064,8 @@ function checkBigSinglesLength() {
 }
 
 function exitConfig() {
-    updateSaveButton("hide");
     selectionData = {};
+    updateSaveButton("hide");
     runonce2 = true;
     setLongPressDelay(600);
     document.removeEventListener("long-press", handleRightClick, true);
