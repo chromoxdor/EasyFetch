@@ -850,8 +850,7 @@ function saveToFile(param) {
         }
     });
 
-    updateSaveButton("hide");
-    runonce2 = true;
+    exitConfig()
 }
 
 
