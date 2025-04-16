@@ -828,7 +828,7 @@ function saveToFile(param) {
             fetchFile(uploadUrl, formDataEfc);
         }
 
-        // Only compress and send main_efc.json.gz if isMain is false
+        // Only compress and send main_efc.json.gz if isMain is true
         if (isMain) {
             console.log("Processing main_efc.json.gz ");
 
@@ -846,7 +846,7 @@ function saveToFile(param) {
             // Upload main_efc.json.gz
             fetchFile(`/upload`, formDataMain);
         } else {
-            console.log("Skipping main_efc.json.gz because isMain is true.");
+            console.log("Skipping main_efc.json.gz because isMain is false.");
         }
     });
 
@@ -893,6 +893,14 @@ function fetchFile(uploadUrl, formData) {
 function createMenu() {
 
     document.getElementById('areaChart')?.addEventListener("resize", updateYAxisVisibility);
+
+    //click anywhere else to cancel menu
+    document.getElementById('container').addEventListener('click', e => {
+        if (e.target === container) {
+            exitConfig();
+            console.log("clicked container");
+        }
+    })
 
     // Handle touchstart to simulate right-click action with 2 fingers
     document.addEventListener('touchstart', function (e) {
