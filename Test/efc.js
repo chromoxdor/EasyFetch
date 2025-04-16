@@ -11,18 +11,18 @@ const pointerEventsStyle = document.createElement("style");
 var contextIsAlready = false;
 let tempName = "";
 
-    // document.addEventListener("DOMContentLoaded", function () {
-    //     const expectedVersion = "20250311/efc_chart1"; // Set the correct version
-    //     const divContent = document.getElementById("dateV")?.textContent.trim();
+// document.addEventListener("DOMContentLoaded", function () {
+//     const expectedVersion = "20250311/efc_chart1"; // Set the correct version
+//     const divContent = document.getElementById("dateV")?.textContent.trim();
 
-    //     if (divContent !== expectedVersion) {
-    //         alert(`Your version (${divContent}) of easyfetch is outdated.
-    //             \n Please Update to: ${expectedVersion}
-    //             \n Fixed: - naming of events was not right
-    //             \n - JSON check was not robust`);
-    //             fetchJson();
-    //     }
-    // });
+//     if (divContent !== expectedVersion) {
+//         alert(`Your version (${divContent}) of easyfetch is outdated.
+//             \n Please Update to: ${expectedVersion}
+//             \n Fixed: - naming of events was not right
+//             \n - JSON check was not robust`);
+//             fetchJson();
+//     }
+// });
 
 
 function addContext() {
@@ -35,101 +35,129 @@ function handleRightClick(event) {
     event.preventDefault();
     removeHighlighting();
 
-    //console.log("Right-clicked", event);
-    let target = event.target.closest('div[id^="efc"]');
-    addPointerEvents(); // Adds the style to access locked elements
+    if (event.target === container) {
+        updateSaveButton();
+        const userInput = prompt("Paste your JSON here:");
 
-    let target2;
-    // // If no target is found, process the parent and enable pointer-events on the children
-    if (target === null) {
-        target2 = event.target;
-        // Enable pointer-events for all children of the target element that have the "efc" class
-        const children = Array.from(target2.children);  // Convert HTMLCollection to an array
-        console.log("Children:", children);
-        if (children.length > 0) {
-            // Only target the first child
-            children.forEach(child => {
+        if (userInput !== null && userInput.length > 2) {
+            let jsonStr = userInput
 
-                if (child.id.includes("efc")) { // Check if the ID contains "efc"
-                    const childUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
-                    console.log("childUnderPointer:", childUnderPointer);
-                    // Reassign the target to the child under the pointer
+            // Remove first and last character if it is in an array 
+            // (content of main_efc.json.gz of a single device)
+            if (userInput.startsWith('[') && userInput.endsWith(']')) {
+                jsonStr = userInput.slice(1, -1);
+            }
+            try {
+                // Try to parse it as JSON
+                selectionData = JSON.parse(jsonStr);
+                console.log("Parsed JSON object:", selectionData);
+            } catch (e) {
+                console.error("Invalid JSON after trimming:", e);
+            }
 
-                    if (childUnderPointer) {
-                        target = childUnderPointer;
-                        if (target.classList.contains("sensors")) { target = childUnderPointer?.parentElement; }
-                        if (target2.id.startsWith("sliderList")) { target = childUnderPointer?.parentElement?.parentElement };
-                        //console.log("TargetChild:", target);
-                    }
-                } 
-            });
-        //    if (children[0].className === "numberUnit") {
-        //         console.log("Targeteklwekdlwkedlwdkwlk:", children[0].className);
-        //         target = target2;
-        //         console.log("Targeteklwekdlwkedlwdkwlk:", target);
-        // } 
+        } else {
+            console.log("Input too short or cancelled.");
+            exitConfig();
         }
     }
+    else {
 
+        //console.log("Right-clicked", event);
+        let target = event.target.closest('div[id^="efc"]');
+        addPointerEvents(); // Adds the style to access locked elements
 
-    // Only proceed if target is valid (i.e., not null or undefined)
-    if (target && (target.id.startsWith("efc") || target.id === "unitId")) {
-        //console.log("Right-clicked on:", target.id);
-        isittime = false;
-        updateSaveButton();
-        currentDivId = target.id;
+        let target2;
+        // // If no target is found, process the parent and enable pointer-events on the children
+        if (target === null) {
+            target2 = event.target;
+            // Enable pointer-events for all children of the target element that have the "efc" class
+            const children = Array.from(target2.children);  // Convert HTMLCollection to an array
+            console.log("Children:", children);
+            if (children.length > 0) {
+                // Only target the first child
+                children.forEach(child => {
 
-        // Remove previous highlights
+                    if (child.id.includes("efc")) { // Check if the ID contains "efc"
+                        const childUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
+                        console.log("childUnderPointer:", childUnderPointer);
+                        // Reassign the target to the child under the pointer
 
-        //document.querySelectorAll('div[id^="efc"]').forEach(el => el.style.outline = "");
-
-        // Apply highlight
-        //target.style.outline = "2px solid #ffcc00"; // Yellow border
-        //highlightMatchingDivs(target.id, target.className);
-
-        // Clear and rebuild the context menu based on the device type
-        rebuildContextMenu(target.id, target.className);
-
-        if (event.detail.clientX) {
-            xCoord = event.detail.clientX;
-            yCoord = event.detail.clientY;
-        } else {
-            xCoord = event.clientX;
-            yCoord = event.clientY;
+                        if (childUnderPointer) {
+                            target = childUnderPointer;
+                            if (target.classList.contains("sensors")) { target = childUnderPointer?.parentElement; }
+                            if (target2.id.startsWith("sliderList")) { target = childUnderPointer?.parentElement?.parentElement };
+                            //console.log("TargetChild:", target);
+                        }
+                    }
+                });
+                //    if (children[0].className === "numberUnit") {
+                //         console.log("Targeteklwekdlwkedlwdkwlk:", children[0].className);
+                //         target = target2;
+                //         console.log("Targeteklwekdlwkedlwdkwlk:", target);
+                // } 
+            }
         }
 
-        // Position and show the menu
-        menu.style.display = "block";
 
-        // Check if the menu element exists and has a valid offsetWidth
-        const menuElement = document.getElementById('custom-menu');
-        if (menuElement && menuElement.offsetWidth > 0) {
-            const menuWidth = menuElement.offsetWidth; // Get the menu width
-            const menuHeight = menuElement.offsetHeight; // Get the menu height
+        // Only proceed if target is valid (i.e., not null or undefined)
+        if (target && (target.id.startsWith("efc") || target.id === "unitId")) {
+            //console.log("Right-clicked on:", target.id);
+            isittime = false;
+            updateSaveButton();
+            currentDivId = target.id;
 
-            let xPosition = xCoord; // Start with the pointer's x-coordinate
+            // Remove previous highlights
 
-            // Adjust x position if menu overflows on the right side
-            if (xCoord + menuWidth > window.innerWidth) {
-                xPosition = window.innerWidth - menuWidth; // Position it to the left edge of the screen
+            //document.querySelectorAll('div[id^="efc"]').forEach(el => el.style.outline = "");
+
+            // Apply highlight
+            //target.style.outline = "2px solid #ffcc00"; // Yellow border
+            //highlightMatchingDivs(target.id, target.className);
+
+            // Clear and rebuild the context menu based on the device type
+            rebuildContextMenu(target.id, target.className);
+
+            if (event.detail.clientX) {
+                xCoord = event.detail.clientX;
+                yCoord = event.detail.clientY;
+            } else {
+                xCoord = event.clientX;
+                yCoord = event.clientY;
             }
 
-            // Set the left position to the adjusted x-position
-            menuElement.style.left = `${xPosition}px`;
+            // Position and show the menu
+            menu.style.display = "block";
 
-            let yPosition = yCoord + 5; // Start with the pointer's y-coordinate with an offset
+            // Check if the menu element exists and has a valid offsetWidth
+            const menuElement = document.getElementById('custom-menu');
+            if (menuElement && menuElement.offsetWidth > 0) {
+                const menuWidth = menuElement.offsetWidth; // Get the menu width
+                const menuHeight = menuElement.offsetHeight; // Get the menu height
 
-            // Adjust y position if menu overflows at the bottom
-            if (yCoord + menuHeight > window.innerHeight) {
-                yPosition = window.innerHeight - menuHeight - 5; // Position it above the pointer if it overflows
+                let xPosition = xCoord; // Start with the pointer's x-coordinate
+
+                // Adjust x position if menu overflows on the right side
+                if (xCoord + menuWidth > window.innerWidth) {
+                    xPosition = window.innerWidth - menuWidth; // Position it to the left edge of the screen
+                }
+
+                // Set the left position to the adjusted x-position
+                menuElement.style.left = `${xPosition}px`;
+
+                let yPosition = yCoord + 5; // Start with the pointer's y-coordinate with an offset
+
+                // Adjust y position if menu overflows at the bottom
+                if (yCoord + menuHeight > window.innerHeight) {
+                    yPosition = window.innerHeight - menuHeight - 5; // Position it above the pointer if it overflows
+                }
+
+                // Set the top position to the adjusted y-position
+                menuElement.style.top = `${yPosition}px`;
             }
-
-            // Set the top position to the adjusted y-position
-            menuElement.style.top = `${yPosition}px`;
+        } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
+            exitConfig();
+            console.log("No valid target found");
         }
-    } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
-        exitConfig();
-        console.log("No valid target found");
     }
 
 }
@@ -894,14 +922,6 @@ function createMenu() {
 
     document.getElementById('areaChart')?.addEventListener("resize", updateYAxisVisibility);
 
-    //click anywhere else to cancel menu
-    document.getElementById('container').addEventListener('click', e => {
-        if (e.target === container) {
-            exitConfig();
-            console.log("clicked container");
-        }
-    })
-
     // Handle touchstart to simulate right-click action with 2 fingers
     document.addEventListener('touchstart', function (e) {
         if (e.touches.length == 2) {
@@ -918,6 +938,10 @@ function createMenu() {
     // **Close menu when clicking outside**
     document.addEventListener("click", (event) => {
         if (!menu.contains(event.target) && !event.target.className.includes("vInputs")) {
+            //second single click closes config
+            if (event.target === container && menu.style.display === "none") {
+                exitConfig();
+            }
             menu.style.display = "none";
             tempName = ""; // Reset the tempName variable for second right click bigVals
             removeHighlighting();
