@@ -388,8 +388,8 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
             addCheckbox(formFields, " chart", "chart");
             addColorPicker(formFields, "color: ", "color");
         }
-
-        if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || contextIsAlready || selectedOption === "bigVS" || (deviceType === 33 && !["none"].includes(selectedOption))) {
+        console.log("deviceType: ", deviceType);
+        if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || contextIsAlready || selectedOption === "bigVS" || selectedOption === "vSlider" || (deviceType === 33 && !["none"].includes(selectedOption))) {
             addNumberInput(formFields, "order: ", "order");
         }
 
@@ -922,6 +922,7 @@ function createMenu() {
 
     document.getElementById('areaChart')?.addEventListener("resize", updateYAxisVisibility);
 
+
     // Handle touchstart to simulate right-click action with 2 fingers
     document.addEventListener('touchstart', function (e) {
         if (e.touches.length == 2) {
@@ -1097,6 +1098,7 @@ function checkBigSinglesLength() {
 function exitConfig() {
     selectionData = {};
     updateSaveButton("hide");
+    hiddenOverride = false;
     runonce2 = true;
     setLongPressDelay(600);
     document.removeEventListener("long-press", handleRightClick, true);
