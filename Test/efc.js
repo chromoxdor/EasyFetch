@@ -6,7 +6,6 @@ var selectionData = {}; // Store selections by deviceType > deviceIndex > valueI
 var saveButton = null;
 var resetButton = null;
 var toggleButton = null;
-let efcArray = [];
 const pointerEventsStyle = document.createElement("style");
 var contextIsAlready = false;
 let tempName = "";
@@ -34,8 +33,8 @@ function addContext() {
 function handleRightClick(event) {
     event.preventDefault();
     removeHighlighting();
-
-    if (event.target === container) {
+    console.log("Right-clicked on: ", event);
+    if (document.getElementById("opener").contains(event.target)) {
         updateSaveButton();
         const userInput = prompt("Paste your JSON here:");
 
@@ -144,14 +143,18 @@ function handleRightClick(event) {
                 // Set the left position to the adjusted x-position
                 menuElement.style.left = `${xPosition}px`;
 
-                let yPosition = yCoord + 5; // Start with the pointer's y-coordinate with an offset
+                let yPosition = yCoord + 5;
 
-                // Adjust y position if menu overflows at the bottom
-                if (yCoord + menuHeight > window.innerHeight) {
-                    yPosition = window.innerHeight - menuHeight - 5; // Position it above the pointer if it overflows
+                // Clamp the y position to be at least 40px from top and 40px from bottom
+                const minY = 40;
+                const maxY = window.innerHeight - menuHeight - 40;
+
+                if (yPosition < minY) {
+                    yPosition = minY;
+                } else if (yPosition > maxY) {
+                    yPosition = maxY;
                 }
 
-                // Set the top position to the adjusted y-position
                 menuElement.style.top = `${yPosition}px`;
             }
         } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
@@ -309,7 +312,6 @@ function rebuildContextMenu(tID, tClass) {
         options = `
             <option value="none">None</option>
             <option value="vSlider">slider</option>
-            <option value="chart">chart</option>
         `;
         if (checkBigSinglesLength() < 4 || checkBigSinglesLength() == 4 && savedData?.val === "bigVS") {
             options += `<option value="bigVS">big value</option>`;
@@ -645,7 +647,7 @@ function saveSelections(ignoreDropdown) {
 
     let formFields = document.getElementById("dynamic-fields");
     let formData = {};
-    selectionData["unit"] = unit;
+    selectionData["unit"] = unitName;
     selectionData["nr"] = unitNr;
 
     // **Handle select dropdown (menu-main-select)**
@@ -879,6 +881,7 @@ function saveToFile(param) {
     });
 
     exitConfig()
+    runonce2 = true;
 }
 
 
@@ -925,8 +928,9 @@ function createMenu() {
 
     // Handle touchstart to simulate right-click action with 2 fingers
     document.addEventListener('touchstart', function (e) {
-        if (e.touches.length == 2) {
-            if (saveButton.style.display === "none") {
+
+        if (e.touches.length == 2 && document.getElementById("opener").contains(e.target)) {
+            if (saveButton.style.display === "none" && selectionData.unit) {
                 updateSaveButton();
                 setLongPressDelay(200);
                 document.addEventListener("long-press", handleRightClick, true);
@@ -1015,7 +1019,7 @@ function updateJsonArray(newData) {
 //             efcArray = mainEfcData;
 
 //             // Fill selectionData with the entry matching the unitname key
-//             selectionData = mainEfcData.find(entry => entry.unit === unit);
+//             selectionData = mainEfcData.find(entry => entry.unit === unitName);
 //             console.log("selectionData after matching unitname:", selectionData);
 
 //         } catch (error) {
@@ -1096,12 +1100,14 @@ function checkBigSinglesLength() {
 }
 
 function exitConfig() {
+    console.log("exitConfig");
     selectionData = {};
     updateSaveButton("hide");
     hiddenOverride = false;
-    runonce2 = true;
+    //runonce2 = true;
     setLongPressDelay(600);
     document.removeEventListener("long-press", handleRightClick, true);
+    newFJ();
 }
 
 //##############################################################################################################

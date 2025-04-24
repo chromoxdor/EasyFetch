@@ -5,7 +5,8 @@ var jsonPath;
 var nNr; //nodeNr
 var nP; //nodePath
 var nP2;
-var nN; //nodeName
+//var nN; //nodeName
+var unitName = "";
 var unitNr;
 var unitNr1;
 var fJ; //fetchJson interval
@@ -18,12 +19,7 @@ var isittime = 1;
 //var NrofSlides = 0;
 var currVal;
 var html;
-var tsX = 0; //startx
-var teX = 0; //endx
-var tsY = 0;
-var teY = 0;
-var msTs = 0; //start time
-var msTe = 0;
+let tsX, tsY, teX, teY, tsTime;
 var manNav;
 var gesVal;
 var iO;
@@ -33,7 +29,6 @@ var coloumnSet;
 var myJson2;
 var baseUrl = "";
 var runonce2 = true;
-var unit;
 var hiddenOverride = false;
 var isMain = true;
 let diV = '</div>';
@@ -42,13 +37,15 @@ let html2 = "";
 let htmlold = "";
 let shouldShowOld = false;
 var selectionData = {}; // Store selections by deviceType > deviceIndex > valueIndex
-var jStats = true;
-let statsAbortController = new AbortController();
+var jStats = false;
+let efcArray = [];
+let fetchAbort = new AbortController();
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
 //##############################################################################################################
-async function fetchJson(gN) {
+async function fetchJson(nN) {
+
     //invert color scheme----------
     try {
         for (const styleSheet of document.styleSheets) {
@@ -60,10 +57,18 @@ async function fetchJson(gN) {
             }
         }
     } catch (err) {
-        //console.error("Error processing style sheets:", err);
     }
     if (!isittime) { return; }
-    //-----------------------
+
+    //----------------------------------------------------------------------------------------------------------get EFC Data
+
+    if (runonce2 === true) {
+        await getEfcData();
+    }
+
+    //----------------------------------------------------------------------------------------------------------get EFC Data
+
+
     let urlParams = new URLSearchParams(window.location.search);
     myParam = urlParams.get('unit');
     if (urlParams.get('cmd') == "reboot") { window.location.href = window.location.origin + "/tools?cmd=reboot" }
@@ -71,47 +76,53 @@ async function fetchJson(gN) {
     someoneEn = 0;
 
     let stats = window.efc ? "?showpluginstats=1" : "";
+    //let stats = "";
     if (!jsonPath) { jsonPath = "/json"; }
     let myJson;
-    
-    console.log("--------------------------------------jsonPath", jsonPath);
-    statsAbortController?.abort(); 
-    statsAbortController = new AbortController();
+
+    fetchAbort = new AbortController();
+
+    //----------------------------------------------------------------------------------------------------------get JSON Data
     try {
-        const response = await getUrl(jsonPath + (jStats ? stats : ""), { signal: statsAbortController.signal });
-        if (statsAbortController.signal.aborted) return;
+        const response = await getUrl(jsonPath + (jStats ? stats : ""), {
+            controller: fetchAbort,
+            signal: fetchAbort.signal,
+            isManualAbort: true
+        });
+        if (fetchAbort.signal.aborted) return;
         myJson = await response.json();
-        unit = gN || myJson.WiFi.Hostname;
+        unitName = myJson.WiFi.Hostname;
         unitNr = myJson.System['Unit Number'];
-        await getEfcData(unit);
+        if (!window.configMode) getEfcUnitData(unitName);
+        if (JSON.stringify(selectionData).includes('"chart":1') && !jStats) {
+            console.error("chart is found!!!!!");
+            jStats = true;
+            newFJ(nN);
+            return;
+        }
     } catch (error) {
         if (error.name === "AbortError") return;
         if (error.toString().includes("double-quoted")) {
-        console.error("Error parsing JSON, falling back to empty stats", error.name);
-        jStats = false;
+            console.error("Error parsing JSON, falling back to empty stats", error.name);
+            jStats = false;
+            newFJ();
+            return;
         }
+
     }
-
-    //----------------------------------------------------------------------------------------------------------get EFC Data
-
-    if (unit !== selectionData.unit) {
-        runonce2 = true;
-        await getEfcData(unit);
-    }
-
-    //----------------------------------------------------------------------------------------------------------get EFC Data
-    //console.log("selectionData", selectionData);
-    if (!isittime) return;
+    //----------------------------------------------------------------------------------------------------------get JSON Data
+   
+    if (!isittime || !myJson) return;
     html = '';
-    let html1 = '', html11 = '', html3 = '', htmlBigS = '';
+    let html1 = '', html3 = '', htmlBigS = '';
     let htmlBigFirst = `<div class="bigNum">`
     let htmlBig1 = `<div class="valuesBig" style="font-weight:bold;text-align:left;">`;
 
-
-    sysInfo = myJson.System
+    //if (!myJson) return;
+    sysInfo = myJson?.System
 
     const sysPairs = [
-        { label: 'Sysinfo of', value: unit },
+        { label: 'Sysinfo of', value: unitName },
         { label: 'Local Time', value: sysInfo['Local Time'] },
         { label: 'Uptime', value: minutesToDhm(sysInfo['Uptime']) },
         { label: 'Load', value: `${sysInfo['Load']}%` },
@@ -222,7 +233,6 @@ async function fetchJson(gN) {
                         let XI = selectedTaskVal?.["noI"] === 1 ? "noI" : "";
                         let order = selectedTaskVal?.["order"] || "0";
 
-
                         const sendToValue = selectedTaskVal?.sendTo;
                         const [sendToNr = "", gpio = ""] = (typeof sendToValue === "string" ? sendToValue.split(",") : []) || [];
 
@@ -293,7 +303,7 @@ async function fetchJson(gN) {
                         }
                         //dummy---------------------------------------------------------
                         if (TaskDeviceNumber !== 1 && !isHidden && !(sensorName).includes("bigVal")) {
-                            if (TaskDeviceNumber !== 33) XI = " noI ";
+                            if (TaskDeviceNumber !== 33) XI = "noI";
                             wasUsed = true;
                             //button coloring
                             if ((kindN === "C" && Value < 2) || Value === 1) { bS = "on"; }
@@ -318,7 +328,7 @@ async function fetchJson(gN) {
                                     }
                                     if (sendToNr) { itemName = `${itemName}&${sendToNr}G${gpio}`; }
                                     const clickHandler = sendToNr === "A" ? `getNodes('${itemName}')` : `buttonClick('${itemName}')`;
-                                    html += `<div order="${order}" id="${efcID}" class="btnTile ${XI}${bS} ${htS1} ${clickHandler}"><div id="${itemName}" class="sensors ${sendToNr === "A" ? `nodes` : ``}" style="font-weight:bold;">${itemNameChanged}</div></div>`;
+                                    html += `<div order="${order}" id="${efcID}" class="btnTile ${XI} ${bS} ${htS1} ${clickHandler}"><div id="${itemName}" class="sensors ${sendToNr === "A" ? `nodes` : ``}" style="font-weight:bold;">${itemNameChanged}</div></div>`;
                                 }
                             }
                             //push buttons
@@ -483,7 +493,7 @@ async function fetchJson(gN) {
                                             </div></div>`;
                                 }
                             }
-                            else if (overrideSelection !== "bigVal") {
+                            else if (overrideSelection !== "bigVal" && !chart) {
                                 if (firstItem) {
                                     html1 += `<div order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
                                 }
@@ -566,6 +576,7 @@ async function fetchJson(gN) {
         // }
 
         // Start fetching JSON data every 2 seconds
+        clearTimeout(fJ);
         fJ = setInterval(fetchJson, 2000);
 
         unitNr1 = myJson.System["Unit Number"];
@@ -581,16 +592,16 @@ async function fetchJson(gN) {
 
         firstRun = false;
     }
-
     // Set unit symbol if unit number matches
     styleU = unitNr === unitNr1 ? "&#8858;&#xFE0E;" : "";
 
     // Update unit display if there are no parameters
     if (!hasParams) {
-        document.getElementById("unitId").innerHTML = `${styleU}${unit} <span class="numberUnit"> (${myJson.WiFi.RSSI})</span>`;
-        document.getElementById("unitT").innerHTML = `${styleU}${unit}`;
+        document.getElementById("unitId").innerHTML = `${styleU}${unitName} <span class="numberUnit"> (${myJson.WiFi.RSSI})</span>`;
+        document.getElementById("unitT").innerHTML = `${styleU}${unitName}`;
     }
-    if (gN) getNodes(undefined, undefined, "ch");
+    console.log("orderjdjjddjdjdjdjdjdjFunction", nN);
+    if (nN) getNodes(undefined, undefined, "ch");
     paramS();
     changeCss();
     resizeText();
@@ -778,17 +789,32 @@ function paramS() {
 //      EVENTLISTENERS THAT NEED TO BE ADDED ONCE
 //##############################################################################################################
 function addEonce() {
-    document.addEventListener('touchstart', e => {
-        msTs = Date.now();
-        tsX = e.changedTouches[0].screenX
-        tsY = e.changedTouches[0].screenY
-    })
-    document.addEventListener('touchend', e => {
-        msTe = Date.now();
-        teX = e.changedTouches[0].screenX
-        teY = e.changedTouches[0].screenY
-        checkDirection()
-    })
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) return; // Ignore multi-finger touches
+        tsTime = Date.now();
+        tsX = e.touches[0].screenX;
+        tsY = e.touches[0].screenY;
+    });
+
+    document.addEventListener('touchend', (e) => {
+        if (e.changedTouches.length > 1) return;
+
+        const teTime = Date.now();
+        teX = e.changedTouches[0].screenX;
+        teY = e.changedTouches[0].screenY;
+
+        const dx = teX - tsX;
+        const dy = teY - tsY;
+        const dt = teTime - tsTime;
+
+        const horizontalSwipe = Math.abs(dx) > 40 && Math.abs(dy) < 30 && dt < 300;
+
+        if (horizontalSwipe) {
+            if (dx > 0 && !navOpen) openNav();   // swipe right to open
+            if (dx < 0 && navOpen) closeNav();   // swipe left to close
+        }
+    });
+
     document.addEventListener('mousemove', e => {
         if (!manNav && !navOpen) {
             if (e.clientX < 10 && document.getElementById('mySidenav').offsetLeft === -280) openNav()
@@ -1149,7 +1175,7 @@ function openNav(whatisit) {
     clearInterval(nIV);
     nIV = setInterval(getNodes, 10000);
     const sideNav = document.getElementById('mySidenav');
-    if (sideNav.offsetLeft === -280) {
+    if (sideNav.offsetLeft === -280 && !window.configMode) {
         getNodes();
         sideNav.style.left = "0";
     } else {
@@ -1192,6 +1218,8 @@ async function getNodes(sensorName, allNodes, ch) {
         response = await getUrl(`/json`);
         myJson2 = await response.json();
     }
+
+    if (!myJson2) return;
     myJson2.nodes.forEach(node => {
         i++
         if (node.nr == myParam && hasParams) {
@@ -1225,7 +1253,7 @@ async function getNodes(sensorName, allNodes, ch) {
         hasParams = 0;
         setTimeout(fetchJson, 3000);
     }
-    else { if (!nIV) { setTimeout(fetchJson, 1000); } }
+    //else { if (!nIV) { setTimeout(fetchJson, 1000); console.log("getNodes", nIV); } }
 }
 
 //##############################################################################################################
@@ -1234,20 +1262,19 @@ async function getNodes(sensorName, allNodes, ch) {
 function nodeChange(event) {
     const node = myJson2.nodes[event];
     cD = [];
+    if (!isMain) runonce2 = true;
     selectionData = {};
-    runonce2 = true;
+    jStats = false;
     if (window.efc) exitConfig();
-    jStats = true;
     if (node) {
         nNr = node.nr;
         nN = node.name;
         baseUrl = `http://${node.ip}`;
         nP = `${baseUrl}/tools`;
         nP2 = `${baseUrl}/devices`;
-        //console.log("......nP2:"+nP2);
         jsonPath = `${baseUrl}/json`;
         window.history.replaceState(null, null, `?unit=${nNr}`);
-        fetchJson(nN);
+        newFJ(nN);
     }
     if (window.innerWidth < 450 && document.getElementById('sysInfo').offsetHeight === 0) {
         closeNav();
@@ -1297,7 +1324,7 @@ function splitOn(x) {
         framie.style.width = 0;
         framie.innerHTML = "";
     }
-    setTimeout(fetchJson, 100);
+    //setTimeout(fetchJson, 100);
 }
 
 // either open the devices page or the page of a specific plugin (e.g. clock)
@@ -1420,86 +1447,94 @@ function playSound(freQ) {
     }
 }
 //timeout fetch requests
-async function getUrl(url) {
+async function getUrl(url, options = {}) {
     if (!window.configMode || url.includes("/json")) {
-        console.log(url);
-        let controller = new AbortController();
-        setTimeout(() => controller.abort(), 1000);
+        //console.log(url);
+        const controller = options.controller || new AbortController();
+        const signal = controller.signal;
+        const isManual = options.isManualAbort;
+
+        // Set timeout to abort the controller after 1.5s
+        setTimeout(() => {
+            if (!signal.aborted) controller.abort();
+        }, 1500);
 
         try {
             let response = await fetch(url, {
-
-                signal: controller.signal
+                ...options,
+                signal
             });
             return response; // Ensure response is returned if successful
         } catch (error) {
-            receiveNote("R"); // Handle the error
+            if (error.name === "AbortError") {
+                receiveNote(isManual ? "G" : "R"); // call receiveNote() with 'G' if this was a manual abort, otherwise pass 'R'
+                return null;
+            }
+
+            receiveNote("R");
             return null; // Abort further execution by returning null
         }
     }
 }
 
-let efcAbortController = new AbortController(); // Stores the latest controller
-
-async function getEfcData(unit) {
-    // Abort the previous request if it exists
-    efcAbortController.abort();
-    efcAbortController = new AbortController(); // Create a new controller for the current request
-
-    if (runonce2 && !hasParams) {
+async function getEfcData() {
+    try {
+        let response = await getUrl(`/main_efc.json.gz`);
+        if (response?.ok) {
+            efcArray = await response.json();
+            console.log("Data from main_efc.json:", efcArray);
+        } else {
+            throw new Error("main_efc.json not available");
+        }
+    } catch (error) {
+        console.log("Fallback: main_efc.json failed:", error.message);
         try {
-            let response = await getUrl(`/main_efc.json.gz`, { signal: efcAbortController.signal });
-
-            if (!response || !response.ok) {
-                throw new Error("Failed to fetch /main_efc.json");
+            let response = await getUrl(`${baseUrl}/efc.json.gz`);
+            if (response?.ok) {
+                selectionData = await response.json();
+                console.log("Data from efc.json:", selectionData);
+                isMain = false;
+            } else {
+                throw new Error("efc.json not available");
             }
-
-            let mainEfcData = await response.json();
-            efcArray = mainEfcData;
-            console.log("Data from main_efc.json:", unit);
-
-            selectionData = mainEfcData.find(entry => entry.unit === unit);
-            console.log("selectionData after matching unitname:", selectionData);
         } catch (error) {
             if (error.name === "AbortError") {
-                console.log("Fetch aborted for:", unit);
-                return;
-            }
-            console.log("Error fetching /main_efc.json:", error.message);
-            try {
-                let response = await getUrl(`${baseUrl}/efc.json.gz`, { signal: efcAbortController.signal });
+                console.log("Fetch aborted for:", unitName);
+            } else {
+                console.log("Both fetches failed:", error.message);
 
-                if (!response || !response.ok) {
-                    throw new Error("Failed to fetch /efc.json");
-                }
-
-                selectionData = await response.json();
-                console.log("selectionData from efc.json:", selectionData);
-                isMain = false;
-            } catch (error) {
-                if (error.name === "AbortError") {
-                    console.log("Fetch aborted for:", unit);
-                    return;
-                }
-                console.log("Error fetching /efc.json:", error.message);
             }
+            //return; // Exit early since both failed
         }
-        if (!selectionData) selectionData = {unit: unit};
-        runonce2 = false;
     }
+    runonce2 = false;
+}
+
+function getEfcUnitData(unitName) {
+    if (efcArray.length > 2) {
+        selectionData = efcArray.find(entry => entry.unit === unitName);
+    }
+    if (!selectionData) selectionData = { unit: unitName };
+    console.log("selectionData after matching unitname:", selectionData);
 }
 
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
         //console.log("visible");
-        clearTimeout(fJ);
-        fetchJson();
-        fJ = setInterval(fetchJson, 2000);
+        newFJ();
     } else {
         //console.log("invisible");
         clearTimeout(fJ);
     }
 });
+
+function newFJ(nN) {
+    fetchAbort?.abort();
+    console.error("Fetch request aborted by programm");
+    clearTimeout(fJ);
+    fetchJson(nN);
+    fJ = setInterval(fetchJson, 2000);
+}
 
 function receiveNote(S) {
     const colors = {
@@ -1518,69 +1553,44 @@ function receiveNote(S) {
 
 //----------------------------------------------------------------------------------------------------------------
 
-// 1️ Inject Web App Manifest (inline)
+// Inject minimal Web App Manifest
 const favicon = document.querySelector("link[rel='icon']").getAttribute("href");
-
 const manifest = {
     name: "easyfetch",
     short_name: "easyfetch",
-    scope: "./",
-    start_url: "./",
+    //start_url: "",
     display: "standalone",
-    background_color: "#000000",
-    theme_color: "#000000",
+    background_color: "#000",
+    theme_color: "#000",
     icons: [192, 256, 384, 512, 57, 72, 76, 120, 152, 167, 180, 1024].map((x) => ({
         src: favicon,
         sizes: `${x}x${x}`,
         purpose: "any"
     }))
 };
-console.log(`http://${window.location.hostname}${window.location.pathname}?unit=1`);
-
-const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
-const manifestURL = URL.createObjectURL(blob);
 const link = document.createElement("link");
 link.rel = "manifest";
-link.href = manifestURL;
+link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/json" }));
 document.head.appendChild(link);
 
-// 2️ Register Inline Service Worker
+// Register minimal Service Worker
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("data:application/javascript," + encodeURIComponent(`
-    self.addEventListener("install", (event) => {
-      console.log("Service Worker installed");
-      self.skipWaiting();
-    });
-
-    self.addEventListener("activate", (event) => {
-      console.log("Service Worker activated");
-    });
-
-    self.addEventListener("fetch", (event) => {
-      event.respondWith(
-        fetch(event.request).catch(() => {
-          console.log("Offline mode: Cannot reach server.");
-          return new Response("You are offline!", { status: 503 });
-        })
-      );
-    });
-  `)).then(() => console.log("Service Worker registered!"))
-        .catch(err => console.error("Service Worker registration failed:", err));
+    const sw = `
+      self.addEventListener("fetch", e => {
+        e.respondWith(
+          fetch(e.request).catch(() =>
+            new Response("Offline", { status: 503 })
+          )
+        );
+      });
+    `;
+    navigator.serviceWorker.register("data:application/javascript," + encodeURIComponent(sw));
 }
-// 3️ Handle Install Prompt (PWA Install Button)
-let deferredPrompt;
-window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-    console.log("PWA Install prompt is available!");
 
-    // Example: Auto-show install prompt after 5 seconds
-    setTimeout(() => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt = null; // Reset prompt so it doesn't show again
-        }
-    }, 1000);
+// Handle install prompt
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    e.prompt?.(); // Prompt immediately, or delay with setTimeout if needed
 });
 // ----------------------------------------------------------------------------------------------------------------
 
