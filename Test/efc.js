@@ -1,29 +1,61 @@
-window.efc = true;
-window.configMode = false;
-var currentDivId;
-var menu;
-var selectionData = {}; // Store selections by deviceType > deviceIndex > valueIndex
-var saveButton = null;
-var resetButton = null;
-var toggleButton = null;
-const pointerEventsStyle = document.createElement("style");
-var contextIsAlready = false;
-let tempName = "";
+// Window-related configuration
+window.efc = true;                  // Flag indicating the EFC (External Function Call) status
+window.configMode = false;          // Flag to indicate if the system is in configuration mode
 
-// document.addEventListener("DOMContentLoaded", function () {
-//     const expectedVersion = "20250311/efc_chart1"; // Set the correct version
-//     const divContent = document.getElementById("dateV")?.textContent.trim();
+// UI and DOM elements
+var currentDivId;                   // Stores the ID of the currently active div
+var menu;                            // Stores the menu object or configuration
+var saveButton = null;              // Reference to the Save button
+var resetButton = null;             // Reference to the Reset button
+var toggleButton = null;            // Reference to the Toggle button
 
-//     if (divContent !== expectedVersion) {
-//         alert(`Your version (${divContent}) of easyfetch is outdated.
-//             \n Please Update to: ${expectedVersion}
-//             \n Fixed: - naming of events was not right
-//             \n - JSON check was not robust`);
-//             fetchJson();
-//     }
-// });
+// Styling
+const pointerEventsStyle = document.createElement("style"); // Dynamically created style element for pointer events
+
+// Context tracking
+var contextIsAlready = false;       // Flag to check if the context menu is already open
+
+// Miscellaneous variables
+let tempName = "";                  // Temporary variable for storing device names
 
 
+//#############################################################################################################
+//      VERSION CHECK
+//#############################################################################################################
+const expected = "20250424/1";
+//#############################################################################################################
+
+// **Check if the current version is outdated**
+document.addEventListener("DOMContentLoaded", () => {
+    const current = document.getElementById("dateV")?.textContent.trim();
+    if (!current) return;
+
+    const cookieVersion = document.cookie.match(/ackVersion=([^;]+)/)?.[1];
+    if (cookieVersion === expected) return;
+
+    const [ed, eb] = expected.split("/"), [cd, cb] = current.split("/");
+    const eNum = parseInt(eb.match(/\d+/)?.[0] || "0");
+    const cNum = parseInt(cb.match(/\d+/)?.[0] || "0");
+    if (!eNum || !cNum) return alert("Invalid build number format");
+
+    const outdated = cd < ed || (cd === ed && cNum < eNum);
+    if (outdated) {
+        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update to: ${expected} \nDo you want to visit the update page?`;
+        const url = `https://github.com/chromoxdor/easyfetch/tree/test`;
+        // Confirm must be immediately followed by window.open to be safe
+        const openUpdate = confirm(msg);
+
+        document.cookie = `ackVersion=${expected}; path=/; max-age=604800`; // 7 days
+        if (openUpdate) {
+            window.open(url, "_blank");
+        }
+    }
+});
+
+
+//##############################################################################################################
+//      GET THE RIGHT TILE
+//##############################################################################################################
 function addContext() {
 
     // Handle right-click (contextmenu)
@@ -61,12 +93,11 @@ function handleRightClick(event) {
     }
     else {
 
-        //console.log("Right-clicked", event);
         let target = event.target.closest('div[id^="efc"]');
         addPointerEvents(); // Adds the style to access locked elements
 
         let target2;
-        // // If no target is found, process the parent and enable pointer-events on the children
+        // If no target is found, process the parent and enable pointer-events on the children
         if (target === null) {
             target2 = event.target;
             // Enable pointer-events for all children of the target element that have the "efc" class
@@ -89,10 +120,8 @@ function handleRightClick(event) {
                         }
                     }
                 });
-                //    if (children[0].className === "numberUnit") {
-                //         console.log("Targeteklwekdlwkedlwdkwlk:", children[0].className);
+                //    if (children[0].className === "numberUnit") {  
                 //         target = target2;
-                //         console.log("Targeteklwekdlwkedlwdkwlk:", target);
                 // } 
             }
         }
@@ -104,14 +133,6 @@ function handleRightClick(event) {
             isittime = false;
             updateSaveButton();
             currentDivId = target.id;
-
-            // Remove previous highlights
-
-            //document.querySelectorAll('div[id^="efc"]').forEach(el => el.style.outline = "");
-
-            // Apply highlight
-            //target.style.outline = "2px solid #ffcc00"; // Yellow border
-            //highlightMatchingDivs(target.id, target.className);
 
             // Clear and rebuild the context menu based on the device type
             rebuildContextMenu(target.id, target.className);
@@ -177,18 +198,6 @@ function highlightMatchingDivs(elementId, elementClass) {
     });
 
     // Select the div that exactly matches the given ID
-    // let exactMatch = document.getElementById(elementId);
-
-    // if (exactMatch) {
-    //     if (elementClass.includes("bigNumWrap") && !elementClass.includes("bigSingles") && !contextIsAlready) {
-    //         exactMatch.parentElement.style.setProperty("transition", "none", "important");
-    //         exactMatch.parentElement.style.outline = "2px solid red"; // Different color for the exact match
-    //     } else {
-    //         exactMatch.style.outline = "2px solid red"; // Different color for the exact match
-
-    //     }
-    // }
-
     let exactMatches = document.querySelectorAll(`[id="${elementId}"]`);
 
     if (exactMatches.length > 0) { // Ensure elements exist
@@ -243,6 +252,10 @@ function parseDivId(divId) {
     return null;
 }
 
+
+//##############################################################################################################
+//      CREATE CONTEXT MENU
+//##############################################################################################################
 // **Rebuilds context menu dynamically based on deviceType**
 function rebuildContextMenu(tID, tClass) {
     let parsed = parseDivId(currentDivId);
@@ -506,7 +519,7 @@ function addTextInput(container, label, key, selectedOption) {
 
 
 //##############################################################################################################
-//      add options
+//      CONTEXT MENU TEMPLATES
 //##############################################################################################################
 function addNumberInput(container, label, key) {
     let labelEl = document.createElement("label");
@@ -607,8 +620,9 @@ function addResetButton(container, deviceIndex, deviceName) {
     container.appendChild(buttonEl);
 }
 
+
 //##############################################################################################################
-//     
+//     SELECTION DATA
 //##############################################################################################################
 function hasNonEmptyValues(obj, key) {
     if (!obj[key] || typeof obj[key] !== "object") return false; // Ensure key exists and is an object
@@ -730,11 +744,10 @@ function updateSaveButton(param) {
     }
 }
 
-//##############################################################################################################
-//     create and insert the save button at the top of the page
-//##############################################################################################################
 
-// **Create and insert the save button at the top of the page**
+//##############################################################################################################
+//    CREATE AND INSERT THE SAVE BUTTON AT THE TOP OF THE PAGE
+//##############################################################################################################
 function createSaveButton() {
     // Create Save Button
     saveButton = document.createElement("button");
@@ -799,28 +812,10 @@ function createSaveButton() {
     });
 }
 
-// // Function to delete the file from the server
-// function deleteFile() {
-//     return;
-//     const deleteUrl = '/delete-file'; // Adjust the URL as per your server route
 
-//     fetch(deleteUrl, {
-//         method: 'DELETE',  // Use the DELETE HTTP method
-//     })
-//         .then(response => {
-//             if (response.ok) {
-//                 console.log('File deleted successfully');
-//                 // Optional: You can add some UI feedback or reset the button's state here
-//             } else {
-//                 console.error('Failed to delete file');
-//             }
-//         })
-//         .catch(error => {
-//             console.error('Error deleting file:', error);
-//         });
-// }
-
-
+//##############################################################################################################
+//      FILE SECTION
+//##############################################################################################################
 function saveToFile(param) {
     'use strict';
     updateJsonArray(selectionData);
@@ -907,19 +902,32 @@ function fetchFile(uploadUrl, formData) {
         });
 }
 
+// // Function to delete the file from the server
+// function deleteFile() {
+//     return;
+//     const deleteUrl = '/delete-file'; // Adjust the URL as per your server route
 
-// // Function to download the file
-// function downloadFile(file) {
-//     const url = URL.createObjectURL(file);
-//     const a = document.createElement("a");
-//     a.href = url;
-//     a.download = file.name;
-//     document.body.appendChild(a);
-//     a.click();
-//     document.body.removeChild(a);
-//     URL.revokeObjectURL(url);
+//     fetch(deleteUrl, {
+//         method: 'DELETE',  // Use the DELETE HTTP method
+//     })
+//         .then(response => {
+//             if (response.ok) {
+//                 console.log('File deleted successfully');
+//                 // Optional: You can add some UI feedback or reset the button's state here
+//             } else {
+//                 console.error('Failed to delete file');
+//             }
+//         })
+//         .catch(error => {
+//             console.error('Error deleting file:', error);
+//         });
 // }
 
+
+
+//##############################################################################################################
+//      CREATE MENU
+//##############################################################################################################
 // **Initialize**
 function createMenu() {
 
@@ -970,13 +978,10 @@ function createMenu() {
     updateSaveButton("hide");   // Update the UI button
 }
 
-// function jsonpRequest(url, callback) {
-//     let script = document.createElement('script');
-//     script.src = `${url}?callback=${callback}`;
-//     console.log("script.src:", script);
-//     document.body.appendChild(script);
-// }
 
+//##############################################################################################################
+//      HELPER
+//##############################################################################################################
 // Define the callback function that will handle the response
 function handleData(data) {
     console.log("Received data:", data);
@@ -998,54 +1003,6 @@ function updateJsonArray(newData) {
     }
     console.log("Updated efcArray:", JSON.stringify(efcArray, null, 2));
 }
-
-//##############################################################################################################
-//    getEfcData()
-//##############################################################################################################
-
-// async function getEfcData() {
-//     if (runonce2) {
-//         // If efc.json fetch fails, try to fetch mein_efc.json
-//         try {
-//             let response = await getUrl(`/main_efc.gz`);
-
-//             // If fetching mein_efc.json fails, throw an error
-//             if (!response || !response.ok) {
-//                 throw new Error("Failed to fetch /main_efc.json");
-//             }
-
-//             // If mein_efc.json is fetched successfully, parse it
-//             let mainEfcData = await response.json();
-//             efcArray = mainEfcData;
-
-//             // Fill selectionData with the entry matching the unitname key
-//             selectionData = mainEfcData.find(entry => entry.unit === unitName);
-//             console.log("selectionData after matching unitname:", selectionData);
-
-//         } catch (error) {
-//             console.log("Error fetching /main_efc.json:", error.message);
-//             try {
-//                 // First, attempt to fetch efc.json
-//                 let response = await getUrl(`${baseUrl}/efc.json`);
-
-//                 // If fetching efc.json fails, throw an error and proceed to the next fetch
-//                 if (!response || !response.ok) {
-//                     throw new Error("Failed to fetch /efc.json");
-//                 }
-
-//                 // If efc.json is fetched successfully, parse and assign to selectionData
-//                 selectionData = await response.json();
-//                 console.log("selectionData from efc.json:", selectionData);
-
-//             } catch (error) {
-//                 console.log("Error fetching /efc.json:", error.message);
-//             }
-//         }
-//         if (!selectionData) { selectionData = {}; }
-//         // Finally, ensure runonce2 is set to false to prevent repeated execution
-//         runonce2 = false;
-//     }
-// }
 
 function removeEmptyKeys(obj) {
     // Iterate over each key in the object
@@ -1110,10 +1067,10 @@ function exitConfig() {
     newFJ();
 }
 
+
 //##############################################################################################################
 //      CHART FUNCTIONS
 //##############################################################################################################
-
 var chartInstances = {}; // Store chart instances uniquely
 var colorArray;
 

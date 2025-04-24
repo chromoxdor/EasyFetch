@@ -1,45 +1,58 @@
-var firstRun = 1;
-//var wasUsed;
-//var slA; //sliderAmount
-var jsonPath;
-var nNr; //nodeNr
-var nP; //nodePath
-var nP2;
-//var nN; //nodeName
-var unitName = "";
-var unitNr;
-var unitNr1;
-var fJ; //fetchJson interval
-var nIV; //nodeinterval
-var iIV; //InputInterV
-var navOpen;
-var myParam;
-var hasParams = 1;
-var isittime = 1;
-//var NrofSlides = 0;
-var currVal;
-var html;
-let tsX, tsY, teX, teY, tsTime;
-var manNav;
-var gesVal;
-var iO;
-var initIP;
-const cmD = "control?cmd=";
-var coloumnSet;
-var myJson2;
-var baseUrl = "";
-var runonce2 = true;
-var hiddenOverride = false;
-var isMain = true;
-let diV = '</div>';
-var cD = [];
-let html2 = "";
-let htmlold = "";
-let shouldShowOld = false;
-var selectionData = {}; // Store selections by deviceType > deviceIndex > valueIndex
-var jStats = false;
-let efcArray = [];
-let fetchAbort = new AbortController();
+// State tracking variables
+var firstRun = 1;                    // Indicates if it's the first run
+var hasParams = 1;                   // Flag to check if parameters are available
+var isittime = 1;                    // Flag to check if it is time to create the tiles
+
+// Node-related variables
+var jsonPath;                        // Path to JSON data
+var nNr;                             // Node number (unique identifier)
+var nP;                              // Path to the node
+var nP2;                             // Alternate node path
+var nIV;                             // Interval for node
+var iIV;                             // Interval for input tile
+
+// Unit-related variables
+var unitName = "";                   // Name of the unit
+var unitNr;                          // Unit number of choosen node
+var unitNr1;                         // Primary unit number
+
+// Navigation and interaction variables
+var navOpen;                         // Flag to check if sidenav is open
+var manNav;                          // Flag for manual navigation control
+var gesVal;                          // Array of NEOPixel slider values
+var iO;                              // Variable to determine if iFrame is open
+
+// UI and display variables
+var html;                            // Holds HTML content for rendering
+var html2 = "";                      // buttons = html; sensor tiles = html1; slider + chart = html2; big values = html3
+var htmlold = "";                    // Previous HTML content for comparison
+var shouldShowOld = false;           // Flag to determine if slider data should be redrawn when window size changes
+
+// Chart and data-related variables
+var selectionData = {};               // Stores data for visualation of a device by deviceIndex > valueIndex
+var efcArray = [];                    // Array of all the selectionData objects
+var cD = [];                         // Array to store chart data
+var jStats = false;                  // Flag for stats-related data fetching
+
+// Fetching and control-related variables
+var fJ;                              // FetchJson interval
+var fetchAbort = new AbortController(); // Controller for aborting fetch requests
+
+// System control and utility constants
+const cmD = "control?cmd=";           // Command string prefix
+const diV = '</div>';                 // Closing div tag string
+var baseUrl = "";                     // Default base URL (empty for now)
+
+// Flags and configuration
+var runonce2 = true;                  // Flag for one-time execution logic
+var hiddenOverride = false;           // Flag for hidebutton in efc
+var isMain = true;                    // Flag to determine if this is the main app
+
+// Miscellaneous variables
+var coloumnSet;                       // Column set for UI
+var myJson2;                          // JSON object for the sidenav handling
+var tsX, tsY, teX, teY, tsTime;       // Time and position-related variables (for touch gesture)
+
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
@@ -68,7 +81,6 @@ async function fetchJson(nN) {
 
     //----------------------------------------------------------------------------------------------------------get EFC Data
 
-
     let urlParams = new URLSearchParams(window.location.search);
     myParam = urlParams.get('unit');
     if (urlParams.get('cmd') == "reboot") { window.location.href = window.location.origin + "/tools?cmd=reboot" }
@@ -86,8 +98,7 @@ async function fetchJson(nN) {
     try {
         const response = await getUrl(jsonPath + (jStats ? stats : ""), {
             controller: fetchAbort,
-            signal: fetchAbort.signal,
-            isManualAbort: true
+            signal: fetchAbort.signal
         });
         if (fetchAbort.signal.aborted) return;
         myJson = await response.json();
@@ -95,7 +106,7 @@ async function fetchJson(nN) {
         unitNr = myJson.System['Unit Number'];
         if (!window.configMode) getEfcUnitData(unitName);
         if (JSON.stringify(selectionData).includes('"chart":1') && !jStats) {
-            console.error("chart is found!!!!!");
+            console.log("chart was found!!!!!");
             jStats = true;
             newFJ(nN);
             return;
@@ -103,7 +114,7 @@ async function fetchJson(nN) {
     } catch (error) {
         if (error.name === "AbortError") return;
         if (error.toString().includes("double-quoted")) {
-            console.error("Error parsing JSON, falling back to empty stats", error.name);
+            console.log("Error parsing JSON, falling back to empty stats", error.name);
             jStats = false;
             newFJ();
             return;
@@ -154,7 +165,7 @@ async function fetchJson(nN) {
         html += '<div class="sensorset clickables" onclick="splitOn(); topF();"><div  class="sensors" style="font-weight:bold;">no tasks configured...</div>';
     }
     else {
-        //------------------------------------
+
         // -----------------------------------------------------------------------    Sensors
         for (const sensor of myJson.Sensors) {
             //myJson.Sensors.forEach(sensor => {
@@ -273,7 +284,7 @@ async function fetchJson(nN) {
 
                         //empty button State
                         bS = "";
-                        //buttons = html; sensor tiles = html1; slider = html2; big values = html3
+                        //buttons = html; sensor tiles = html1; slider + chart = html2; big values = html3
                         //switch---------------------------------------------------------
                         if (TaskDeviceNumber == 1) {
                             wasUsed = true;
@@ -546,6 +557,7 @@ async function fetchJson(nN) {
         }
     }
     html += html1;
+
     //wrap bigValues singleMode
     if (htmlBigS) {
         let htmlBigSingles = '';
@@ -566,14 +578,10 @@ async function fetchJson(nN) {
     html2 = "";
 
     document.getElementById('bigNumber').innerHTML = html3;
+    
     //Things that only need to run once
     if (firstRun) {
         if (!document.cookie.includes("Snd=")) mC("Snd");
-
-        // Set full viewport height for iPhones
-        // if (/iPhone/i.test(window.navigator.userAgent)) {
-        //     document.body.style.height = "100vh";
-        // }
 
         // Start fetching JSON data every 2 seconds
         clearTimeout(fJ);
@@ -600,7 +608,7 @@ async function fetchJson(nN) {
         document.getElementById("unitId").innerHTML = `${styleU}${unitName} <span class="numberUnit"> (${myJson.WiFi.RSSI})</span>`;
         document.getElementById("unitT").innerHTML = `${styleU}${unitName}`;
     }
-    console.log("orderjdjjddjdjdjdjdjdjFunction", nN);
+
     if (nN) getNodes(undefined, undefined, "ch");
     paramS();
     changeCss();
@@ -734,8 +742,6 @@ function changeCss() {
         elements.forEach(el => el.classList.add("bigSpan"));
     }
 
-
-    console.log(coloumnSet, y);
     sList.style.setProperty('grid-template-columns', y);
     list3.forEach(item => {
         item.style.setProperty('grid-template-columns', y);
@@ -921,9 +927,7 @@ function updateSlider(event) {
 function sliderChTS(event) {
     playSound(4000);
     const slider = event.target;
-    console.log(slider);
     const slTName = slider.parentNode.parentNode;
-    console.log(slTName);
     const slTNameID = slTName.id.match(/:(\w+)=/)[1];
     const sliderId = slider.id.split(":")[0];
     const LorR = slider.id.split(":")[1];
@@ -948,7 +952,6 @@ function sliderChTS(event) {
     } else {
         const isLeft = LorR === "L";
         const secVal = document.getElementById(isLeft ? `${sliderId}:R` : `${sliderId}:L`).value;
-        console.log(secVal);
         const paddedSecVal = secVal.toString().padStart(4, "0");
         const combinedValue = isLeft
             ? `${sliderValue}.${paddedSecVal}`
@@ -1329,7 +1332,6 @@ function splitOn(x) {
 
 // either open the devices page or the page of a specific plugin (e.g. clock)
 function iFr(x) {
-    //console.log("nP2:"+nP2);
     if (iO) {
         const src = x ? `${nP2}?index=${x}&page=1` : nP2;
         document.getElementById('framie').innerHTML = `<iframe src="${src}"></iframe>`;
@@ -1342,6 +1344,7 @@ function iFr(x) {
 //      SCROLL TO THE TOP
 //##############################################################################################################
 function topF() { document.body.scrollTop = 0; document.documentElement.scrollTop = 0; }
+
 
 //##############################################################################################################
 //      LONGPRESS AND COOCKIE SECTION
@@ -1449,30 +1452,28 @@ function playSound(freQ) {
 //timeout fetch requests
 async function getUrl(url, options = {}) {
     if (!window.configMode || url.includes("/json")) {
-        //console.log(url);
+        console.log(url);
+        
         const controller = options.controller || new AbortController();
         const signal = controller.signal;
-        const isManual = options.isManualAbort;
+        let isTimeout = false;
 
-        // Set timeout to abort the controller after 1.5s
+        // Set timeout to abort the controller after 1 second and flag isTimeout
         setTimeout(() => {
-            if (!signal.aborted) controller.abort();
-        }, 1500);
+            if (!signal.aborted) {
+                isTimeout = true;
+                controller.abort();
+            }
+        }, 1000);
 
         try {
-            let response = await fetch(url, {
-                ...options,
-                signal
-            });
-            return response; // Ensure response is returned if successful
+            let response = await fetch(url, { ...options, signal });
+            return response;
         } catch (error) {
-            if (error.name === "AbortError") {
-                receiveNote(isManual ? "G" : "R"); // call receiveNote() with 'G' if this was a manual abort, otherwise pass 'R'
-                return null;
+            // Check if the error is not AbortError or if it's a timeout
+            if (error.name !== "AbortError" || isTimeout) {
+                receiveNote("R");
             }
-
-            receiveNote("R");
-            return null; // Abort further execution by returning null
         }
     }
 }
@@ -1515,7 +1516,7 @@ function getEfcUnitData(unitName) {
         selectionData = efcArray.find(entry => entry.unit === unitName);
     }
     if (!selectionData) selectionData = { unit: unitName };
-    console.log("selectionData after matching unitname:", selectionData);
+    //console.log("selectionData after matching unitname:", selectionData);
 }
 
 document.addEventListener("visibilitychange", () => {
@@ -1530,7 +1531,6 @@ document.addEventListener("visibilitychange", () => {
 
 function newFJ(nN) {
     fetchAbort?.abort();
-    console.error("Fetch request aborted by programm");
     clearTimeout(fJ);
     fetchJson(nN);
     fJ = setInterval(fetchJson, 2000);
@@ -1557,7 +1557,7 @@ function receiveNote(S) {
 const favicon = document.querySelector("link[rel='icon']").getAttribute("href");
 const manifest = {
     name: "easyfetch",
-    short_name: "easyfetch",
+    short_name: "ef",
     //start_url: "",
     display: "standalone",
     background_color: "#000",
