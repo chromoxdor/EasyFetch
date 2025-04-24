@@ -22,6 +22,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
+const efcVersion = "20250424/2";
 const expected = "20250424/1";
 //#############################################################################################################
 
@@ -29,6 +30,8 @@ const expected = "20250424/1";
 document.addEventListener("DOMContentLoaded", () => {
     const current = document.getElementById("dateV")?.textContent.trim();
     if (!current) return;
+
+    document.getElementById("dateV").innerHTML = `${current} (efc:${efcVersion})`;
 
     const cookieVersion = document.cookie.match(/ackVersion=([^;]+)/)?.[1];
     if (cookieVersion === expected) return;
