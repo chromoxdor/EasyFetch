@@ -58,7 +58,6 @@ var tsX, tsY, teX, teY, tsTime;       // Time and position-related variables (fo
 //      FETCH AND MAKE TILES
 //##############################################################################################################
 async function fetchJson(nN) {
-
     //invert color scheme----------
     try {
         for (const styleSheet of document.styleSheets) {
@@ -78,7 +77,6 @@ async function fetchJson(nN) {
     if (runonce2 === true) {
         await getEfcData();
     }
-
     //----------------------------------------------------------------------------------------------------------get EFC Data
 
     let urlParams = new URLSearchParams(window.location.search);
@@ -104,7 +102,8 @@ async function fetchJson(nN) {
         myJson = await response.json();
         unitName = myJson.WiFi.Hostname;
         unitNr = myJson.System['Unit Number'];
-        if (!window.configMode) getEfcUnitData(unitName);
+        if (!window.configMode) {
+            getEfcUnitData(unitName);}
         if (JSON.stringify(selectionData).includes('"chart":1') && !jStats) {
             console.log("chart was found!!!!!");
             jStats = true;
@@ -535,10 +534,10 @@ async function fetchJson(nN) {
 
 
                     //sorting button and value tiles
-                    if (!document.cookie.includes("Sort=1")) {
-                        html += html1;
-                        html1 = '';
-                    }
+                    // if (!document.cookie.includes("Sort=1")) {
+                    //     html += html1;
+                    //     html1 = '';
+                    // }
                 }
                 else {
                     html1 += `
@@ -1349,14 +1348,17 @@ function topF() { document.body.scrollTop = 0; document.documentElement.scrollTo
 //##############################################################################################################
 //      LONGPRESS AND COOCKIE SECTION
 //##############################################################################################################
-function longPressN() { document.getElementById('mOpen').addEventListener('long-press', function (e) { window.location.href = nP; }); }
+const longPressN = () =>
+    document.getElementById('mOpen').addEventListener('long-press', () =>
+      !configMode ? window.location.href = nP : null
+    );
 
 function longPressS() {
     document.body.addEventListener('long-press', function (e) {
         e.preventDefault();
         const actions = {
             closeBtn: "Snd",
-            nOpen: "Sort",
+            //nOpen: "Sort",
             openSys: "Two",
             unitId: "Col"
         };
@@ -1512,11 +1514,10 @@ async function getEfcData() {
 }
 
 function getEfcUnitData(unitName) {
-    if (efcArray.length > 2) {
-        selectionData = efcArray.find(entry => entry.unit === unitName);
+    if (efcArray) {
+        selectionData = structuredClone(efcArray.find(entry => entry.unit === unitName));
     }
     if (!selectionData) selectionData = { unit: unitName };
-    //console.log("selectionData after matching unitname:", selectionData);
 }
 
 document.addEventListener("visibilitychange", () => {
@@ -1586,7 +1587,6 @@ if ("serviceWorker" in navigator) {
     `;
     navigator.serviceWorker.register("data:application/javascript," + encodeURIComponent(sw));
 }
-
 // Handle install prompt
 window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();

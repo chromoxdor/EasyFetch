@@ -22,8 +22,8 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250424/2";
-const expected = "20250424/1";
+const efcVersion = "20250425/1";
+const expected = "20250425/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("dateV").innerHTML = `${current} (efc:${efcVersion})`;
 
-    const cookieVersion = document.cookie.match(/ackVersion=([^;]+)/)?.[1];
+    const cookieVersion = document.cookie.match(/efcVersion=([^;]+)/)?.[1];
     if (cookieVersion === expected) return;
 
     const [ed, eb] = expected.split("/"), [cd, cb] = current.split("/");
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Confirm must be immediately followed by window.open to be safe
         const openUpdate = confirm(msg);
 
-        document.cookie = `ackVersion=${expected}; path=/; max-age=604800`; // 7 days
+        document.cookie = `efcVersion=${expected}; path=/; max-age=604800`; // 7 days
         if (openUpdate) {
             window.open(url, "_blank");
         }
@@ -69,124 +69,92 @@ function handleRightClick(event) {
     event.preventDefault();
     removeHighlighting();
     console.log("Right-clicked on: ", event);
-    if (document.getElementById("opener").contains(event.target)) {
-        updateSaveButton();
-        const userInput = prompt("Paste your JSON here:");
 
-        if (userInput !== null && userInput.length > 2) {
-            let jsonStr = userInput
+    let target = event.target.closest('div[id^="efc"]');
+    addPointerEvents(); // Adds the style to access locked elements
 
-            // Remove first and last character if it is in an array 
-            // (content of main_efc.json.gz of a single device)
-            if (userInput.startsWith('[') && userInput.endsWith(']')) {
-                jsonStr = userInput.slice(1, -1);
-            }
-            try {
-                // Try to parse it as JSON
-                selectionData = JSON.parse(jsonStr);
-                console.log("Parsed JSON object:", selectionData);
-            } catch (e) {
-                console.error("Invalid JSON after trimming:", e);
-            }
+    let target2;
+    // If no target is found, process the parent and enable pointer-events on the children
+    if (target === null) {
+        target2 = event.target;
+        // Enable pointer-events for all children of the target element that have the "efc" class
+        const children = Array.from(target2.children);  // Convert HTMLCollection to an array
+        console.log("Children:", children);
+        if (children.length > 0) {
+            // Only target the first child
+            children.forEach(child => {
 
-        } else {
-            console.log("Input too short or cancelled.");
-            exitConfig();
-        }
-    }
-    else {
+                if (child.id.includes("efc")) { // Check if the ID contains "efc"
+                    const childUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
+                    console.log("childUnderPointer:", childUnderPointer);
+                    // Reassign the target to the child under the pointer
 
-        let target = event.target.closest('div[id^="efc"]');
-        addPointerEvents(); // Adds the style to access locked elements
-
-        let target2;
-        // If no target is found, process the parent and enable pointer-events on the children
-        if (target === null) {
-            target2 = event.target;
-            // Enable pointer-events for all children of the target element that have the "efc" class
-            const children = Array.from(target2.children);  // Convert HTMLCollection to an array
-            console.log("Children:", children);
-            if (children.length > 0) {
-                // Only target the first child
-                children.forEach(child => {
-
-                    if (child.id.includes("efc")) { // Check if the ID contains "efc"
-                        const childUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
-                        console.log("childUnderPointer:", childUnderPointer);
-                        // Reassign the target to the child under the pointer
-
-                        if (childUnderPointer) {
-                            target = childUnderPointer;
-                            if (target.classList.contains("sensors")) { target = childUnderPointer?.parentElement; }
-                            if (target2.id.startsWith("sliderList")) { target = childUnderPointer?.parentElement?.parentElement };
-                            //console.log("TargetChild:", target);
-                        }
+                    if (childUnderPointer) {
+                        target = childUnderPointer;
+                        if (target.classList.contains("sensors")) { target = childUnderPointer?.parentElement; }
+                        if (target2.id.startsWith("sliderList")) { target = childUnderPointer?.parentElement?.parentElement };
+                        //console.log("TargetChild:", target);
                     }
-                });
-                //    if (children[0].className === "numberUnit") {  
-                //         target = target2;
-                // } 
-            }
-        }
-
-
-        // Only proceed if target is valid (i.e., not null or undefined)
-        if (target && (target.id.startsWith("efc") || target.id === "unitId")) {
-            //console.log("Right-clicked on:", target.id);
-            isittime = false;
-            updateSaveButton();
-            currentDivId = target.id;
-
-            // Clear and rebuild the context menu based on the device type
-            rebuildContextMenu(target.id, target.className);
-
-            if (event.detail.clientX) {
-                xCoord = event.detail.clientX;
-                yCoord = event.detail.clientY;
-            } else {
-                xCoord = event.clientX;
-                yCoord = event.clientY;
-            }
-
-            // Position and show the menu
-            menu.style.display = "block";
-
-            // Check if the menu element exists and has a valid offsetWidth
-            const menuElement = document.getElementById('custom-menu');
-            if (menuElement && menuElement.offsetWidth > 0) {
-                const menuWidth = menuElement.offsetWidth; // Get the menu width
-                const menuHeight = menuElement.offsetHeight; // Get the menu height
-
-                let xPosition = xCoord; // Start with the pointer's x-coordinate
-
-                // Adjust x position if menu overflows on the right side
-                if (xCoord + menuWidth > window.innerWidth) {
-                    xPosition = window.innerWidth - menuWidth; // Position it to the left edge of the screen
                 }
-
-                // Set the left position to the adjusted x-position
-                menuElement.style.left = `${xPosition}px`;
-
-                let yPosition = yCoord + 5;
-
-                // Clamp the y position to be at least 40px from top and 40px from bottom
-                const minY = 40;
-                const maxY = window.innerHeight - menuHeight - 40;
-
-                if (yPosition < minY) {
-                    yPosition = minY;
-                } else if (yPosition > maxY) {
-                    yPosition = maxY;
-                }
-
-                menuElement.style.top = `${yPosition}px`;
-            }
-        } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
-            exitConfig();
-            console.log("No valid target found");
+            });
+            //    if (children[0].className === "numberUnit") {  
+            //         target = target2;
+            // } 
         }
     }
 
+
+    // Only proceed if target is valid (i.e., not null or undefined)
+    if (target && (target.id.startsWith("efc") || target.id === "unitId")) {
+        //console.log("Right-clicked on:", target.id);
+        isittime = false;
+        updateSaveButton();
+        currentDivId = target.id;
+
+        // Clear and rebuild the context menu based on the device type
+        rebuildContextMenu(target.id, target.className);
+
+        if (event.detail.clientX) {
+            xCoord = event.detail.clientX;
+            yCoord = event.detail.clientY;
+        } else {
+            xCoord = event.clientX;
+            yCoord = event.clientY;
+        }
+
+        // Position and show the menu
+        menu.style.display = "block";
+
+        // Check if the menu element exists and has a valid offsetWidth
+        const menuElement = document.getElementById('custom-menu');
+        if (menuElement && menuElement.offsetWidth > 0) {
+            const menuWidth = menuElement.offsetWidth;
+            const menuHeight = menuElement.offsetHeight;
+
+            // Adjust for scroll (use the correct scroll container!)
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+
+            let x = xCoord + scrollX + 5;
+            if (x + menuWidth > window.innerWidth + scrollX) {
+                x = window.innerWidth + scrollX - menuWidth - 10;
+            }
+            x = Math.max(10, x);
+
+            let y = yCoord + scrollY;
+            const minY = scrollY + 40;
+            const maxY = scrollY + window.innerHeight - menuHeight - 50;
+            y = Math.min(Math.max(y, minY), maxY);
+
+            menuElement.style.position = "absolute";
+            menuElement.style.left = `${x}px`;
+            menuElement.style.top = `${y}px`;
+        }
+    } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
+        isittime = false;
+        updateSaveButton();
+        console.log("No valid target found");
+    }
 }
 
 function highlightMatchingDivs(elementId, elementClass) {
@@ -341,7 +309,6 @@ function rebuildContextMenu(tID, tClass) {
 
     // **Detect dropdown changes**
     dropdown.addEventListener("change", (event) => {
-        //console.log("Dropdown value changed:", event.target.value);
         updateMenuFields(deviceType, event.target.value, deviceName, deviceIndex);
         saveSelections(false);
     });
@@ -558,7 +525,6 @@ function addNumberInput(container, label, key) {
 
         // Helper function to update value and trigger input event
         function updateValue(change) {
-
             let newValue = parseInt(input.value) + change;
             input.value = newValue;
             // Trigger an 'input' event so external scripts detect the change
@@ -641,10 +607,7 @@ function deleteDevice(deviceIndex) {
     delete selectionData[deviceIndex];
     console.log("Deleting device with index after:", selectionData[deviceIndex]);
     saveSelections(true);
-    menu.style.display = "none";
-    removeHighlighting();
-    //document.querySelectorAll('div[id^="efc"]').forEach(el => el.style.outline = "");
-    isittime = true;
+    closeContextMenu();
 }
 // **Save selections**
 function saveSelections(ignoreDropdown) {
@@ -732,7 +695,11 @@ function keepOnlyA(obj) {
 
 // **Show or hide the save button based on selection data**
 function updateSaveButton(param) {
+    console.log("updateSaveButton called with param:", param);
     if (param !== "hide") {
+        nOpen.innerHTML = "&times;&#xFE0E;";
+        mOpen.innerHTML = "&#8679;&#xFE0E;";
+        mOpen.addEventListener("click", uploadJson, true);
         saveButton.style.display = "block";
         resetButton.style.display = "block";
         if (hasHiddenProperty(selectionData)) {
@@ -740,9 +707,14 @@ function updateSaveButton(param) {
         }
         window.configMode = true;
     } else {
+        nOpen.innerHTML = "&#9776;&#xFE0E;";
+        mOpen.innerHTML = "&#8962;&#xFE0E;";
+        mOpen.removeEventListener("click", uploadJson, true);
         saveButton.style.display = "none";
         resetButton.style.display = "none";
         toggleButton.style.display = "none";
+        closeContextMenu();
+        //runonce2 = true;
         window.configMode = false;
     }
 }
@@ -933,40 +905,22 @@ function fetchFile(uploadUrl, formData) {
 //##############################################################################################################
 // **Initialize**
 function createMenu() {
-
+    const nOpen = document.getElementById('nOpen')
+    const mOpen = document.getElementById('mOpen')
     document.getElementById('areaChart')?.addEventListener("resize", updateYAxisVisibility);
 
-
-    // Handle touchstart to simulate right-click action with 2 fingers
-    document.addEventListener('touchstart', function (e) {
-
-        if (e.touches.length == 2 && document.getElementById("opener").contains(e.target)) {
-            if (saveButton.style.display === "none" && selectionData.unit) {
-                updateSaveButton();
-                setLongPressDelay(200);
-                document.addEventListener("long-press", handleRightClick, true);
-            } else {
-                exitConfig();
-            }
+    nOpen.addEventListener('long-press', () => {
+        if (saveButton.style.display === "none" && selectionData.unit) {
+            updateSaveButton();
+            setLongPressDelay(200);
+            document.addEventListener("long-press", handleRightClick, true);
+        } else {
+            exitConfig();
         }
-    }, true); // Use capturing phase for touch events
-
-    // **Close menu when clicking outside**
-    document.addEventListener("click", (event) => {
-        if (!menu.contains(event.target) && !event.target.className.includes("vInputs")) {
-            //second single click closes config
-            if (event.target === container && menu.style.display === "none") {
-                exitConfig();
-            }
-            menu.style.display = "none";
-            tempName = ""; // Reset the tempName variable for second right click bigVals
-            removeHighlighting();
-            removePointerEvents();
-            //document.querySelectorAll('div[id^="efc"]').forEach(el => el.style.outline = "");
-            isittime = true;
-        }
-
     });
+    // Attach to both 'click' and 'touchend'
+    document.addEventListener("click", handleInteraction);
+    document.addEventListener("touchstart", handleInteraction);
 
     menu = document.createElement("div");
     menu.id = "custom-menu";
@@ -978,7 +932,25 @@ function createMenu() {
     menu.style.color = "white";
     document.body.appendChild(menu);
     createSaveButton();
-    updateSaveButton("hide");   // Update the UI button
+    //updateSaveButton("hide");   // Update the UI button
+}
+
+// **Close menu when clicking outside**
+function handleInteraction(event) {
+    if (!menu.contains(event.target) && !event.target.className.includes("vInputs")) {
+        if ((event.target === container && menu.style.display === "none") || document.getElementById("nOpen").contains(event.target)) {
+            exitConfig();
+        }
+        closeContextMenu();
+    }
+}
+
+function closeContextMenu() {
+    menu.style.display = "none";
+    tempName = ""; // Reset the tempName variable
+    removeHighlighting();
+    removePointerEvents();
+    isittime = true;
 }
 
 
@@ -1008,16 +980,21 @@ function updateJsonArray(newData) {
 }
 
 function removeEmptyKeys(obj) {
-    // Iterate over each key in the object
     for (let key in obj) {
-        // Check if the key is directly in the object (not in the prototype chain)
         if (obj.hasOwnProperty(key)) {
-            // If the value is an object, recurse to remove empty keys in nested objects
-            if (typeof obj[key] === 'object' && obj[key] !== null) {
-                removeEmptyKeys(obj[key]);
-            }
-            // Delete the key if the value is empty (null, undefined, or "")
-            else if (obj[key] === "" || obj[key] === null || obj[key] === undefined) {
+            const value = obj[key];
+
+            // If value is an object (and not null), recurse
+            if (typeof value === 'object' && value !== null) {
+                removeEmptyKeys(value); // Clean nested object
+
+                // After recursion, if it's now empty, delete the key
+                if (Object.keys(value).length === 0) {
+                    delete obj[key];
+                }
+            } 
+            // Delete key if value is empty string, null, or undefined
+            else if (value === "" || value === null || value === undefined) {
                 delete obj[key];
             }
         }
@@ -1064,10 +1041,36 @@ function exitConfig() {
     selectionData = {};
     updateSaveButton("hide");
     hiddenOverride = false;
-    //runonce2 = true;
     setLongPressDelay(600);
     document.removeEventListener("long-press", handleRightClick, true);
     newFJ();
+}
+
+function uploadJson(e) {
+    e.stopImmediatePropagation();
+    //updateSaveButton();
+    const userInput = prompt("Paste your JSON here:");
+
+    if (userInput !== null && userInput.length > 2) {
+        let jsonStr = userInput
+
+        // Remove first and last character if it is in an array 
+        // (content of main_efc.json.gz of a single device)
+        if (userInput.startsWith('[') && userInput.endsWith(']')) {
+            jsonStr = userInput.slice(1, -1);
+        }
+        try {
+            // Try to parse it as JSON
+            selectionData = JSON.parse(jsonStr);
+            console.log("Parsed JSON object:", selectionData);
+        } catch (e) {
+            console.error("Invalid JSON after trimming:", e);
+        }
+
+    } else {
+        console.log("Input too short or cancelled.");
+        exitConfig();
+    }
 }
 
 
