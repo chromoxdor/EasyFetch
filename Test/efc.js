@@ -22,7 +22,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250425/2";
+const efcVersion = "20250425/3";
 const expected = "20250425/2";
 //#############################################################################################################
 
@@ -920,7 +920,7 @@ function createMenu() {
     });
     // Attach to both 'click' and 'touchend'
     document.addEventListener("click", handleInteraction);
-    document.addEventListener("touchstart", handleInteraction);
+   // document.addEventListener("touchstart", handleInteraction);
 
     menu = document.createElement("div");
     menu.id = "custom-menu";
