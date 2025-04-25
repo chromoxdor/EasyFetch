@@ -103,7 +103,8 @@ async function fetchJson(nN) {
         unitName = myJson.WiFi.Hostname;
         unitNr = myJson.System['Unit Number'];
         if (!window.configMode) {
-            getEfcUnitData(unitName);}
+            getEfcUnitData(unitName);
+        }
         if (JSON.stringify(selectionData).includes('"chart":1') && !jStats) {
             console.log("chart was found!!!!!");
             jStats = true;
@@ -121,7 +122,7 @@ async function fetchJson(nN) {
 
     }
     //----------------------------------------------------------------------------------------------------------get JSON Data
-   
+
     if (!isittime || !myJson) return;
     html = '';
     let html1 = '', html3 = '', htmlBigS = '';
@@ -357,7 +358,7 @@ async function fetchJson(nN) {
                                                 ${itemNameChanged}
                                             </div>
                                             <div class="valWrap">
-                                                <input type="number" class="vInputs ${TaskNumber},${ValueNumber}" id="${itemName}" name="${deviceName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
+                                                <input type="number" class="vInputs ${TaskNumber},${ValueNumber}" id="${itemName}_vI" name="${deviceName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
                                                 <div class="kindInput">${kindNP}</div>
                                             </div>
                                         </div>`;
@@ -577,7 +578,7 @@ async function fetchJson(nN) {
     html2 = "";
 
     document.getElementById('bigNumber').innerHTML = html3;
-    
+
     //Things that only need to run once
     if (firstRun) {
         if (!document.cookie.includes("Snd=")) mC("Snd");
@@ -1110,56 +1111,97 @@ function pushClick(sensorName, b) {
 //##############################################################################################################
 //      INPUT TILES EVENT
 //##############################################################################################################
-function getInput(ele, initialClick) {
-    ele.addEventListener('click', (e) => {
-        if (e.type === 'click') {
-            isittime = 0;
-            iIV = setTimeout(blurInput, 8000);
-            ele.addEventListener('blur', (event) => {
-                clearTimeout(iIV);
-                isittime = 1;
-                setTimeout(fetchJson, 400);
-            });
-        }
-
-        // Truncate the value if it exceeds 12 characters
-        if (ele.value.length > 12) {
-            ele.value = ele.value.slice(0, 12);
-        }
-
-        // Handle 'Enter' or 'click' event with 'initialClick' flag
-        if ((e.key === 'Enter' || e.type === 'click' && !initialClick)) {
+function getInput(ele, initalCLick) {
+    console.log(event.key, ele.id)
+    if (event.type === 'click') {
+        isittime = 0;
+        iIV = setTimeout(blurInput, 8000);
+        ele.addEventListener('blur', (event) => {
+            clearTimeout(iIV)
             isittime = 1;
+            setTimeout(fetchJson, 400);
+        });
+    }
+    if (ele.value.length > 12) { ele.value = ele.value.slice(0, 12); }
+    if (event.key === 'Enter' || event.type === 'click' && !initalCLick) {
+        isittime = 1;
+        if (ele.value) {
+            playSound(4000);
 
-            if (ele.value) {
-                playSound(4000);
+            // Dynamic task value command
+            const taskValueSetCmd = `taskvalueset,${ele.classList[1]},${ele.value}`;
 
-                // Dynamic task value command
-                const taskValueSetCmd = `taskvalueset,${ele.classList[1]},${ele.value}`;
-
-                if (unitNr === unitNr1) {
-                    getUrl(cmD + taskValueSetCmd);
-                } else {
-                    getUrl(`${cmD}SendTo,${nNr},"${taskValueSetCmd}"`);
-                }
-
-                buttonClick(ele.id);
+            if (unitNr === unitNr1) {
+                getUrl(cmD + taskValueSetCmd);
             } else {
-                setTimeout(fetchJson, 400);
+                getUrl(`${cmD}SendTo,${nNr},"${taskValueSetCmd}"`);
             }
-            clearTimeout(iIV);
+
+            buttonClick(ele.id);
         }
-        // Handle Escape key press to clear the input value
-        else if (e.key === 'Escape') {
-            document.getElementById(ele.id).value = "";
-        }
-        // If no condition is met, set a timeout for blur
-        else {
-            clearTimeout(iIV);
-            iIV = setTimeout(blurInput, 5000);
-        }
-    });
+        else { setTimeout(fetchJson, 400); }
+        clearTimeout(iIV);
+    }
+    else if (event.key === 'Escape') {
+        console.log("dqwdqwdqwdqwdqdqd")
+        document.getElementById(ele.id).value = "";
+    }
+    else {
+        clearTimeout(iIV); iIV = setTimeout(blurInput, 5000);
+    }
 }
+
+// function getInput(ele, initialClick) {
+//     ele.addEventListener('click', (e) => {
+//         if (e.type === 'click') {
+//             isittime = 0;
+//             iIV = setTimeout(blurInput, 8000);
+//             ele.addEventListener('blur', (event) => {
+//                 clearTimeout(iIV);
+//                 isittime = 1;
+//                 setTimeout(fetchJson, 400);
+//             });
+//         }
+
+//         // Truncate the value if it exceeds 12 characters
+//         if (ele.value.length > 12) {
+//             ele.value = ele.value.slice(0, 12);
+//         }
+
+//         // Handle 'Enter' or 'click' event with 'initialClick' flag
+//         if ((e.key === 'Enter' || e.type === 'click' && !initialClick)) {
+//             isittime = 1;
+
+//             if (ele.value) {
+//                 playSound(4000);
+
+//                 // Dynamic task value command
+//                 const taskValueSetCmd = `taskvalueset,${ele.classList[1]},${ele.value}`;
+
+//                 if (unitNr === unitNr1) {
+//                     getUrl(cmD + taskValueSetCmd);
+//                 } else {
+//                     getUrl(`${cmD}SendTo,${nNr},"${taskValueSetCmd}"`);
+//                 }
+
+//                 buttonClick(ele.id);
+//             } else {
+//                 setTimeout(fetchJson, 400);
+//             }
+//             clearTimeout(iIV);
+//         }
+//         // Handle Escape key press to clear the input value
+//         else if (e.key === 'Escape') {
+//             document.getElementById(ele.id).value = "";
+//         }
+//         // If no condition is met, set a timeout for blur
+//         else {
+//             clearTimeout(iIV);
+//             iIV = setTimeout(blurInput, 5000);
+//         }
+//     });
+//     console.log("isittime", isittime)
+// }
 
 //##############################################################################################################
 //      BLUR INPUT
@@ -1350,7 +1392,7 @@ function topF() { document.body.scrollTop = 0; document.documentElement.scrollTo
 //##############################################################################################################
 const longPressN = () =>
     document.getElementById('mOpen').addEventListener('long-press', () =>
-      !configMode ? window.location.href = nP : null
+        !configMode ? window.location.href = nP : null
     );
 
 function longPressS() {
@@ -1455,7 +1497,7 @@ function playSound(freQ) {
 async function getUrl(url, options = {}) {
     if (!window.configMode || url.includes("/json")) {
         console.log(url);
-        
+
         const controller = options.controller || new AbortController();
         const signal = controller.signal;
         let isTimeout = false;

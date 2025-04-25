@@ -22,8 +22,8 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250425/1";
-const expected = "20250425/1";
+const efcVersion = "20250425/2";
+const expected = "20250425/2";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -965,12 +965,13 @@ function handleData(data) {
 }
 
 function updateJsonArray(newData) {
+    console.log("Received data:", newData);
     let existingIndex = efcArray.findIndex(item => item.unit === newData.unit);
 
     if (existingIndex !== -1) {
         console.log("update");
         // Merge the existing entry with the new data
-        efcArray[existingIndex] = { ...efcArray[existingIndex], ...newData };
+        efcArray[existingIndex] = newData;
     } else {
         console.log("push");
         // Add new entry

@@ -390,16 +390,16 @@ iframe {
     color: inherit;
 }
 
-.vInputs:focus-visible {
+input:focus-visible {
     width: inherit;
 }
 
-.vInputs::placeholder {
+input::placeholder {
     opacity: 1;
     color: #fff;
 }
 
-vInputs:focus::placeholder {
+input:focus::placeholder {
     opacity: .2;
 }
 
