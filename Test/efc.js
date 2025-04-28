@@ -22,7 +22,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250428/2";
+const efcVersion = "20250428/3";
 const expected = "20250428/1";
 //#############################################################################################################
 
@@ -50,8 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.cookie = `efcVersion=${expected}; path=/; max-age=604800`; // 7 days
         if (openUpdate) {
-            saveUrlToServer(url, 'index.htm.gz');
-            //window.open(url, "_blank");
+            //saveUrlToServer(url, 'index.htm.gz');
+            window.open(url, "_blank");
         }
     }
 });
