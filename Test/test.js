@@ -179,8 +179,8 @@ async function fetchJson(nN) {
 
             //console.log("chartData", cD);
             var bigSpan = "";
-            sensorName = TaskName;
-            deviceName = TaskName;
+            let sensorName = TaskName;
+            let deviceName = TaskName;
             taskEnabled = sensor.TaskEnabled.toString();
             const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
 
@@ -385,7 +385,7 @@ async function fetchJson(nN) {
                                 hour2 = Math.floor(slT2 / 60);
                                 minute2 = slT2 % 60;
                                 const padded2 = minute2.toString().padStart(2, "0");
-                                itemName = changeNN(itemName);
+                                //let itemNameC = changeNN(itemName);
                                 const htmlSlider1 = `<input class="slTS slTHU" type="range" min="0" max="1440" step="5" value="`;
 
                                 html2 += `
@@ -405,8 +405,8 @@ async function fetchJson(nN) {
                             }
                             // thermostat slider
                             else if ((sensorName).includes("thSlider")) {
-                                if (NrDecimals !== 3) itemName = "For the Thermo slider the value must have<br>3 decimals!";
-                                itemName = changeNN(itemName);
+                                if (NrDecimals !== 3) itemName = "For the Thermo slider the value<br>must have 3 decimals!";
+                                //itemName = changeNN(itemName);
                                 slT1 = Value.toFixed(3);
                                 slT2 = (slT1 - Math.floor(slT1)) * 100;
                                 slT2 = slT2.toFixed(1)
@@ -422,7 +422,7 @@ async function fetchJson(nN) {
                                       <div class="even">&#9728;&#xFE0E;<span class="isT">${slT1}</span>°C</div>
                                       <div class="even">&#9737;&#xFE0E;<span class="setT">${slT2}</span>°C</div>
                                     </div>
-                                    <div class="slTimeSet">
+                                    <div id="${itemName}" class="slTimeSet">
                                       <input class="slTHU thermO ${XI}" ${htmlSlider1}${slT2}" id="setpoint">
                                       <input class="slider noI thT" ${htmlSlider1}${slT1}" id="${itemName}">
                                     </div>
@@ -661,7 +661,7 @@ function changeNN(nn) {
 function changeCss() {
     let x = " auto";
     let m = "";
-    let coloumnSet, y, z;
+    let y, z;
     var numSl = document.querySelectorAll('.chart, input[type=range]').length;
     if (!numSl) { document.getElementById("allList").classList.add('allExtra'); }
     else { document.getElementById("allList").classList.remove('allExtra'); }
@@ -758,7 +758,7 @@ function changeCss() {
     if (coloumnSet == 2 && bigLength == 1) {
         document.getElementsByClassName('bigNum')[0].appendChild(Object.assign(document.createElement('div'), { className: 'bigNumWrap' }));
     }
-
+console.log("vcocllwlwl", coloumnSet)
     document.getElementById('sensorList').innerHTML = sList.innerHTML;
     bigLength = 0;
 }
@@ -928,7 +928,7 @@ function sliderChTS(event) {
     playSound(4000);
     const slider = event.target;
     const slTName = slider.parentNode.parentNode;
-    const slTNameID = slTName.id.match(/:(\w+)=/)[1];
+    const slTNameID = slider.parentNode.id;
     const sliderId = slider.id.split(":")[0];
     const LorR = slider.id.split(":")[1];
     const slClass2 = slTName.classList[2];
@@ -1127,7 +1127,6 @@ function getInput(ele, initalCLick) {
         isittime = 1;
         if (ele.value) {
             playSound(4000);
-
             // Dynamic task value command
             const taskValueSetCmd = `taskvalueset,${ele.classList[1]},${ele.value}`;
 
@@ -1137,7 +1136,7 @@ function getInput(ele, initalCLick) {
                 getUrl(`${cmD}SendTo,${nNr},"${taskValueSetCmd}"`);
             }
 
-            buttonClick(ele.id);
+            buttonClick(ele.id.split('_vI')[0]);
         }
         else { setTimeout(fetchJson, 400); }
         clearTimeout(iIV);

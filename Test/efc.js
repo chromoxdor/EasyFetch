@@ -22,8 +22,8 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250425/3";
-const expected = "20250425/2";
+const efcVersion = "20250428/1";
+const expected = "20250428/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -357,7 +357,12 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         if (["dButtons", "vSlider"].includes(selectedOption) && deviceType === 33) {
             addCheckbox(formFields, " no input", "noI");
         }
-
+//needs Json output for clock plugin in ESPEasy
+        if (["tSlider"].includes(selectedOption) && deviceType === 33) {
+            addTextInput(formFields, "taskname: ", "timeName");
+            addDropdown(formFields, "day");
+            addDropdown(formFields, "fields");
+        }
 
         if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1 || contextIsAlready && deviceType !== "A") {
             addTextInput(formFields, "unit: ", "unit");
@@ -563,6 +568,48 @@ function addCheckbox(container, label, key) {
     //container.appendChild(document.createElement("br"));
 }
 
+function addDropdown(container, key) {
+    const config = {
+        day: {
+            label: "Day:",
+            options: ["All", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Wrk", "Wkd"]
+        },
+        fields: {
+            label: "Fields:",
+            options: ["1-2", "3-4", "5-6", "7-8"]
+        }
+    };
+
+    if (!config[key]) {
+        console.error(`Unknown dropdown key: ${key}`);
+        return;
+    }
+
+    const { label, options } = config[key];
+
+    const wrapper = document.createElement("div");
+    wrapper.style.padding = "5px 0";
+
+    const labelEl = document.createElement("span");
+    labelEl.textContent = label;
+    labelEl.style.marginRight = "5px";
+
+    const select = document.createElement("select");
+    select.dataset.key = key;
+    select.style.padding = "2px 5px";
+
+    options.forEach(optionText => {
+        const option = document.createElement("option");
+        option.value = optionText;
+        option.textContent = optionText;
+        select.appendChild(option);
+    });
+
+    wrapper.appendChild(labelEl);
+    wrapper.appendChild(select);
+    container.appendChild(wrapper);
+}
+
 function addColorPicker(container, label, key) {
     let labelEl = document.createElement("label");
     labelEl.innerText = label;
@@ -645,7 +692,7 @@ function saveSelections(ignoreDropdown) {
     if (formFields) {
         formFields.querySelectorAll("input, select").forEach(input => {
             let key = input.dataset.key;
-            //console.log(`Processing input with key: ${key}`);
+            console.log(`Processing input with key: ${key}`,input.checked);
 
             if (input.type === "checkbox") {
                 // Checkbox input
@@ -849,9 +896,9 @@ function saveToFile(param) {
             console.log("Skipping main_efc.json.gz because isMain is false.");
         }
     });
-
+   // runonce2 = true;
     exitConfig()
-    runonce2 = true;
+
 }
 
 
@@ -950,7 +997,9 @@ function closeContextMenu() {
     tempName = ""; // Reset the tempName variable
     removeHighlighting();
     removePointerEvents();
+    updateYAxisVisibility()
     isittime = true;
+    newFJ();
 }
 
 
@@ -1044,7 +1093,8 @@ function exitConfig() {
     hiddenOverride = false;
     setLongPressDelay(600);
     document.removeEventListener("long-press", handleRightClick, true);
-    newFJ();
+    //runonce2 = false;
+    setTimeout(newFJ, 200);
 }
 
 function uploadJson(e) {
@@ -1085,17 +1135,17 @@ function getColorScheme() {
     const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
     if (bgColor === "0") {
         return [
-            "rgba(34, 165, 89, 0.3)",
-            "rgba(34, 36, 165, 0.3)",
-            "rgba(255, 99, 133, 0.3)",
-            "rgba(115, 46, 133, 0.3)"
+            "rgba(34, 165, 89, 0.5)",
+            "rgba(34, 36, 165, 0.5)",
+            "rgba(255, 99, 133, 0.5)",
+            "rgba(115, 46, 133, 0.5)"
         ];
     } else {
         return [
-            "rgba(96, 248, 91, 0.3)",
-            "rgba(71, 209, 255, 0.3)",
-            "rgba(255, 75, 102, 0.3)",
-            "rgba(255, 78, 255, 0.3)"
+            "rgba(71, 227, 39, 0.6)",
+            "rgba(71, 209, 255, 0.6)",
+            "rgba(255, 75, 102, 0.6)",
+            "rgba(255, 78, 255, 0.6)"
         ];
 
     }
@@ -1145,7 +1195,20 @@ function makeChart() {
                         animation: false,
                         plugins: {
                             legend: { display: false },
-                            tooltip: { enabled: true, displayColors: false },
+                            tooltip: { 
+                                enabled: true, 
+                                displayColors: true,
+                                callbacks: {
+                                    labelColor: function(context) {
+                                        const dataset = context.dataset;
+                                        return {
+                                            backgroundColor: dataset.borderColor,
+                                            borderColor: dataset.borderColor,
+                                            borderWidth: 2,
+                                        };
+                                    }
+                                }
+                            },
                         },
                         scales: { x: { display: false } },
                         elements: {
@@ -1170,7 +1233,9 @@ function makeChart() {
 }
 
 function updateYAxisVisibility() {
-    const shouldShow = document.getElementById('allList').offsetWidth > 400;
+    console.log("Updating Y-axis visibility",coloumnSet);
+    const shouldShow = coloumnSet > 2;
+    console.log("Updating Y-axis visibility based on coloumnSet:", shouldShow);
     const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
     Object.values(chartInstances).forEach(chart => {
         if (!chart) return;
