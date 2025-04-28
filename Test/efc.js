@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const outdated = cd < ed || (cd === ed && cNum < eNum);
     if (outdated) {
         const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update to: ${expected} \nDo you want to visit the update page?`;
-        const url = `https://github.com/chromoxdor/easyfetch/tree/test`;
+        const url = `https://downgit.github.io/#/home?url=https://github.com/chromoxdor/easyfetch/blob/test/index.htm.gz`;
         // Confirm must be immediately followed by window.open to be safe
         const openUpdate = confirm(msg);
 
