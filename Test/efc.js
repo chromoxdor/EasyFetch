@@ -22,7 +22,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250428/8";
+const efcVersion = "20250428/9";
 const expected = "20250428/3";
 //#############################################################################################################
 
@@ -382,7 +382,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
             if (!!selectionData[deviceIndex]?.A?.chart) {
                 addCheckbox(formFields, " always Y", "Y");
             }
-            if (!tClass.includes("chart")) {
+            if (!tClass?.includes("chart")) {
                 addColorPicker(formFields, "color: ", "color");
             }
         }
