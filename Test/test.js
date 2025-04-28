@@ -208,10 +208,7 @@ async function fetchJson(nN) {
                 let efcIDA = `efc:${deviceName}=${TaskDeviceNumber},${TaskNumber}`;
                 //chart  
                 if (chart && window.efc) {
-                    html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:150px; padding:0;">
-                      Make sure the "stats" checkbox is checked<br> in device settings if the chart isn’t working.
-                    <canvas id="${TaskName}chart"></canvas>
-                </div>`;                }
+                    html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:150px; padding:0;"><canvas id="${TaskName}chart"></canvas></div>`;                }
                 if (sensor.TaskValues) {
                     someoneEn = 1;
                     let firstItem = false;

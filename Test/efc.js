@@ -23,7 +23,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //      VERSION CHECK
 //#############################################################################################################
 const efcVersion = "20250428/8";
-const expected = "20250428/2";
+const expected = "20250428/3";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -43,15 +43,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const outdated = cd < ed || (cd === ed && cNum < eNum);
     if (outdated) {
-        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update to: ${expected} \nClick ok to install the latest version?`;
+        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update to: ${expected} \nClick ok to install the latest version?\n\nIf this message appears again,\nplease abort and wait a while then try again!!!`;
         const url = `https://raw.githubusercontent.com/chromoxdor/easyfetch/test/index.htm.gz`;
         // Confirm must be immediately followed by window.open to be safe
         const openUpdate = confirm(msg);
 
-        document.cookie = `efcVersion=${expected}; path=/; max-age=604800`; // 7 days
+        
         if (openUpdate) {
             saveUrlToServer(url, 'index.htm.gz');
             //window.open(url, "_blank");
+        } else {
+            document.cookie = `efcVersion=${expected}; path=/; max-age=86400`; // 1 day
         }
     }
 });
@@ -971,7 +973,7 @@ function saveUrlToServer(urlToFetch, filename = 'file.dat') {
             console.log(`Uploaded ${filename} to server.`);
             // Display the alert popup
             alert("Upgrade Successful");
-
+            document.cookie = `efcVersion=; path=/; max-age=0`;
             // Reload the page after the user clicks "OK"
             location.reload();
         })
