@@ -22,8 +22,8 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250428/7";
-const expected = "20250428/1";
+const efcVersion = "20250428/8";
+const expected = "20250428/2";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -332,7 +332,7 @@ function rebuildContextMenu(tID, tClass) {
 function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, valueIndex, singleTile, tClass) {
     let formFields = document.getElementById("dynamic-fields");
     if (formFields) menu.removeChild(formFields);
-console.log("selectedOption",tClass)
+    console.log("selectedOption", tClass)
     formFields = document.createElement("div");
     formFields.id = "dynamic-fields";
     formFields.style.display = "grid";
@@ -379,7 +379,7 @@ console.log("selectedOption",tClass)
             addCheckbox(formFields, " chart", "chart");
             if (!!selectionData[deviceIndex]?.A?.chart) {
                 addCheckbox(formFields, " always Y", "Y");
-            } 
+            }
             if (!tClass.includes("chart")) {
                 addColorPicker(formFields, "color: ", "color");
             }
@@ -969,6 +969,11 @@ function saveUrlToServer(urlToFetch, filename = 'file.dat') {
 
             fetchFile(`/upload`, formData);
             console.log(`Uploaded ${filename} to server.`);
+            // Display the alert popup
+            alert("Upgrade Successful");
+
+            // Reload the page after the user clicks "OK"
+            location.reload();
         })
         .catch(error => {
             console.error('Error uploading file:', error);
