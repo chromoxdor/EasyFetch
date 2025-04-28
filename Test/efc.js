@@ -22,7 +22,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250428/6";
+const efcVersion = "20250428/7";
 const expected = "20250428/1";
 //#############################################################################################################
 
@@ -377,7 +377,7 @@ console.log("selectedOption",tClass)
 
         if (deviceType === "A" && !singleTile) {
             addCheckbox(formFields, " chart", "chart");
-            if (!!selectionData[deviceIndex].A.chart) {
+            if (!!selectionData[deviceIndex]?.A?.chart) {
                 addCheckbox(formFields, " always Y", "Y");
             } 
             if (!tClass.includes("chart")) {
@@ -1014,7 +1014,7 @@ function createMenu() {
 
 // **Close menu when clicking outside**
 function handleInteraction(event) {
-    if (!menu.contains(event.target) && !event.target.className.includes("vInputs")) {
+    if (!menu.contains(event.target) && !event.target.className.includes("vInputs") && configMode) {
         if ((event.target === container && menu.style.display === "none") || document.getElementById("nOpen").contains(event.target)) {
             exitConfig();
         }
