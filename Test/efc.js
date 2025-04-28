@@ -22,7 +22,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250428/3";
+const efcVersion = "20250428/4";
 const expected = "20250428/1";
 //#############################################################################################################
 
@@ -43,15 +43,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const outdated = cd < ed || (cd === ed && cNum < eNum);
     if (outdated) {
-        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update to: ${expected} \nDo you want to install the latest version?`;
-        const url = `https://downgit.github.io/#/home?url=https://github.com/chromoxdor/easyfetch/blob/test/index.htm.gz`;
+        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update to: ${expected} \nClick ok to install the latest version?`;
+        const url = `https://raw.githubusercontent.com/chromoxdor/easyfetch/test/index.htm.gz`;
         // Confirm must be immediately followed by window.open to be safe
         const openUpdate = confirm(msg);
 
         document.cookie = `efcVersion=${expected}; path=/; max-age=604800`; // 7 days
         if (openUpdate) {
-            //saveUrlToServer(url, 'index.htm.gz');
-            window.open(url, "_blank");
+            saveUrlToServer(url, 'index.htm.gz');
+            //window.open(url, "_blank");
         }
     }
 });
@@ -955,6 +955,7 @@ function saveUrlToServer(urlToFetch, filename = 'file.dat') {
             return response.blob();
         })
         .then(blob => {
+            console.log(`Fetched blob size: ${blob.size} bytes`);
             const file = new File([blob], filename, { type: blob.type });
 
             const formData = new FormData();
