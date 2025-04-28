@@ -22,7 +22,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250428/1";
+const efcVersion = "20250428/2";
 const expected = "20250428/1";
 //#############################################################################################################
 
@@ -43,14 +43,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const outdated = cd < ed || (cd === ed && cNum < eNum);
     if (outdated) {
-        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update to: ${expected} \nDo you want to visit the update page?`;
+        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update to: ${expected} \nDo you want to install the latest version?`;
         const url = `https://downgit.github.io/#/home?url=https://github.com/chromoxdor/easyfetch/blob/test/index.htm.gz`;
         // Confirm must be immediately followed by window.open to be safe
         const openUpdate = confirm(msg);
 
         document.cookie = `efcVersion=${expected}; path=/; max-age=604800`; // 7 days
         if (openUpdate) {
-            window.open(url, "_blank");
+            saveUrlToServer(url, 'index.htm.gz');
+            //window.open(url, "_blank");
         }
     }
 });
@@ -357,7 +358,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         if (["dButtons", "vSlider"].includes(selectedOption) && deviceType === 33) {
             addCheckbox(formFields, " no input", "noI");
         }
-//needs Json output for clock plugin in ESPEasy
+        //needs Json output for clock plugin in ESPEasy
         if (["tSlider"].includes(selectedOption) && deviceType === 33) {
             addTextInput(formFields, "taskname: ", "timeName");
             addDropdown(formFields, "day");
@@ -692,7 +693,7 @@ function saveSelections(ignoreDropdown) {
     if (formFields) {
         formFields.querySelectorAll("input, select").forEach(input => {
             let key = input.dataset.key;
-            console.log(`Processing input with key: ${key}`,input.checked);
+            console.log(`Processing input with key: ${key}`, input.checked);
 
             if (input.type === "checkbox") {
                 // Checkbox input
@@ -896,7 +897,7 @@ function saveToFile(param) {
             console.log("Skipping main_efc.json.gz because isMain is false.");
         }
     });
-   // runonce2 = true;
+    // runonce2 = true;
     exitConfig()
 
 }
@@ -945,6 +946,28 @@ function fetchFile(uploadUrl, formData) {
 //         });
 // }
 
+function saveUrlToServer(urlToFetch, filename = 'file.dat') {
+    fetch(urlToFetch)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed to fetch: ${response.statusText}`);
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const file = new File([blob], filename, { type: blob.type });
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetchFile(`/upload`, formData);
+            console.log(`Uploaded ${filename} to server.`);
+        })
+        .catch(error => {
+            console.error('Error uploading file:', error);
+        });
+}
+
 
 
 //##############################################################################################################
@@ -967,7 +990,7 @@ function createMenu() {
     });
     // Attach to both 'click' and 'touchend'
     document.addEventListener("click", handleInteraction);
-   // document.addEventListener("touchstart", handleInteraction);
+    // document.addEventListener("touchstart", handleInteraction);
 
     menu = document.createElement("div");
     menu.id = "custom-menu";
@@ -1042,7 +1065,7 @@ function removeEmptyKeys(obj) {
                 if (Object.keys(value).length === 0) {
                     delete obj[key];
                 }
-            } 
+            }
             // Delete key if value is empty string, null, or undefined
             else if (value === "" || value === null || value === undefined) {
                 delete obj[key];
@@ -1195,11 +1218,11 @@ function makeChart() {
                         animation: false,
                         plugins: {
                             legend: { display: false },
-                            tooltip: { 
-                                enabled: true, 
+                            tooltip: {
+                                enabled: true,
                                 displayColors: true,
                                 callbacks: {
-                                    labelColor: function(context) {
+                                    labelColor: function (context) {
                                         const dataset = context.dataset;
                                         return {
                                             backgroundColor: dataset.borderColor,
@@ -1233,7 +1256,7 @@ function makeChart() {
 }
 
 function updateYAxisVisibility() {
-    console.log("Updating Y-axis visibility",coloumnSet);
+    console.log("Updating Y-axis visibility", coloumnSet);
     const shouldShow = coloumnSet > 2;
     console.log("Updating Y-axis visibility based on coloumnSet:", shouldShow);
     const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
