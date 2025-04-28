@@ -22,7 +22,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250428/5";
+const efcVersion = "20250428/6";
 const expected = "20250428/1";
 //#############################################################################################################
 
@@ -325,14 +325,14 @@ function rebuildContextMenu(tID, tClass) {
         if (singleTile) { dropdown.value = ""; }
     }
 
-    updateMenuFields(deviceType, dropdown.value, deviceName, deviceIndex, valueIndex, singleTile); // Initial call
+    updateMenuFields(deviceType, dropdown.value, deviceName, deviceIndex, valueIndex, singleTile, tClass); // Initial call
 }
 
 // **Updates additional fields based on dropdown selection**
-function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, valueIndex, singleTile) {
+function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, valueIndex, singleTile, tClass) {
     let formFields = document.getElementById("dynamic-fields");
     if (formFields) menu.removeChild(formFields);
-
+console.log("selectedOption",tClass)
     formFields = document.createElement("div");
     formFields.id = "dynamic-fields";
     formFields.style.display = "grid";
@@ -379,8 +379,10 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
             addCheckbox(formFields, " chart", "chart");
             if (!!selectionData[deviceIndex].A.chart) {
                 addCheckbox(formFields, " always Y", "Y");
+            } 
+            if (!tClass.includes("chart")) {
+                addColorPicker(formFields, "color: ", "color");
             }
-            addColorPicker(formFields, "color: ", "color");
         }
         console.log("deviceType: ", deviceType);
         if ((deviceType === "A" && !["bigVal"].includes(selectedOption)) || singleTile || contextIsAlready || selectedOption === "bigVS" || selectedOption === "vSlider" || (deviceType === 33 && !["none"].includes(selectedOption))) {
