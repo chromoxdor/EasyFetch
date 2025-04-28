@@ -22,7 +22,7 @@ let tempName = "";                  // Temporary variable for storing device nam
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250428/4";
+const efcVersion = "20250428/5";
 const expected = "20250428/1";
 //#############################################################################################################
 
@@ -377,6 +377,9 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
 
         if (deviceType === "A" && !singleTile) {
             addCheckbox(formFields, " chart", "chart");
+            if (!!selectionData[deviceIndex].A.chart) {
+                addCheckbox(formFields, " always Y", "Y");
+            }
             addColorPicker(formFields, "color: ", "color");
         }
         console.log("deviceType: ", deviceType);
@@ -566,6 +569,7 @@ function addCheckbox(container, label, key) {
     labelEl.appendChild(input);
     labelEl.appendChild(document.createTextNode(label));
     container.appendChild(labelEl);
+
     //container.appendChild(document.createElement("br"));
 }
 
@@ -1257,19 +1261,15 @@ function makeChart() {
 }
 
 function updateYAxisVisibility() {
-    console.log("Updating Y-axis visibility", coloumnSet);
     const shouldShow = coloumnSet > 2;
-    console.log("Updating Y-axis visibility based on coloumnSet:", shouldShow);
     const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
     Object.values(chartInstances).forEach(chart => {
         if (!chart) return;
 
-
-
         // Loop through all Y-axes and update visibility
         Object.keys(chart.options.scales).forEach(scaleKey => {
             if (scaleKey.startsWith("y-")) { // Only target Y-axes
-                chart.options.scales[scaleKey].display = shouldShow;
+                chart.options.scales[scaleKey].display = shouldShow || !!(selectionData[chart.canvas.offsetParent?.id.match(/=(\d+),(\d+)/)?.[2]]?.A?.Y);
                 chart.options.scales[scaleKey].ticks.color = bgColor === "0" ? "grey" : "white";
             }
             if (scaleKey.startsWith("y-r")) { // Only target Y-axes
