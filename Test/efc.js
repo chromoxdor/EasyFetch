@@ -24,7 +24,7 @@ var interactionHandled = false;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250429/2";
+const efcVersion = "20250429/3";
 const expected = "20250429/1";
 //#############################################################################################################
 
@@ -1211,6 +1211,7 @@ function getColorScheme() {
 }
 
 function makeChart() {
+    checkColumns();
     loadScript("https://cdn.jsdelivr.net/npm/chart.js", function () {
         if (!cD) return;
         colorArray = getColorScheme();
@@ -1311,11 +1312,9 @@ function updateYAxisVisibility() {
         chart.update();
     });
 }
-//redraw the chart tiles when thw number of columns changes
-let l = coloumnSet >= 3;
-(function f() {
-  let c = coloumnSet < 3;
-  if (c && l)  console.log("sdflklfdklklslkddsdsdssd"),htmlold = "", newFJ();
-  l = !c;
-  requestAnimationFrame(f);
-})();
+let l = true;
+function checkColumns() {
+    let c = coloumnSet < 3;
+    if (c && l) console.log("column count dropped"), htmlold = "", newFJ();
+    l = !c;
+  }
