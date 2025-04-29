@@ -24,7 +24,7 @@ var interactionHandled = false;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250429/1";
+const efcVersion = "20250429/2";
 const expected = "20250429/1";
 //#############################################################################################################
 
@@ -756,8 +756,8 @@ function keepOnlyA(obj) {
 function updateSaveButton(param) {
     console.log("updateSaveButton called with param:", param);
     if (param !== "hide") {
-        nOpen.innerHTML = "&times;&#xFE0E;";
-        mOpen.innerHTML = "&#8679;&#xFE0E;";
+        nOpen && (nOpen.innerHTML = "&times;&#xFE0E;");
+        mOpen && (mOpen.innerHTML = "&#8679;&#xFE0E;");
         // mOpen.addEventListener("click", uploadJson, true);
         saveButton.style.display = "block";
         resetButton.style.display = "block";
@@ -766,8 +766,8 @@ function updateSaveButton(param) {
         }
         window.configMode = true;
     } else {
-        nOpen.innerHTML = "&#9776;&#xFE0E;";
-        mOpen.innerHTML = "&#8962;&#xFE0E;";
+        nOpen && (nOpen.innerHTML = "&#9776;&#xFE0E;");
+        mOpen && (mOpen.innerHTML = "&#8962;&#xFE0E;");
         // mOpen.removeEventListener("click", uploadJson, true);
         saveButton.style.display = "none";
         resetButton.style.display = "none";
@@ -1311,3 +1311,11 @@ function updateYAxisVisibility() {
         chart.update();
     });
 }
+//redraw the chart tiles when thw number of columns changes
+let l = coloumnSet >= 3;
+(function f() {
+  let c = coloumnSet < 3;
+  if (c && l)  console.log("sdflklfdklklslkddsdsdssd"),htmlold = "", newFJ();
+  l = !c;
+  requestAnimationFrame(f);
+})();
