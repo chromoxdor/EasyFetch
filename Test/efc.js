@@ -17,13 +17,15 @@ var contextIsAlready = false;       // Flag to check if the context menu is alre
 
 // Miscellaneous variables
 let tempName = "";                  // Temporary variable for storing device names
+var mOpen, nOpen;                  // References to the menu buttons
+var interactionHandled = false;
 
 
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250428/9";
-const expected = "20250428/3";
+const efcVersion = "20250429/1";
+const expected = "20250429/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -48,7 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Confirm must be immediately followed by window.open to be safe
         const openUpdate = confirm(msg);
 
-        
         if (openUpdate) {
             saveUrlToServer(url, 'index.htm.gz');
             //window.open(url, "_blank");
@@ -65,7 +66,9 @@ document.addEventListener("DOMContentLoaded", () => {
 function addContext() {
 
     // Handle right-click (contextmenu)
-    document.addEventListener("contextmenu", handleRightClick, true);  // Use capturing phase for contextmenu
+    if (!/(android)/i.test(navigator.userAgent)) {
+        document.addEventListener("contextmenu", handleRightClick, true);  // Use capturing phase for contextmenu
+    }
 }
 
 function handleRightClick(event) {
@@ -755,7 +758,7 @@ function updateSaveButton(param) {
     if (param !== "hide") {
         nOpen.innerHTML = "&times;&#xFE0E;";
         mOpen.innerHTML = "&#8679;&#xFE0E;";
-        mOpen.addEventListener("click", uploadJson, true);
+        // mOpen.addEventListener("click", uploadJson, true);
         saveButton.style.display = "block";
         resetButton.style.display = "block";
         if (hasHiddenProperty(selectionData)) {
@@ -765,7 +768,7 @@ function updateSaveButton(param) {
     } else {
         nOpen.innerHTML = "&#9776;&#xFE0E;";
         mOpen.innerHTML = "&#8962;&#xFE0E;";
-        mOpen.removeEventListener("click", uploadJson, true);
+        // mOpen.removeEventListener("click", uploadJson, true);
         saveButton.style.display = "none";
         resetButton.style.display = "none";
         toggleButton.style.display = "none";
@@ -989,22 +992,37 @@ function saveUrlToServer(urlToFetch, filename = 'file.dat') {
 //##############################################################################################################
 // **Initialize**
 function createMenu() {
-    const nOpen = document.getElementById('nOpen')
-    const mOpen = document.getElementById('mOpen')
+    nOpen = document.getElementById('nOpen')
+    mOpen = document.getElementById('mOpen')
     document.getElementById('areaChart')?.addEventListener("resize", updateYAxisVisibility);
 
     nOpen.addEventListener('long-press', () => {
         if (saveButton.style.display === "none" && selectionData.unit) {
             updateSaveButton();
             setLongPressDelay(200);
-            document.addEventListener("long-press", handleRightClick, true);
+            if (('ontouchstart' in window)) document.addEventListener("long-press", handleRightClick, true);
         } else {
             exitConfig();
         }
     });
-    // Attach to both 'click' and 'touchend'
-    document.addEventListener("click", handleInteraction);
-    // document.addEventListener("touchstart", handleInteraction);
+
+    if (!('ontouchstart' in window)) {
+        document.addEventListener('click', handleInteraction);
+    } else {
+        let touchStartTime = 0;
+        const tapThreshold = 200; // ms
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartTime = Date.now();
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            const duration = Date.now() - touchStartTime;
+            if (duration < tapThreshold) {
+                handleInteraction(e);
+            }
+        }, { passive: false }); // Set to false if using preventDefault
+    }
 
     menu = document.createElement("div");
     menu.id = "custom-menu";
@@ -1021,9 +1039,13 @@ function createMenu() {
 
 // **Close menu when clicking outside**
 function handleInteraction(event) {
+    console.log("Interaction detected!", event.type);
     if (!menu.contains(event.target) && !event.target.className.includes("vInputs") && configMode) {
-        if ((event.target === container && menu.style.display === "none") || document.getElementById("nOpen").contains(event.target)) {
+        if ((event.target === container && menu.style.display === "none") || nOpen.contains(event.target)) {
             exitConfig();
+        }
+        if (mOpen.contains(event.target)) {
+            uploadJson(event);
         }
         closeContextMenu();
     }
