@@ -37,6 +37,7 @@ var jStats = false;                  // Flag for stats-related data fetching
 // Fetching and control-related variables
 var fJ;                              // FetchJson interval
 var fetchAbort = new AbortController(); // Controller for aborting fetch requests
+let isFetching = false;                 // Flag to track fetch status
 
 // System control and utility constants
 const cmD = "control?cmd=";           // Command string prefix
@@ -52,6 +53,7 @@ var isMain = true;                    // Flag to determine if this is the main a
 var coloumnSet;                       // Column set for UI
 var myJson2;                          // JSON object for the sidenav handling
 var tsX, tsY, teX, teY, tsTime;       // Time and position-related variables (for touch gesture)
+const c = new (window.AudioContext || window.webkitAudioContext)();
 
 
 //##############################################################################################################
@@ -93,33 +95,45 @@ async function fetchJson(nN) {
     fetchAbort = new AbortController();
 
     //----------------------------------------------------------------------------------------------------------get JSON Data
+    if (isFetching) {
+        console.error("[fetchJson] Skipped: previous request still in progress.");
+        return;
+    }
+    isFetching = true;
+
     try {
         const response = await getUrl(jsonPath + (jStats ? stats : ""), {
             controller: fetchAbort,
             signal: fetchAbort.signal
         });
         if (fetchAbort.signal.aborted) return;
+
         myJson = await response.json();
         unitName = myJson.WiFi.Hostname;
         unitNr = myJson.System['Unit Number'];
+
         if (!window.configMode) {
             getEfcUnitData(unitName);
         }
+
         if (JSON.stringify(selectionData).includes('"chart":1') && !jStats) {
             console.log("chart was found!!!!!");
             jStats = true;
+            isFetching = false;
             newFJ(nN);
             return;
         }
     } catch (error) {
         if (error.name === "AbortError") return;
+
         if (error.toString().includes("double-quoted")) {
             console.log("Error parsing JSON, falling back to empty stats", error.name);
             jStats = false;
             newFJ();
             return;
         }
-
+    } finally {
+        isFetching = false; // Always release the lock
     }
     //----------------------------------------------------------------------------------------------------------get JSON Data
 
@@ -208,7 +222,8 @@ async function fetchJson(nN) {
                 let efcIDA = `efc:${deviceName}=${TaskDeviceNumber},${TaskNumber}`;
                 //chart  
                 if (chart && window.efc) {
-                    html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:150px; padding:0;"><canvas id="${TaskName}chart"></canvas></div>`;                }
+                    html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:150px;padding:0;"><canvas id="${TaskName}chart" ></canvas></div>`;
+                }
                 if (sensor.TaskValues) {
                     someoneEn = 1;
                     let firstItem = false;
@@ -590,7 +605,7 @@ async function fetchJson(nN) {
 
         nP2 = `http://${initIP}/devices`;
         nP = `http://${initIP}/tools`;
-
+        myJson2 = myJson;
         getNodes();
         longPressS();
         longPressN();
@@ -606,7 +621,7 @@ async function fetchJson(nN) {
         document.getElementById("unitId").innerHTML = `${styleU}${unitName} <span class="numberUnit"> (${myJson.WiFi.RSSI})</span>`;
         document.getElementById("unitT").innerHTML = `${styleU}${unitName}`;
     }
-
+    if (unitNr === unitNr1) myJson2 = myJson;
     if (nN) getNodes(undefined, undefined, "ch");
     paramS();
     changeCss();
@@ -756,7 +771,7 @@ function changeCss() {
     if (coloumnSet == 2 && bigLength == 1) {
         document.getElementsByClassName('bigNum')[0].appendChild(Object.assign(document.createElement('div'), { className: 'bigNumWrap' }));
     }
-console.log("vcocllwlwl", coloumnSet)
+
     document.getElementById('sensorList').innerHTML = sList.innerHTML;
     bigLength = 0;
 }
@@ -830,6 +845,7 @@ function addEonce() {
             closeNav()
         }
     })
+
     if (window.efc) {
         createMenu();
     }
@@ -1255,11 +1271,11 @@ async function getNodes(sensorName, allNodes, ch) {
     let html4 = '';
     let i = -1;
 
-    if (!ch) {
+    if (!ch && unitNr !== unitNr1) {
         response = await getUrl(`/json`);
         myJson2 = await response.json();
     }
-
+    console.log("getNodes", myJson2)
     if (!myJson2) return;
     myJson2.nodes.forEach(node => {
         i++
@@ -1306,7 +1322,7 @@ function nodeChange(event) {
     if (!isMain) runonce2 = true;
     selectionData = {};
     jStats = false;
-    if (window.efc) exitConfig();
+    if (window.efc && window.configMode) exitConfig();
     if (node) {
         nNr = node.nr;
         nN = node.name;
@@ -1315,6 +1331,7 @@ function nodeChange(event) {
         nP2 = `${baseUrl}/devices`;
         jsonPath = `${baseUrl}/json`;
         window.history.replaceState(null, null, `?unit=${nNr}`);
+        console.log("nodeChange", node)
         newFJ(nN);
     }
     if (window.innerWidth < 450 && document.getElementById('sysInfo').offsetHeight === 0) {
@@ -1476,7 +1493,7 @@ function playSound(freQ) {
     } else if (freQ > 1000) {
         receiveNote("G");
     } if ((document.cookie.includes("Snd=1") || freQ < 1000) && (isittime || freQ !== 3000)) {
-        c = new AudioContext()
+        //c = new AudioContext()
         o = c.createOscillator()
         g = c.createGain()
         frequency = freQ
@@ -1493,25 +1510,24 @@ function playSound(freQ) {
 //timeout fetch requests
 async function getUrl(url, options = {}) {
     if (!window.configMode || url.includes("/json")) {
-        console.log(url);
-
         const controller = options.controller || new AbortController();
         const signal = controller.signal;
         let isTimeout = false;
 
-        // Set timeout to abort the controller after 1 second and flag isTimeout
+        // Use longer timeout for JSON URLs
+        const timeoutDuration = url.includes("/json") || url.includes("json.gz") ? 5500 : 1800;
+
         setTimeout(() => {
             if (!signal.aborted) {
                 isTimeout = true;
                 controller.abort();
             }
-        }, 1000);
+        }, timeoutDuration);
 
         try {
             let response = await fetch(url, { ...options, signal });
             return response;
         } catch (error) {
-            // Check if the error is not AbortError or if it's a timeout
             if (error.name !== "AbortError" || isTimeout) {
                 receiveNote("R");
             }
@@ -1520,6 +1536,7 @@ async function getUrl(url, options = {}) {
 }
 
 async function getEfcData() {
+    runonce2 = false;
     try {
         let response = await getUrl(`/main_efc.json.gz`);
         if (response?.ok) {
@@ -1544,12 +1561,11 @@ async function getEfcData() {
                 console.log("Fetch aborted for:", unitName);
             } else {
                 console.log("Both fetches failed:", error.message);
-
+                runonce2 = true;
             }
             //return; // Exit early since both failed
         }
     }
-    runonce2 = false;
 }
 
 function getEfcUnitData(unitName) {
@@ -1561,7 +1577,7 @@ function getEfcUnitData(unitName) {
 
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-        //console.log("visible");
+        console.log("visible");
         runonce2 = true;
         newFJ();
     } else {
@@ -1573,6 +1589,7 @@ document.addEventListener("visibilitychange", () => {
 function newFJ(nN) {
     fetchAbort?.abort();
     clearTimeout(fJ);
+    isFetching = false;
     fetchJson(nN);
     fJ = setInterval(fetchJson, 2000);
 }
@@ -1635,4 +1652,4 @@ window.addEventListener("beforeinstallprompt", (e) => {
 // ----------------------------------------------------------------------------------------------------------------
 
 
-!function(e,n){"use strict";let t=null;const o=10,a=10;let i={x:0,y:0},s=1e3;const c="ontouchstart"in e||navigator.maxTouchPoints>0||navigator.msMaxTouchPoints>0,r="PointerEvent"in e||e.navigator&&"msPointerEnabled"in e.navigator?{down:"pointerdown",up:"pointerup",move:"pointermove",leave:"pointerleave"}:c?{down:"touchstart",up:"touchend",move:"touchmove",leave:"touchleave"}:{down:"mousedown",up:"mouseup",move:"mousemove",leave:"mouseleave"};function u(e){v();const t=l(e),o=new CustomEvent("long-press",{bubbles:!0,cancelable:!0,detail:(a=t,{clientX:a.clientX,clientY:a.clientY,offsetX:a.offsetX,offsetY:a.offsetY,pageX:a.pageX,pageY:a.pageY,screenX:a.screenX,screenY:a.screenY})});var a;this.dispatchEvent(o)||n.addEventListener("click",m,!0)}function l(e){return e.changedTouches?e.changedTouches[0]:e}function d(e,n=s){v();const o=e.target;t=setTimeout((()=>u.call(o,e)),n)}function v(){t&&(clearTimeout(t),t=null)}function m(e){n.removeEventListener("click",m,!0),e.preventDefault(),e.stopImmediatePropagation()}n.addEventListener(r.down,(function(e){const n=l(e);i={x:n.clientX,y:n.clientY},d(e)}),!0),n.addEventListener(r.move,(function(e){const n=l(e);(Math.abs(i.x-n.clientX)>o||Math.abs(i.y-n.clientY)>a)&&v()}),!0),n.addEventListener(r.up,v,!0),n.addEventListener(r.leave,v,!0),n.addEventListener("wheel",v,!0),n.addEventListener("scroll",v,!0),navigator.userAgent.toLowerCase().includes("android")||n.addEventListener("contextmenu",v,!0),e.setLongPressDelay=function(e){s=e}}(window,document);
+!function (e, n) { "use strict"; let t = null; const o = 10, a = 10; let i = { x: 0, y: 0 }, s = 1e3; const c = "ontouchstart" in e || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0, r = "PointerEvent" in e || e.navigator && "msPointerEnabled" in e.navigator ? { down: "pointerdown", up: "pointerup", move: "pointermove", leave: "pointerleave" } : c ? { down: "touchstart", up: "touchend", move: "touchmove", leave: "touchleave" } : { down: "mousedown", up: "mouseup", move: "mousemove", leave: "mouseleave" }; function u(e) { v(); const t = l(e), o = new CustomEvent("long-press", { bubbles: !0, cancelable: !0, detail: (a = t, { clientX: a.clientX, clientY: a.clientY, offsetX: a.offsetX, offsetY: a.offsetY, pageX: a.pageX, pageY: a.pageY, screenX: a.screenX, screenY: a.screenY }) }); var a; this.dispatchEvent(o) || n.addEventListener("click", m, !0) } function l(e) { return e.changedTouches ? e.changedTouches[0] : e } function d(e, n = s) { v(); const o = e.target; t = setTimeout((() => u.call(o, e)), n) } function v() { t && (clearTimeout(t), t = null) } function m(e) { n.removeEventListener("click", m, !0), e.preventDefault(), e.stopImmediatePropagation() } n.addEventListener(r.down, (function (e) { const n = l(e); i = { x: n.clientX, y: n.clientY }, d(e) }), !0), n.addEventListener(r.move, (function (e) { const n = l(e); (Math.abs(i.x - n.clientX) > o || Math.abs(i.y - n.clientY) > a) && v() }), !0), n.addEventListener(r.up, v, !0), n.addEventListener(r.leave, v, !0), n.addEventListener("wheel", v, !0), n.addEventListener("scroll", v, !0), navigator.userAgent.toLowerCase().includes("android") || n.addEventListener("contextmenu", v, !0), e.setLongPressDelay = function (e) { s = e } }(window, document);

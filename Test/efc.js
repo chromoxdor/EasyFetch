@@ -24,12 +24,13 @@ var interactionHandled = false;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250429/3";
-const expected = "20250429/1";
+const efcVersion = "20250505/1";
+const expected = "20250505/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
 document.addEventListener("DOMContentLoaded", () => {
+    const filename = window.location.href.match(/\/([^\/?#]+\.html?.gz)/i)?.[1] || 'index.htm.gz';
     const current = document.getElementById("dateV")?.textContent.trim();
     if (!current) return;
 
@@ -45,13 +46,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const outdated = cd < ed || (cd === ed && cNum < eNum);
     if (outdated) {
-        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update to: ${expected} \nClick ok to install the latest version?\n\nIf this message appears again,\nplease abort and wait a while then try again!!!`;
+        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update your ${filename} to: ${expected} \nClick ok to install the latest version?\n\nIf this message appears again shortly after pressing "OK",\nabort, wait a while, then try again!!!`;
         const url = `https://raw.githubusercontent.com/chromoxdor/easyfetch/test/index.htm.gz`;
         // Confirm must be immediately followed by window.open to be safe
         const openUpdate = confirm(msg);
 
         if (openUpdate) {
-            saveUrlToServer(url, 'index.htm.gz');
+            console.log(`Downloading ${url} to ${filename}`);
+            saveUrlToServer(url, filename);
             //window.open(url, "_blank");
         } else {
             document.cookie = `efcVersion=${expected}; path=/; max-age=86400`; // 1 day
@@ -463,7 +465,7 @@ function addTextInput(container, label, key, selectedOption) {
 
         // Allow only numbers, dots, and commas while typing
         input.addEventListener("input", (event) => {
-            input.value = input.value.replace(/[^0-9.,]/g, ""); // Remove invalid characters
+            input.value = input.value.replace(/[^0-9.,-]/g, ""); // Remove invalid characters
         });
 
         // Validate on blur (losing focus)
@@ -916,7 +918,7 @@ function saveToFile(param) {
 
 function fetchFile(uploadUrl, formData) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const timeoutId = setTimeout(() => controller.abort(), 5500);
 
     fetch(uploadUrl, {
         method: 'POST',
@@ -957,7 +959,7 @@ function fetchFile(uploadUrl, formData) {
 //         });
 // }
 
-function saveUrlToServer(urlToFetch, filename = 'file.dat') {
+function saveUrlToServer(urlToFetch, filename) {
     fetch(urlToFetch)
         .then(response => {
             if (!response.ok) {
