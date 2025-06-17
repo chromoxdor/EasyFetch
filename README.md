@@ -1,7 +1,7 @@
 If you like my work consider a donation: [![donate](https://img.shields.io/badge/donate-ko--fi-orange)](https://ko-fi.com/chromoxdor)
 
 
-# EasyFetch - dashboard for ESPeasy
+# EasyFetch - an alternative dashboard for ESPeasy
 
 Easyfetch is a alternative dashboard in tile optic for ESPeasy (https://github.com/letscontrolit/ESPEasy). It was created to have a quick and relatively simple way of visualizing data and interacting with the hardware (buttons & slider) in a browser. Especially where no bigger infrastructure like a homeautomation server is needed (the ability to write complex rules in espeasy and the ability of communication between the nodes via a simple p2p-network can often make a full blown home automation system unnecessary).
 
