@@ -3,8 +3,6 @@ If you like my work consider a donation: [![donate](https://img.shields.io/badge
 
 # EasyFetch - dashboard for ESPeasy
 
-*!Note: I added some things and changed the eventnames the slider create. Latest additions can be found here: https://www.letscontrolit.com/forum/viewtopic.php?p=61671#p61671 (Documentation here will be updated later)*
-
 Easyfetch is a alternative dashboard in tile optic for ESPeasy (https://github.com/letscontrolit/ESPEasy). It was created to have a quick and relatively simple way of visualizing data and interacting with the hardware (buttons & slider) in a browser. Especially where no bigger infrastructure like a homeautomation server is needed (the ability to write complex rules in espeasy and the ability of communication between the nodes via a simple p2p-network can often make a full blown home automation system unnecessary).
 
 ![easyfetchmain](https://github.com/chromoxdor/easyfetch/assets/33860956/cd19b11f-40d6-42ef-9f26-86ef43c0920c)
