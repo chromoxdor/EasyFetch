@@ -1,9 +1,7 @@
 If you like my work consider a donation: [![donate](https://img.shields.io/badge/donate-ko--fi-orange)](https://ko-fi.com/chromoxdor)
 
 
-# easyfetch - dashboard for ESPeasy
-
-*!Note: I added some things and changed the eventnames the slider create. Latest additions can be found here: https://www.letscontrolit.com/forum/viewtopic.php?p=61671#p61671 (Documentation here will be updated later)*
+# EasyFetch - dashboard for ESPeasy
 
 Easyfetch is a alternative dashboard in tile optic for ESPeasy (https://github.com/letscontrolit/ESPEasy). It was created to have a quick and relatively simple way of visualizing data and interacting with the hardware (buttons & slider) in a browser. Especially where no bigger infrastructure like a homeautomation server is needed (the ability to write complex rules in espeasy and the ability of communication between the nodes via a simple p2p-network can often make a full blown home automation system unnecessary).
 
@@ -75,10 +73,7 @@ You should now see all the ESPEasy device tasks and states.
        dosomething
        endon
        </code></pre>
-  - Every value of a task can have its own unit of measurement . Therefore add “?\<unit>“ to the valuename (e.g. Temperature?°C or Humidity?H)
-    (Notice: ?% is not an option because you´ll get an error message in espeasy so H is translated to % when displayed.)
-  - You can hide valuenames and their values: add “XX” to the itemname (e.g. HumidityXX for name and value or for hiding only the name leave 
-    it empty or just name it “?°C” to keep the unit of measurement)
+ 
 
     <img width="500" alt="s1" src="https://user-images.githubusercontent.com/33860956/159250534-96dcd024-1d28-44d0-9174-a84390819379.png">
 
@@ -214,51 +209,7 @@ You should now see all the ESPEasy device tasks and states.
 
 ***
 
-### Display options overview:
-(options are case sensitive!)
-
-**Options via taskname:**
-
-The taskname needs to contain one of these phrases. E.g. 1bigVal, bigVal1, bigVal2, bigValtwo,...
-
-* dButtons  --- creates an array of buttons (dummy device)
-* pButtons  --- creates an array of push buttons (dummy device)
-* vInput  --- creates an array of number Inputs (dummy device)
-* bigVal / bigValC --- creates "big values" (any device)
-* vSlider / nvSlider --- creates an array of "ordinary" slider (dummy device)
-  - To add "switch"-behavior in a slider a "Sw" needs do be added to "vSlider" or "nvSlider"
-e.g.: "vSliderSw"
-* tSlider  --- creates an array of "time" slider (dummy device)
-* neoPixel  --- creates a Slider for a neopixel device (valuenames can be named "h"(ue) and/or "s"(saturation) and/or "v"(alue) ) (dummy device)
-* "?\<hexcolor>"  --- gives the a "normal" and "bigVal" tile a specific color (note: hexcolor must be added without "#" e.g. "MyValuename?00b300") (note2: "normal" tile means no dButtons,pButtons,vInput,Slider,neoPixel) 
-* XX --- hides the task (any device)
-
-**Options via valuename:**
-
-The valuename needs to contain one of these phrases:
-
-* State / iState --- renders a button if beein the first value (switch plugin) - since mega-20221224
-* btnState / btnStateC --- renders a button if beein the first value (switch plugin) - before mega-20221224 (needs additional rules)
-* pState --- creates an event instead of toggeling the corresponding gpio (switch plugin) - used for pushbuttons 
-* Clock / Time / Uhr / Zeit --- valuename for displaying the time set in espeasy (big values)
-* Date / Datum  --- valuename for displaying the date set in espeasy (big values)
-* Year / Jahr  --- valuename for displaying the year set in espeasy (big values)
-* XX --- append this to the valuename to hide this value (any value)
-* noVal --- generates an empty tile (buttons, slider, inputs, big values)
-* noValAuto --- generates an empty tile which hides automatically in 2-row mode (buttons, inputs, big values)
-
-
-These option needs to be at the end of the valuename:
-
-* vSlider / nvSlider: "?\<min>?\<max>?\<step>"  (hint: change the number of decimals of the value to correspond with the stepsize)
-
-
-This options needs to be at the very end and of the valuename:
-  (e.g. "iamaslider?0?100?0.5?ms)
-* "?\<UM>"  --- unit of measurement (any valuename)
-* "&\<unit_number>" or "&A" --- sends the event to the specific unit or if "A" to all units (only dButtons)
-
 ### Button cheat sheet:
-<img width="617" alt="settings" src="https://github.com/user-attachments/assets/5cdd2984-79b1-4c52-a8ab-bbf5bb40568b">
+<img width="700" alt="cheatsheet" src="https://github.com/user-attachments/assets/10f018f9-69a9-420d-82c6-242d7e98f36f" />
 
 
