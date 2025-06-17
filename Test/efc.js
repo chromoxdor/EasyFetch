@@ -24,8 +24,8 @@ var selectionDataOld;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250617/3";
-const expected = "20250617/2";
+const efcVersion = "20250617/4";
+const expected = "20250617/3";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -46,8 +46,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const outdated = cd < ed || (cd === ed && cNum < eNum);
     if (outdated) {
-        const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update your ${filename} to: ${expected} \nClick ok to install the latest version?\n\nIf this message appears again shortly after pressing "OK",\nabort, wait a while, then try again!!!`;
-        const url = `https://raw.githubusercontent.com/chromoxdor/easyfetch/test/index.htm.gz`;
+        const msg = `We are changing to the main branch of EasyFetch now.\nPlease click ok to install the latest version?\n\nIf this message appears again shortly after pressing "OK",\nabort, wait a while, then try again!!!`;
+        //const msg = `Your version of EasyFetch (${current}) is outdated.\nPlease update your ${filename} to: ${expected} \nClick ok to install the latest version?\n\nIf this message appears again shortly after pressing "OK",\nabort, wait a while, then try again!!!`;
+        const url = `https://raw.githubusercontent.com/chromoxdor/EasyFetch/main/fetch.html.gz`;
         // Confirm must be immediately followed by window.open to be safe
         const openUpdate = confirm(msg);
 
