@@ -3,7 +3,7 @@
     font-family: sans-serif;
     font-size: 12pt;
     margin: 0;
-    padding: 0
+    padding: 0;
 }
 
 body {
@@ -11,7 +11,7 @@ body {
     -webkit-user-select: none;
     margin: 0;
     background: #e8e8e8;
-    color: #4e4a4a
+    color: #4e4a4a;
 }
 
 #dateV {
@@ -19,19 +19,17 @@ body {
     top: 10px;
     writing-mode: vertical-lr;
     position: fixed;
-    pointer-events: none
+    pointer-events: none;
 }
 
 #openSys:hover #dateV {
-    opacity: 1
+    opacity: 1;
 }
 
 #container {
     display: flex;
-    position: absolute;
     height: 100vh;
-    width: 100vw;
-    justify-content: center
+    justify-content: center;
 }
 
 #framie {
@@ -39,8 +37,8 @@ body {
     transition: .8s;
     position: relative;
     z-index: 2;
-    padding-bottom: 60px;
-    left: 1px
+    padding-bottom: 50px;
+    left: 1px;
 }
 
 iframe {
@@ -48,18 +46,21 @@ iframe {
     height: 100%;
     border: 0;
     background: #fff;
-    box-shadow: 4px 0 13px -7px #000
+    box-shadow: 4px 0 13px -7px #000;
 }
 
 #unitId {
-    top: 2%;
+    padding: 1vh;
+    width: 110vw;
     z-index: 1;
     display: flex;
-    position: fixed
+    position: fixed;
+    transition: 0.3s ease-out;
+    justify-content: center;
 }
 
 #allList {
-    display: flex;
+    display: grid;
     transform: translate3d(0, 0, 0);
     /*safari blur issue fix*/
     grid-row-gap: 1vh;
@@ -67,38 +68,37 @@ iframe {
     padding: 5px;
     transition: .8s ease-out;
     flex-direction: column;
-    padding-bottom: 40px;
+    align-content: center;
+    flex-wrap: wrap;
+    padding-bottom: 50px;
     padding-top: 40px;
-    color: #fff
+    color: #fff;
 }
 
 #allList>div>:not(.bigNum) {
-    box-shadow: 0 0 10px 1px #00000026
+    box-shadow: 0 0 10px 1px #00000026;
 }
 
 .allExtra {
-    grid-row-gap: .5vh !important
+    grid-row-gap: .5vh !important;
 }
 
 #bigNumber {
     display: grid;
     gap: 1vh;
-    transition: .8s ease-out
+    transition: .8s ease-out;
 }
 
 .bigNum {
-    display: flex;
-    grid-template-columns: auto auto auto auto;
+    display: grid;
     gap: 1vh;
-    width: -webkit-fill-available;
     justify-content: start;
-    transition: .8s ease-out
+    transition: .8s ease-out;
+    border-radius: 5px
 }
 
 .bigNumOne {
-    justify-content: center !important;
-    grid-template-columns: auto !important;
-    width: unset !important
+    justify-content: center;
 }
 
 .bigNumWrap {
@@ -114,53 +114,51 @@ iframe {
     background: #837c7c;
     flex-wrap: nowrap;
     justify-content: space-between;
-    box-shadow: 0 0 10px 1px #00000026
-}
-
-.bigC {
-    background: #009c63
+    box-shadow: 0 0 10px 1px #00000026;
 }
 
 #sensorList {
     display: grid;
     gap: 1vh;
     justify-content: center;
-    transition: .8s ease-out
+    transition: .8s ease-out;
 }
 
 #sliderList {
     display: grid;
     gap: 1vh;
-    min-width: 288px;
-    transition: .8s ease-out
+    transition: .8s ease-out;
+    min-width: 305px
 }
 
 #sliderList .sensorset {
     width: inherit;
     height: 40px;
-    background: #837c7c
+    background: #837c7c;
 }
 
 .clickables:active,
 .push:active {
     transform: scale(0.95);
-    -webkit-transform: scale(0.95);
-    transition: .1s
+    transition: .1s;
 }
 
 .slider,
 .npSl {
     -webkit-appearance: none;
     position: absolute;
-    height: inherit
+    height: 40px;
 }
 
 .slider {
-    mix-blend-mode: color;
     background: #847d7d;
     width: calc(100% + 44.2px);
     left: -24.2px;
-    top: 0
+    top: 0;
+}
+
+.noI {
+    pointer-events: none;
 }
 
 .npSl {
@@ -169,11 +167,7 @@ iframe {
     position: inherit;
     height: 40px;
     overflow: hidden;
-    border-radius: 5px
-}
-
-.sliderAmount {
-    margin-top: -4px
+    border-radius: 5px;
 }
 
 .slider::-webkit-slider-thumb {
@@ -183,8 +177,12 @@ iframe {
     cursor: pointer;
     box-shadow: -100vw 0 0 100vw #458fd1;
     border-left: 20px solid #458fd1;
-    border-right: 20px solid #837c7c
+    border-right: 20px solid #837c7c;
 }
+
+/* .thT::-webkit-slider-thumb{
+    border-right: 90 !important;
+} */
 
 .slider::-moz-range-thumb {
     width: 0;
@@ -192,7 +190,7 @@ iframe {
     cursor: pointer;
     box-shadow: -100vw 0 0 100vw #458fd1;
     border-left: 20px solid #458fd1;
-    border-right: 20px solid #837c7c
+    border-right: 20px solid #837c7c;
 }
 
 .npSl::-webkit-slider-thumb {
@@ -201,7 +199,7 @@ iframe {
     height: 42px;
     cursor: pointer;
     box-shadow: 0 0 2px 0 #fff;
-    background: #3e88cb
+    background: #3e88cb;
 }
 
 .npSl::-moz-range-thumb {
@@ -210,22 +208,23 @@ iframe {
     cursor: pointer;
     box-shadow: 0 0 2px 0 #fff;
     background: #3e88cb;
-    border: 0
+    border: 0;
 }
 
 .npH {
-    background-image: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red)
+    background-image: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
 }
 
 .npV {
-    background-image: linear-gradient(to right, #333, white)
+    background-image: linear-gradient(to right, #333, white);
 }
 
 .npS {
-    background-image: linear-gradient(to right, white, #333)
+    background-image: linear-gradient(to right, white, #333);
 }
 
-.slTS {
+.slTS,
+.thermO {
     -webkit-appearance: none;
     position: absolute;
     height: 40px;
@@ -233,56 +232,90 @@ iframe {
     border-radius: 5px;
     width: 100%;
     top: 0;
-    mix-blend-mode: overlay;
     pointer-events: none;
-    background: #8a8787
+}
+
+.slTS {
+    mix-blend-mode: overlay;
+    background: #8a8787;
 }
 
 .slTS:hover {
-    background: transparent
+    background: transparent;
 }
 
 .slTS:nth-child(1)::-webkit-slider-thumb {
     border-left: 10px solid #d25e42;
-    border-right: 10px solid #458fd1
+    border-right: 10px solid #458fd1;
 }
 
 .slTS:nth-child(2)::-webkit-slider-thumb {
     border-left: 10px solid #458fd1;
-    border-right: 10px solid #d25e42
+    border-right: 10px solid #d25e42;
 }
 
 .slTS:nth-child(1)::-moz-range-thumb {
     border-left: 10px solid #d25e42;
-    border-right: 10px solid #458fd1
+    border-right: 10px solid #458fd1;
 }
 
 .slTS:nth-child(2)::-moz-range-thumb {
     border-left: 10px solid #458fd1;
-    border-right: 10px solid #d25e42
+    border-right: 10px solid #d25e42;
+}
+
+.thermO::-webkit-slider-thumb {
+    border: 4px solid #d25e42;
+}
+
+.thermO::-moz-range-thumb {
+    border: 4px solid #d25e42;
 }
 
 .slTS::-webkit-slider-thumb {
-    -webkit-appearance: none;
     width: 0;
     height: 40px;
-    cursor: pointer;
-    appearance: none;
-    pointer-events: all
+    box-shadow: 0 0 10px 10px #00000026;
 }
 
 .slTS::-moz-range-thumb {
     width: 0;
     height: 100vh;
+}
+
+.slTHU::-moz-range-thumb {
     cursor: pointer;
     appearance: none;
-    pointer-events: all
+    pointer-events: all;
+}
+
+.slTHU::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: none;
+    cursor: pointer;
+    appearance: none;
+    pointer-events: all;
+}
+
+.thermO::-webkit-slider-thumb {
+    width: 25px;
+    height: 40px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px 10px #00000026, inset 0 0 5px 2px #00000026;
+}
+
+.thermO::-moz-range-thumb {
+    background: none;
+    width: 20px;
+    height: 32px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px 10px #00000026, inset 0 0 5px 2px #00000026;
 }
 
 .slTimeSet {
     display: flex;
     align-items: center;
-    justify-content: center
+    justify-content: center;
 }
 
 .slTimeSetWrap {
@@ -290,18 +323,25 @@ iframe {
     padding: 4.2px;
     border-radius: 5px;
     overflow: hidden;
-    position: relative
+    position: relative;
 }
 
-.slTimeText {
+.slTimeText,
+.sliderAmount {
     position: absolute;
     right: 4.2px;
-    bottom: 2.2px;
-    font-weight: 400
+    bottom: 0;
+    font-weight: 400;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.thermO {
+    background: none;
 }
 
 .sensorset:not(.btnTile) {
-    background: #847d7d
+    background: #847d7d;
 }
 
 .sensorset {
@@ -315,16 +355,20 @@ iframe {
     overflow: hidden;
     position: relative;
     align-items: stretch;
-    cursor: pointer
+    cursor: pointer;
+}
+
+#sensorList > * {
+    min-height: 60px
 }
 
 .valueBig {
     font-size: 27pt;
-    text-align: right
+    text-align: right;
 }
 
 .valuesBig {
-    overflow-wrap: anywhere
+    overflow-wrap: anywhere;
 }
 
 .valWrap {
@@ -334,7 +378,7 @@ iframe {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    width: 100%
+    width: 100%;
 }
 
 .vInputs {
@@ -343,68 +387,78 @@ iframe {
     border: 0;
     background: none;
     text-align: end;
-    color: inherit
+    color: inherit;
 }
 
-.vInputs:focus-visible {
-    width: inherit
+input:focus-visible {
+    width: inherit;
+}
+
+input::placeholder {
+    opacity: 1;
+    color: #fff;
 }
 
 input:focus::placeholder {
-    opacity: .2
+    opacity: .2;
 }
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     -webkit-appearance: none;
-    margin: 0
+    margin: 0;
 }
 
 input[type=number] {
-    -moz-appearance: textfield
+    -moz-appearance: textfield;
 }
 
 .kindInput {
-    padding: 0 2px 0 1px
+    padding: 0 2px 0 1px;
 }
 
 .on,
 .push:active {
-    background: #3e88cb !important
+    background: #3e88cb !important;
 }
 
 .alert {
-    background: #d8524f !important
+    background: #d8524f !important;
 }
 
 .btnTile {
-    background: #635d5d;
-    min-height: 60px
+    background: #635d5d
 }
 
 .sensors {
     padding-bottom: 4px;
-    overflow-wrap: anywhere
+    overflow-wrap: anywhere;
+    z-index: 2;
+    pointer-events: none;
 }
 
 .row {
     display: flex;
-    justify-content: space-between
+    justify-content: space-between;
+    align-items: flex-end;
 }
 
 .odd {
     padding-right: 1px;
-    overflow-wrap: anywhere
+    overflow-wrap: anywhere;
 }
 
 .odd:hover {
-    overflow: visible
+    overflow: visible;
 }
 
 .even {
+    display: flex;
     word-spacing: -2px;
     white-space: nowrap;
-    align-self: self-end
+    height: 20px;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 .cron {
@@ -412,12 +466,8 @@ input[type=number] {
     text-align: end
 }
 
-input::placeholder {
-    opacity: 1;
-    color: #fff
-}
-
 #opener {
+    height: 50px;
     bottom: 0;
     z-index: 2;
     width: 100%;
@@ -427,11 +477,11 @@ input::placeholder {
 .open {
     background: none;
     display: flex;
-    max-width: 200px;
+    max-width: 250px;
     align-items: center;
     margin: auto;
     padding-bottom: 2vh;
-    justify-content: space-between
+    justify-content: space-between;
 }
 
 .sidenav {
@@ -449,7 +499,7 @@ input::placeholder {
     align-items: center;
     cursor: pointer;
     justify-content: center;
-    color: #fff
+    color: #fff;
 }
 
 .menueItem {
@@ -460,7 +510,8 @@ input::placeholder {
 }
 
 .numberUnit {
-    font-size: 10px;
+    padding-left: 2px;
+    font-size: 12px;
     color: #818181
 }
 
@@ -469,7 +520,7 @@ input::placeholder {
 }
 
 .nc {
-    word-break: break-all
+    word-break: break-word
 }
 
 .sideNbtn {
@@ -494,11 +545,12 @@ input::placeholder {
     scrollbar-width: none;
     transition: .2s;
     width: max-content;
-    max-width: 280px
+    max-width: 280px;
+    padding: 6px
 }
 
 #menueList::-webkit-scrollbar {
-    display: none
+    display: none;
 }
 
 #menueList div {
@@ -527,7 +579,7 @@ input::placeholder {
 }
 
 .syspair>div {
-    font-size: 8pt !important
+    font-size: 8pt !important;
 }
 
 .syspair div:nth-child(1) {
@@ -544,38 +596,39 @@ input::placeholder {
 
 .bigSpan:nth-child(1) {
     grid-row: 1 / span 2;
-    height: 100%
+    height: 100%;
 }
 
 @media screen and (max-height: 450px) {
-    framie {
-        padding-bottom: 40px
-    }
+    /* #framie {
+        padding-bottom: 40px;
+    } */
 
-    #opener {
+    /* #opener {
         height: 40px
-    }
+    } */
 }
 
 @media screen and (max-width: 799px) {
     #framie {
-        position: absolute
+        position: absolute;
     }
 }
 
 @media screen and (max-width: 450px) {
     #allList {
         grid-row-gap: 5px;
-        min-width: unset
+        min-width: unset;
+        overflow-y: auto
     }
 
-    #opener {
+    /* #opener {
         height: 40px
-    }
+    } */
 
-    #framie {
+    /* #framie {
         padding-bottom: 40px
-    }
+    } */
 
     .allExtra {
         grid-row-gap: 2.5px !important
@@ -618,16 +671,13 @@ input::placeholder {
         background: #000
     }
 
-    #opener {
+    #opener,
+    #unitId {
         background: #000000a8
     }
 
     .bigNumWrap {
         background: #444
-    }
-
-    .bigC {
-        background: #553630
     }
 
     .slTS {
@@ -637,26 +687,33 @@ input::placeholder {
 
     .slTS:nth-child(1)::-webkit-slider-thumb {
         border-left: 10px solid #6d1343;
-        border-right: 10px solid #44607a
+        border-right: 10px solid #44607a;
     }
 
     .slTS:nth-child(2)::-webkit-slider-thumb {
         border-left: 10px solid #44607a;
-        border-right: 10px solid #6d1343
+        border-right: 10px solid #6d1343;
     }
 
     .slTS:nth-child(1)::-moz-range-thumb {
         border-left: 10px solid #6d1343;
-        border-right: 10px solid #44607a
+        border-right: 10px solid #44607a;
     }
 
     .slTS:nth-child(2)::-moz-range-thumb {
         border-left: 10px solid #44607a;
-        border-right: 10px solid #6d1343
+        border-right: 10px solid #6d1343;
+    }
+
+    .thermO::-webkit-slider-thumb {
+        border: 4px solid #882c29;
+    }
+
+    .thermO::-moz-range-thumb {
+        border: 4px solid #882c29;
     }
 
     .slider {
-        mix-blend-mode: lighten;
         background: #444
     }
 
@@ -674,19 +731,19 @@ input::placeholder {
 
     .npSl::-webkit-slider-thumb {
         box-shadow: 0 0 4px 3px grey;
-        background: #44607a
+        background: #44607a;
     }
 
     .npSl::-moz-range-thumb {
         box-shadow: 0 0 4px 3px grey;
-        background: #44607a
+        background: #44607a;
     }
 
     .npS,
     .npH,
     .npV {
         background-color: #9b9b9b;
-        background-blend-mode: multiply
+        background-blend-mode: multiply;
     }
 
     .on,
@@ -699,16 +756,16 @@ input::placeholder {
     }
 
     .valueBig {
-        background: none
+        background: none;
     }
 
     .btnTile,
     .valWrap {
-        background: #333
+        background: #333;
     }
 
     .sensorset:not(.btnTile),
     #sliderList .sensorset {
-        background: #444
+        background: #444;
     }
 }
