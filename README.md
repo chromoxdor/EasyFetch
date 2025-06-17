@@ -211,50 +211,6 @@ You should now see all the ESPEasy device tasks and states.
 
 ***
 
-### Display options overview:
-(options are case sensitive!)
-
-**Options via taskname:**
-
-The taskname needs to contain one of these phrases. E.g. 1bigVal, bigVal1, bigVal2, bigValtwo,...
-
-* dButtons  --- creates an array of buttons (dummy device)
-* pButtons  --- creates an array of push buttons (dummy device)
-* vInput  --- creates an array of number Inputs (dummy device)
-* bigVal / bigValC --- creates "big values" (any device)
-* vSlider / nvSlider --- creates an array of "ordinary" slider (dummy device)
-  - To add "switch"-behavior in a slider a "Sw" needs do be added to "vSlider" or "nvSlider"
-e.g.: "vSliderSw"
-* tSlider  --- creates an array of "time" slider (dummy device)
-* neoPixel  --- creates a Slider for a neopixel device (valuenames can be named "h"(ue) and/or "s"(saturation) and/or "v"(alue) ) (dummy device)
-* "?\<hexcolor>"  --- gives the a "normal" and "bigVal" tile a specific color (note: hexcolor must be added without "#" e.g. "MyValuename?00b300") (note2: "normal" tile means no dButtons,pButtons,vInput,Slider,neoPixel) 
-* XX --- hides the task (any device)
-
-**Options via valuename:**
-
-The valuename needs to contain one of these phrases:
-
-* State / iState --- renders a button if beein the first value (switch plugin) - since mega-20221224
-* btnState / btnStateC --- renders a button if beein the first value (switch plugin) - before mega-20221224 (needs additional rules)
-* pState --- creates an event instead of toggeling the corresponding gpio (switch plugin) - used for pushbuttons 
-* Clock / Time / Uhr / Zeit --- valuename for displaying the time set in espeasy (big values)
-* Date / Datum  --- valuename for displaying the date set in espeasy (big values)
-* Year / Jahr  --- valuename for displaying the year set in espeasy (big values)
-* XX --- append this to the valuename to hide this value (any value)
-* noVal --- generates an empty tile (buttons, slider, inputs, big values)
-* noValAuto --- generates an empty tile which hides automatically in 2-row mode (buttons, inputs, big values)
-
-
-These option needs to be at the end of the valuename:
-
-* vSlider / nvSlider: "?\<min>?\<max>?\<step>"  (hint: change the number of decimals of the value to correspond with the stepsize)
-
-
-This options needs to be at the very end and of the valuename:
-  (e.g. "iamaslider?0?100?0.5?ms)
-* "?\<UM>"  --- unit of measurement (any valuename)
-* "&\<unit_number>" or "&A" --- sends the event to the specific unit or if "A" to all units (only dButtons)
-
 ### Button cheat sheet:
 <img width="617" alt="settings" src="https://github.com/user-attachments/assets/5cdd2984-79b1-4c52-a8ab-bbf5bb40568b">
 
