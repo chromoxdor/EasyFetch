@@ -1,7 +1,7 @@
 If you like my work consider a donation: [![donate](https://img.shields.io/badge/donate-ko--fi-orange)](https://ko-fi.com/chromoxdor)
 
 
-# easyfetch - dashboard for ESPeasy
+# EasyFetch - dashboard for ESPeasy
 
 *!Note: I added some things and changed the eventnames the slider create. Latest additions can be found here: https://www.letscontrolit.com/forum/viewtopic.php?p=61671#p61671 (Documentation here will be updated later)*
 
@@ -75,10 +75,7 @@ You should now see all the ESPEasy device tasks and states.
        dosomething
        endon
        </code></pre>
-  - Every value of a task can have its own unit of measurement . Therefore add “?\<unit>“ to the valuename (e.g. Temperature?°C or Humidity?H)
-    (Notice: ?% is not an option because you´ll get an error message in espeasy so H is translated to % when displayed.)
-  - You can hide valuenames and their values: add “XX” to the itemname (e.g. HumidityXX for name and value or for hiding only the name leave 
-    it empty or just name it “?°C” to keep the unit of measurement)
+ 
 
     <img width="500" alt="s1" src="https://user-images.githubusercontent.com/33860956/159250534-96dcd024-1d28-44d0-9174-a84390819379.png">
 
