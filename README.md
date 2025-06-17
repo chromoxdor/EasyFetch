@@ -212,6 +212,6 @@ You should now see all the ESPEasy device tasks and states.
 ***
 
 ### Button cheat sheet:
-<img width="617" alt="settings" src="https://github.com/user-attachments/assets/5cdd2984-79b1-4c52-a8ab-bbf5bb40568b">
+<img width="700" alt="cheatsheet" src="https://github.com/user-attachments/assets/10f018f9-69a9-420d-82c6-242d7e98f36f" />
 
 
