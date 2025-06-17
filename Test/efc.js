@@ -24,8 +24,8 @@ var interactionHandled = false;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250505/1";
-const expected = "20250505/1";
+const efcVersion = "20250617/1";
+const expected = "20250617/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -78,8 +78,18 @@ function handleRightClick(event) {
     removeHighlighting();
     console.log("Right-clicked on: ", event);
 
+
+
     let target = event.target.closest('div[id^="efc"]');
     addPointerEvents(); // Adds the style to access locked elements
+
+    const span = event.currentTarget.querySelector("span")
+    console.log("Span:", span);
+    if (span && span.hasAttribute("title")) {
+        console.log("Span has title:", span.getAttribute("title"));
+    } else {
+        console.log("Span has no title");
+    }
 
     let target2;
     // If no target is found, process the parent and enable pointer-events on the children
@@ -114,13 +124,16 @@ function handleRightClick(event) {
 
     // Only proceed if target is valid (i.e., not null or undefined)
     if (target && (target.id.startsWith("efc") || target.id === "unitId")) {
-        //console.log("Right-clicked on:", target.id);
+        console.log("Right-clicked on:", target);
+        //see if span has a title attribute for UoM
+        const span = target.querySelector("span");
+
         isittime = false;
         updateSaveButton();
         currentDivId = target.id;
 
         // Clear and rebuild the context menu based on the device type
-        rebuildContextMenu(target.id, target.className);
+        rebuildContextMenu(target.id, target.className, span);
 
         if (event.detail.clientX) {
             xCoord = event.detail.clientX;
@@ -236,7 +249,7 @@ function parseDivId(divId) {
 //      CREATE CONTEXT MENU
 //##############################################################################################################
 // **Rebuilds context menu dynamically based on deviceType**
-function rebuildContextMenu(tID, tClass) {
+function rebuildContextMenu(tID, tClass, span) {
     let parsed = parseDivId(currentDivId);
     if (!parsed) return;
 
@@ -332,11 +345,11 @@ function rebuildContextMenu(tID, tClass) {
         if (singleTile) { dropdown.value = ""; }
     }
 
-    updateMenuFields(deviceType, dropdown.value, deviceName, deviceIndex, valueIndex, singleTile, tClass); // Initial call
+    updateMenuFields(deviceType, dropdown.value, deviceName, deviceIndex, valueIndex, singleTile, tClass, span); // Initial call
 }
 
 // **Updates additional fields based on dropdown selection**
-function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, valueIndex, singleTile, tClass) {
+function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, valueIndex, singleTile, tClass, span) {
     let formFields = document.getElementById("dynamic-fields");
     if (formFields) menu.removeChild(formFields);
     console.log("selectedOption", tClass)
@@ -373,7 +386,9 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         }
 
         if (!["thSlider", "tSlider", "dButtons", "pButtons", "bigVal"].includes(selectedOption) && deviceType !== "A" && deviceType !== 1 || contextIsAlready && deviceType !== "A") {
-            addTextInput(formFields, "unit: ", "unit");
+            if (!span?.title) {
+                addTextInput(formFields, "UoM: ", "unit");
+            }
             addCheckbox(formFields, " hide name", "noV");
         }
 
@@ -384,11 +399,13 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
 
         if (deviceType === "A" && !singleTile) {
             addCheckbox(formFields, " chart", "chart");
-            if (!!selectionData[deviceIndex]?.A?.chart) {
+            if (selectionData[deviceIndex]?.A?.chart) {
                 addCheckbox(formFields, " always Y", "Y");
             }
             if (!tClass?.includes("chart")) {
                 addColorPicker(formFields, "color: ", "color");
+            } else {
+                addColorPicker(formFields, "color: ", "color", true);
             }
         }
         console.log("deviceType: ", deviceType);
@@ -624,12 +641,19 @@ function addDropdown(container, key) {
     container.appendChild(wrapper);
 }
 
-function addColorPicker(container, label, key) {
+function addColorPicker(container, label, key, hide) {
     let labelEl = document.createElement("label");
     labelEl.innerText = label;
     let input = document.createElement("input");
     input.type = "color";
     input.dataset.key = key;
+
+    // If hide is true, hide both label and input
+    if (hide) {
+        labelEl.style.display = "none";
+        input.style.display = "none";
+    }
+
     container.appendChild(labelEl);
     container.appendChild(input);
 
@@ -690,6 +714,8 @@ function saveSelections(ignoreDropdown) {
     let formData = {};
     selectionData["unit"] = unitName;
     selectionData["nr"] = unitNr;
+    //selectionData["iV"] = durationF;
+    //selectionData["CiV"] = nThX;
 
     // **Handle select dropdown (menu-main-select)**
     let dropdown = document.getElementById("menu-main-select");
@@ -742,6 +768,7 @@ function saveSelections(ignoreDropdown) {
     removeEmptyKeys(selectionData)
     console.log("Updated Selection Data:", selectionData);
     updateSaveButton();
+    extraConfig();
 }
 
 function keepOnlyA(obj) {
@@ -758,8 +785,8 @@ function keepOnlyA(obj) {
 function updateSaveButton(param) {
     console.log("updateSaveButton called with param:", param);
     if (param !== "hide") {
-        nOpen && (nOpen.innerHTML = "&times;&#xFE0E;");
-        mOpen && (mOpen.innerHTML = "&#8679;&#xFE0E;");
+        nOpen && (nOpen.innerHTML = "&#9881;&#xFE0E;");
+        mOpen && (mOpen.innerHTML = "&times;&#xFE0E;");
         // mOpen.addEventListener("click", uploadJson, true);
         saveButton.style.display = "block";
         resetButton.style.display = "block";
@@ -998,6 +1025,18 @@ function createMenu() {
     mOpen = document.getElementById('mOpen')
     document.getElementById('areaChart')?.addEventListener("resize", updateYAxisVisibility);
 
+    mOpen.onclick = function (event) {
+        if (configMode) {
+            event.preventDefault();
+            event.stopPropagation();
+            exitConfig();
+        } else {
+            splitOn();
+            topF();
+        }
+    };
+
+
     nOpen.addEventListener('long-press', () => {
         if (saveButton.style.display === "none" && selectionData.unit) {
             updateSaveButton();
@@ -1043,11 +1082,12 @@ function createMenu() {
 function handleInteraction(event) {
     console.log("Interaction detected!", event.type);
     if (!menu.contains(event.target) && !event.target.className.includes("vInputs") && configMode) {
-        if ((event.target === container && menu.style.display === "none") || nOpen.contains(event.target)) {
+        if ((event.target === container && menu.style.display === "none") || mOpen.contains(event.target)) {
+            if (mOpen.contains(event.target) && configMode) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             exitConfig();
-        }
-        if (mOpen.contains(event.target)) {
-            uploadJson(event);
         }
         closeContextMenu();
     }
@@ -1149,6 +1189,7 @@ function checkBigSinglesLength() {
 
 function exitConfig() {
     console.log("exitConfig");
+    closeNav();
     selectionData = {};
     updateSaveButton("hide");
     hiddenOverride = false;
@@ -1158,8 +1199,8 @@ function exitConfig() {
     setTimeout(newFJ, 200);
 }
 
-function uploadJson(e) {
-    e.stopImmediatePropagation();
+function uploadJson() {
+    //e.stopImmediatePropagation();
     //updateSaveButton();
     const userInput = prompt("Paste your JSON here:");
 
@@ -1181,8 +1222,88 @@ function uploadJson(e) {
 
     } else {
         console.log("Input too short or cancelled.");
-        exitConfig();
+        //exitConfig();
     }
+}
+
+function extraConfig() {
+
+    selectionData["iV"] = durationF;
+    selectionData["CiV"] = nThX;
+
+    const menu = document.getElementById("menueList");
+    menu.innerHTML = "";
+
+    menu.innerHTML += `
+        <div><h2>${unitName}</h2></div>
+    `;
+
+    // Duration input using waitFor (converted to seconds)
+    menu.innerHTML += `
+        <div>
+            <label for="durationInput">Interval (sec):</label><br>
+            <input type="number" id="durationInput" placeholder="${durationF / 1000}" min="1" max="60" step="1" style="width:80px;">
+            <button onclick="const input = document.getElementById('durationInput');
+                             const v = input.value;
+                             if(v >= 1) {
+                                 durationF = +v * 1000;
+                                 extraConfig();
+                             }">Submit</button>
+        </div>
+    `;
+
+    if (JSON.stringify(selectionData).includes('"chart":1')) {
+
+        menu.innerHTML += `
+        <div>
+            <label for="ChartIV">ChartInterval(sec):</label><br>
+            <input type="number" id="ChartIV" placeholder="${nThX * (durationF / 1000)}" min="${durationF / 1000}" step="${durationF / 1000}" style="width:80px;">
+            <button class="clickables" onclick="const v = document.getElementById('ChartIV').value;
+                if (v >= 1) {
+                    nThX = Math.ceil(v / (durationF / 1000));
+                    nTh = 0;
+                    extraConfig();
+                }">
+                Submit
+            </button>
+        </div>
+    `;
+    }
+    // Upload JSON button
+    menu.innerHTML += `
+        <br>
+        <button onclick="uploadJson()" 
+               class="clickables" style="margin:10px 0; padding:5px 15px; background:green; color:white; border:none; border-radius:8px;">
+            Upload JSON
+        </button>
+        <br>
+        <span style="font-size:12px;">
+            (Integrate the config from a device<br>
+            by copying the contents of its efc.json file<br>
+            and pasting them into the upload field)
+        </span>
+        <br>
+        <br>
+        <br>
+        <br>
+        <hr>
+    `;
+
+    menu.innerHTML += `
+        <br>
+        <div><h2>Gerneral Settings:</h2></div>
+    `;
+
+    // Cookie checkboxes
+    ["Snd", "Two", "Col"].forEach(name => {
+        const checked = document.cookie.includes(`${name}=1`) ? "checked" : "";
+        menu.innerHTML += `
+            <div>
+                <input type="checkbox" id="chk_${name}" ${checked} onchange="mC('${name}')">
+                <label for="chk_${name}">${name}</label>
+            </div>
+        `;
+    });
 }
 
 
@@ -1319,4 +1440,4 @@ function checkColumns() {
     let c = coloumnSet < 3;
     if (c && l) console.log("column count dropped"), htmlold = "", newFJ();
     l = !c;
-  }
+}

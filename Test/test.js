@@ -33,8 +33,11 @@ var selectionData = {};               // Stores data for visualation of a device
 var efcArray = [];                    // Array of all the selectionData objects
 var cD = [];                         // Array to store chart data
 var jStats = false;                  // Flag for stats-related data fetching
+var nTh = 0;
+var nThX = 1;
 
 // Fetching and control-related variables
+var durationF = 2000;                  // Delay for fetching JSON data
 var fJ;                              // FetchJson interval
 var fetchAbort = new AbortController(); // Controller for aborting fetch requests
 let isFetching = false;                 // Flag to track fetch status
@@ -100,9 +103,15 @@ async function fetchJson(nN) {
         return;
     }
     isFetching = true;
+    
+    // set individual interval for each unit
+    if (!configMode) {
+        durationF = selectionData?.iV ?? 2000;
+        nThX = selectionData?.CiV ?? 1;
+    }
 
     try {
-        const response = await getUrl(jsonPath + (jStats ? stats : ""), {
+        const response = await getUrl(jsonPath + (jStats && nTh % nThX === 0 ? stats : ""), {
             controller: fetchAbort,
             signal: fetchAbort.signal
         });
@@ -116,12 +125,18 @@ async function fetchJson(nN) {
             getEfcUnitData(unitName);
         }
 
-        if (JSON.stringify(selectionData).includes('"chart":1') && !jStats) {
-            console.log("chart was found!!!!!");
-            jStats = true;
-            isFetching = false;
-            newFJ(nN);
-            return;
+        if (JSON.stringify(selectionData).includes('"chart":1')) {
+            if (!jStats) {
+                nTh = 0;
+                console.log("chart was found!!!!!");
+                jStats = true;
+                isFetching = false;
+                newFJ(nN);
+                return;
+            }
+            nTh++;
+        } else {
+            jStats = false;
         }
     } catch (error) {
         if (error.name === "AbortError") return;
@@ -222,7 +237,7 @@ async function fetchJson(nN) {
                 let efcIDA = `efc:${deviceName}=${TaskDeviceNumber},${TaskNumber}`;
                 //chart  
                 if (chart && window.efc) {
-                    html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:150px;padding:0;"><canvas id="${TaskName}chart" ></canvas></div>`;
+                    html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:160px;padding:0;"><div style="padding: 4.2px;font-weight: bold;">${sensorName}</div><div style="height:135px"><canvas id="${TaskName}chart" ></canvas></div></div>`;
                 }
                 if (sensor.TaskValues) {
                     someoneEn = 1;
@@ -233,7 +248,7 @@ async function fetchJson(nN) {
                     //----------------------------------------------------------------------------------------------   TaskValues 
                     for (const item of sensor.TaskValues) {
 
-                        const { ValueNumber, Value, Name, NrDecimals } = item;
+                        const { ValueNumber, Value, Name, NrDecimals, UoM } = item;
 
 
                         //adding an ID for every Tile to be able to access the context menu
@@ -252,8 +267,8 @@ async function fetchJson(nN) {
                             : "";
 
                         let taskVal = selectedTaskVal?.["val"] || "";
-                        let kindN = selectedTaskVal?.["unit"] || "";
-                        let kindNP = `<span style="background:none;padding-left: 2px;">${kindN}</span>`
+                        let kindN = UoM ?? (selectedTaskVal?.unit || "");
+                        let kindNP = `<span ${UoM ? `title="${UoM}"` : ''} style="background:none;padding-left: 2px;">${kindN}</span>`;
                         let XI = selectedTaskVal?.["noI"] === 1 ? "noI" : "";
                         let order = selectedTaskVal?.["order"] || "0";
 
@@ -598,7 +613,7 @@ async function fetchJson(nN) {
 
         // Start fetching JSON data every 2 seconds
         clearTimeout(fJ);
-        fJ = setInterval(fetchJson, 2000);
+        fJ = setInterval(fetchJson, durationF);
 
         unitNr1 = myJson.System["Unit Number"];
         initIP = myJson.WiFi["IP Address"] === "(IP unset)" ? "192.168.4.1" : myJson.WiFi["IP Address"];
@@ -653,6 +668,7 @@ function orderFunction(html) {
 //      get remote GPIO state
 //##############################################################################################################
 
+//FixIt: This might lead to issues for then timing out (1,8s) to often (see fetchJson) schould also run sequentially?
 async function getRemoteGPIOState(taskNum, unitToNum, gpioNum, unitFromNum, valueNum) {
     const url = Number(unitToNum) === unitNr1
         ? `${cmD}SendTo,${unitFromNum},'taskvalueset,${taskNum},${valueNum},[Plugin%23GPIO%23Pinstate%23${gpioNum}]'`
@@ -1232,8 +1248,13 @@ function openNav(whatisit) {
     clearInterval(nIV);
     nIV = setInterval(getNodes, 10000);
     const sideNav = document.getElementById('mySidenav');
-    if (sideNav.offsetLeft === -280 && !window.configMode) {
-        getNodes();
+    if (sideNav.offsetLeft === -280) {
+        if (window.configMode) {
+            clearInterval(nIV);
+            extraConfig();
+        } else {
+            getNodes();
+        }
         sideNav.style.left = "0";
     } else {
         closeNav();
@@ -1591,7 +1612,7 @@ function newFJ(nN) {
     clearTimeout(fJ);
     isFetching = false;
     fetchJson(nN);
-    fJ = setInterval(fetchJson, 2000);
+    fJ = setInterval(fetchJson, durationF);
 }
 
 function receiveNote(S) {
