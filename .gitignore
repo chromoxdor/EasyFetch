@@ -3,7 +3,8 @@
 # MacOSX Finder *****
 .DS_Store
 
-fetch_timechange.html
+
+fetch.min.html
 /gifs
 /sketch
 test/test_bkup.css
