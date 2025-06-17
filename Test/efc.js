@@ -25,7 +25,7 @@ var interactionHandled = false;
 //      VERSION CHECK
 //#############################################################################################################
 const efcVersion = "20250617/1";
-const expected = "20250617/1";
+const expected = "20250617/2";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -1080,8 +1080,8 @@ function createMenu() {
 
 // **Close menu when clicking outside**
 function handleInteraction(event) {
-    console.log("Interaction detected!", event.type);
     if (!menu.contains(event.target) && !event.target.className.includes("vInputs") && configMode) {
+         console.log("Interaction detected!", event.type);
         if ((event.target === container && menu.style.display === "none") || mOpen.contains(event.target)) {
             if (mOpen.contains(event.target) && configMode) {
                 event.preventDefault();

@@ -103,7 +103,7 @@ async function fetchJson(nN) {
         return;
     }
     isFetching = true;
-    
+
     // set individual interval for each unit
     if (!configMode) {
         durationF = selectionData?.iV ?? 2000;
@@ -381,12 +381,12 @@ async function fetchJson(nN) {
                             //number input
                             else if (sensorName.includes("vInput")) {
                                 html += `
-                                        <div order="${order}" id="${efcID}" class="sensorset clickables">
-                                            <div id="${itemName}" class="sensors" style="font-weight:bold;pointer-events:all" onclick="getInput(this.nextElementSibling.firstElementChild)">
+                                        <div order="${order}" id="${efcID}" class="sensorset clickables " onclick="getInput(this.children[1].querySelector('input'))">
+                                            <div id="${itemName}" class="sensors" style="font-weight:bold;pointer-events:all">
                                                 ${itemNameChanged}
                                             </div>
                                             <div class="valWrap">
-                                                <input type="number" class="vInputs ${TaskNumber},${ValueNumber}" id="${itemName}_vI" name="${deviceName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="getInput(this,1)">
+                                                <input type="number" class="vInputs ${TaskNumber},${ValueNumber}" id="${itemName}_vI" name="${deviceName}" placeholder="${num2Value}" onkeydown="getInput(this)" onclick="event.stopPropagation(); getInput(this,1)">
                                                 <div class="kindInput">${kindNP}</div>
                                             </div>
                                         </div>`;
@@ -395,7 +395,7 @@ async function fetchJson(nN) {
                             else if ((sensorName).includes("vSlider")) {
                                 num2Value = Number(num2Value).toFixed((slStep.toString().split('.')[1] || '').length);
                                 itemName = itemName === "noVal" ? "&nbsp;" : itemName;
-                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset"><input type="range" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${TaskNumber},${ValueNumber}`;
+                                html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset"><input type="range" data-unit="${kindN}" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${TaskNumber},${ValueNumber}`;
                                 //if (sensorName.includes("vSliderSw")) html2 += " swSlider";
                                 html2 += sensorName.includes("nvSlider")
                                     ? ` noVal"><div class="sensors" style="align-items: flex-end;"><div style="font-weight:bold;">${itemNameChanged}</div></div></div>`
@@ -916,20 +916,18 @@ function updateSlider(event) {
     isittime = 0;
 
     const slider = event.target;
-    const currVal = slider.attributes.value.nodeValue;
-    let slKind = slider.id.split("?")[4] || "";
+    //const currVal = slider.attributes.value.nodeValue;
 
     // Update slider value display if not marked "noVal"
     if (!slider.className.includes("noVal")) {
         const amount = slider.closest("div.sensorset").querySelector(".sliderAmount");
-        if (slKind === "H") slKind = "%";
 
         const stepPrecision = slider.step.includes(".")
             ? slider.step.split(".")[1].length
             : 0;
-        const slA = Number(slider.value).toFixed(stepPrecision) + slKind;
+        const slA = Number(slider.value).toFixed(stepPrecision);
 
-        amount.textContent = slA;
+        amount.firstChild.textContent = slA;
     }
 
     // Handle "npSl" slider type
