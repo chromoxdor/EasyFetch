@@ -725,6 +725,8 @@ function saveSelections(ignoreDropdown) {
         formFields.querySelectorAll("input, select").forEach(input => {
             let key = input.dataset.key;
             console.log(`Processing input with key: ${key}`, input.checked);
+            //set html2 to empty string to redraw the slider and charts when when the ammount of tiles is changed
+            if (key === "hide") html2 = ""; 
 
             if (input.type === "checkbox") {
                 // Checkbox input
