@@ -1235,14 +1235,14 @@ function extraConfig() {
     menu.innerHTML = "";
 
     menu.innerHTML += `
-        <div><h2>${unitName}</h2></div>
+        <div style="color: inherit;"><h2>${unitName}</h2></div>
     `;
 
     // Duration input using waitFor (converted to seconds)
     menu.innerHTML += `
-        <div>
+        <div  style="color: inherit;">
             <label for="durationInput">Interval (sec):</label><br>
-            <input type="number" id="durationInput" placeholder="${durationF / 1000}" min="1" max="60" step="1" style="width:80px;">
+            <input type="number" id="durationInput" class="vInputs" placeholder="${durationF / 1000}" min="1" max="60" step="1" style="width:80px; border: 1px solid #ccc; border-radius: 4px;">
             <button onclick="const input = document.getElementById('durationInput');
                              const v = input.value;
                              if(v >= 1) {
@@ -1255,9 +1255,9 @@ function extraConfig() {
     if (JSON.stringify(selectionData).includes('"chart":1')) {
 
         menu.innerHTML += `
-        <div>
+        <div  style="color: inherit;">
             <label for="ChartIV">ChartInterval(sec):</label><br>
-            <input type="number" id="ChartIV" placeholder="${nThX * (durationF / 1000)}" min="${durationF / 1000}" step="${durationF / 1000}" style="width:80px;">
+            <input type="number" id="ChartIV" class="vInputs" placeholder="${nThX * (durationF / 1000)}" min="${durationF / 1000}" step="${durationF / 1000}" style="width:80px;border: 1px solid #ccc; border-radius: 4px;">
             <button class="clickables" onclick="const v = document.getElementById('ChartIV').value;
                 if (v >= 1) {
                     nThX = Math.ceil(v / (durationF / 1000));
@@ -1282,19 +1282,16 @@ function extraConfig() {
             by copying the contents of its efc.json file<br>
             and pasting them into the upload field)
         </span>
-        <br>
-        <br>
-        <br>
-        <br>
-        <hr>
-    `;
-
-    menu.innerHTML += `
-        <br>
-        <div><h2>Gerneral Settings:</h2></div>
+        <br><br><br><br><hr><br>
     `;
 
     // Cookie checkboxes
+    menu.innerHTML += `
+        <br>
+        <div  style="color: inherit;"><h2>Gerneral Settings:</h2></div>
+    `;
+
+
     ["Snd", "Two", "Col"].forEach(name => {
         const checked = document.cookie.includes(`${name}=1`) ? "checked" : "";
         menu.innerHTML += `
