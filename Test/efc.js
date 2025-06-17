@@ -19,12 +19,12 @@ var contextIsAlready = false;       // Flag to check if the context menu is alre
 let tempName = "";                  // Temporary variable for storing device names
 var mOpen, nOpen;                  // References to the menu buttons
 var interactionHandled = false;
-
+var selectionDataOld;
 
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250617/2";
+const efcVersion = "20250617/3";
 const expected = "20250617/2";
 //#############################################################################################################
 
@@ -82,14 +82,6 @@ function handleRightClick(event) {
 
     let target = event.target.closest('div[id^="efc"]');
     addPointerEvents(); // Adds the style to access locked elements
-
-    const span = event.currentTarget.querySelector("span")
-    console.log("Span:", span);
-    if (span && span.hasAttribute("title")) {
-        console.log("Span has title:", span.getAttribute("title"));
-    } else {
-        console.log("Span has no title");
-    }
 
     let target2;
     // If no target is found, process the parent and enable pointer-events on the children
@@ -173,7 +165,7 @@ function handleRightClick(event) {
         }
     } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
         isittime = false;
-        updateSaveButton();
+        updateSaveButton("inital");
         console.log("No valid target found");
     }
 }
@@ -783,12 +775,15 @@ function keepOnlyA(obj) {
 
 // **Show or hide the save button based on selection data**
 function updateSaveButton(param) {
-    console.log("updateSaveButton called with param:", param);
+    if (param === "inital") { selectionDataOld = JSON.stringify(selectionData); }
     if (param !== "hide") {
         nOpen && (nOpen.innerHTML = "&#9881;&#xFE0E;");
         mOpen && (mOpen.innerHTML = "&times;&#xFE0E;");
         // mOpen.addEventListener("click", uploadJson, true);
-        saveButton.style.display = "block";
+        //show the save button only if selectionData has changed
+        if (selectionDataOld !== JSON.stringify(selectionData)) {
+            saveButton.style.display = "block";
+        } else { saveButton.style.display = "none"; }
         resetButton.style.display = "block";
         if (hasHiddenProperty(selectionData)) {
             toggleButton.style.display = "block";
@@ -1039,7 +1034,7 @@ function createMenu() {
 
     nOpen.addEventListener('long-press', () => {
         if (saveButton.style.display === "none" && selectionData.unit) {
-            updateSaveButton();
+            updateSaveButton("inital");
             setLongPressDelay(200);
             if (('ontouchstart' in window)) document.addEventListener("long-press", handleRightClick, true);
         } else {
@@ -1081,7 +1076,7 @@ function createMenu() {
 // **Close menu when clicking outside**
 function handleInteraction(event) {
     if (!menu.contains(event.target) && !event.target.className.includes("vInputs") && configMode) {
-         console.log("Interaction detected!", event.type);
+        console.log("Interaction detected!", event.type);
         if ((event.target === container && menu.style.display === "none") || mOpen.contains(event.target)) {
             if (mOpen.contains(event.target) && configMode) {
                 event.preventDefault();
@@ -1230,6 +1225,7 @@ function extraConfig() {
 
     selectionData["iV"] = durationF;
     selectionData["CiV"] = nThX;
+    updateSaveButton();
 
     const menu = document.getElementById("menueList");
     menu.innerHTML = "";
