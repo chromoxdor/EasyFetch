@@ -3,7 +3,7 @@ If you like my work consider a donation: [![donate](https://img.shields.io/badge
 
 # EasyFetch - an alternative dashboard for ESPeasy
 
-Easyfetch is a alternative dashboard in tile optic for ESPeasy (https://github.com/letscontrolit/ESPEasy). It was created to have a quick and relatively simple way of visualizing data and interacting with the hardware (buttons & slider) in a browser. Especially where no bigger infrastructure like a homeautomation server is needed (the ability to write complex rules in espeasy and the ability of communication between the nodes via a simple p2p-network can often make a full blown home automation system unnecessary).
+EasyFetch is an alternative dashboard in Tile Optic for ESPEasy (https://github.com/letscontrolit/ESPEasy). It was created to have a quick and relatively simple way of visualising data and interacting with the hardware (buttons & sliders) in a browser. Especially where no bigger infrastructure like a home automation server is needed (the ability to write complex rules in ESPEasy and the ability of communication between the nodes via a simple P2P network can often make a full-blown home automation system unnecessary).
 
 ![easyfetchmain](https://github.com/chromoxdor/easyfetch/assets/33860956/cd19b11f-40d6-42ef-9f26-86ef43c0920c)
 
@@ -16,63 +16,58 @@ There are 3 possible categories:
      1. big-values
      2. slider
      3. the rest: buttons and "ordinary" tiles
+	 4. charts
 
   2. **unit-menu:** Here are all the units listed, that are connected via the controller called ESPEasy P2P Networking (https://espeasy.readthedocs.io/en/latest/Controller/C013.html)
-     * next to the unitname is the unitnumber.
-     * the symbol "⊙" leading the unitname marks the unit wich serves the easyfetch.html 
+     * Next to the unit name is the unit number.
+     * The symbol "⊙" leading the unit name marks the unit which contains the EasyFetch file.
 
-  3. **unit-name:** the unit-name of the unit that is actual selected. next to it is the signalstrength in dBm of this unit.
-     * clicking it enters fullscreen mode on supported browsers
+  3. **unit-name:** The unit-name of the unit that is actually selected. Next to it is the signal strength in dBm of this unit.
+     * Clicking it enters full-screen mode on supported browsers
 
-  4. **menu and splitview buttons:** 
-     * the left button opens the unit-list 
-     * the right button opens the devices-page of the espeasy unit in a splitview for easier dashboard creation (on smartphones it overlays the page instead because of limited space). If long-clicked this button leaves easyfetch and directs to the tools page of the selected unit.
+4. **Menu and Split View Buttons:**
+
+* The left button opens the unit list.
+* The right button opens the devices page of the ESPEasy unit in a split view (on smartphones, it overlays the page instead due to limited space). If long-clicked, this button leaves EasyFetch and directs to the tools page of the selected unit.
 
 <img width="399" alt="main" src="https://user-images.githubusercontent.com/33860956/158618125-4e73ae1f-a0f7-4cf1-87c2-982e93c036e8.png">
 
-## Creating a Dashboard:
+## Installing Fetch:
 
-Here you can see the corresponding devices page of the unit: "testesp" (click on the ⌂︎ - symbol to open the split view):
+1. Download the fetch.html.gz file to your computer. Alternatively, you can rename it to index.htm.gz to replace the main page.
 
-<img width="740" alt="main split" src="https://user-images.githubusercontent.com/33860956/158621473-f1e1525d-5028-4299-9bc5-15b2d6bc7ff9.png">
+2. Open your browser and navigate to http://<ESP_DEVICE_IP>. Replace <ESP_DEVICE_IP> with your device’s Local IP Address.
 
-### Install:
+3. Click on the „Tools“ tab.
 
-1. Download the fetch.html or better for limited space the fetch.html.gz to your computer. (It is also possible to name it index.htm or index.htm.gz to replace the main page)
+4. Select the „Filesystem->File browser“ button.
 
-2. Use a browser and open your ESPEasy Device at http://<ESP_DEVICE_IP>
-   (Note: replace <ESP_DEVICE_IP> with your device's Local IP Address)
+5. Click the „Upload“ button.
 
-3. Go to the "Tools" Tab
+6. Click the „Browse…“ button and select the fetch.html file.
 
-4. Select the "Filesystem->File browser" button.
+7. Click the „Upload“ button again.
 
-5. Click the "Upload" button.
+Now, open your browser and view the new dashboard at http://<ESP_DEVICE_IP>/fetch.html.gz. You should now see all the ESPEasy device tasks and states.
 
-6. Click the "Browse..." button and select the fetch.html file.
+(Note: If you have multiple ESPEasy devices in a network, you’ll need only one device with the fetch.html.gz file as the primary device when all devices communicate via the p2p controller. ESPEasy P2P Networking must be added in /Controllers. For more information, see https://espeasy.readthedocs.io/en/latest/Controller/C013.html?highlight=p2p.)
 
-7. Click the "Upload" button.
-
-Use your browser to view the new dashboard: http://<ESP_DEVICE_IP>/fetch.html ( or http://<ESP_DEVICE_IP>/fetch.html.gz ).
-You should now see all the ESPEasy device tasks and states.
-(Note: For multiple espeasy devices in a network you´ll need only one device with the fetch.html as a primary device when all communicate via the p2p controller. ESPEasy P2P Networking msut be added in /Controllers. See: https://espeasy.readthedocs.io/en/latest/Controller/C013.html?highlight=p2p)
 
 ### Display options:
-
-
 ***
+**1. Ordinary Tile:**
 
-**1. ordinary Tile:**
-  - Each task is without further ado rendered as a tile. These tiles are arranged by their tasknumbers.
-  - On the upper left is the taskname and aligned right if present are the valuenames and their values
-  - These tiles (and the buttons too) can be clicked and longclicked and trigger an event which can be accessed in rules
-    - if clicked short  `<taskname>event` and if longclicked `<taskname>long`
-     - rulesexample: 
-       <pre><code>
-       on sensorevent do
-       dosomething
-       endon
-       </code></pre>
+- Each task is presented as a tile, organised by its task number.
+- The upper left corner of each tile displays the task name. If the task has associated values, they are aligned right and displayed below the task name.
+- These tiles and the buttons associated with them can be clicked and long-clicked, triggering events that can be accessed in rules.
+- Short clicks trigger events with the name `<taskname>event`, while long clicks trigger events with the name `<taskname>long`.
+- Here’s an example of a rule:
+
+```
+on sensorevent do
+    dosomething
+endon
+```
  
 
     <img width="500" alt="s1" src="https://user-images.githubusercontent.com/33860956/159250534-96dcd024-1d28-44d0-9174-a84390819379.png">
@@ -83,8 +78,6 @@ You should now see all the ESPEasy device tasks and states.
 **2. Buttons:**
   - Buttons are basically ordinary tiles where the valuenames/values are not rendered
   - They have the ability to change their color depending on their state
-  - There are two options to generate a button tile:
-     1. Name the first value of a Task "btnState" (a button whose color is dependent of the btnState 0=no color 1=blue) or “btnStateC” (this button is independent from its state always blue)
      ![button simple](https://user-images.githubusercontent.com/33860956/159255555-d7caea8e-4913-4a4b-98b7-f9a83e5c4f3c.png)
      (the device here is a sonoff s20 and since we do not need the first button, since its the hardwarebutton, on our dahboard we can hide it with the "XX" option. the second button is the actual relay so the state changes depending on the gpio state)
      
