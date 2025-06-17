@@ -24,7 +24,7 @@ var interactionHandled = false;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250617/1";
+const efcVersion = "20250617/2";
 const expected = "20250617/2";
 //#############################################################################################################
 
@@ -1289,6 +1289,7 @@ function extraConfig() {
     menu.innerHTML += `
         <br>
         <div  style="color: inherit;"><h2>Gerneral Settings:</h2></div>
+        <span style="font-size:12px;color: red;">  No need to press Save for these settings!</span></div>
     `;
 
 
