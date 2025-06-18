@@ -62,7 +62,7 @@ const c = new (window.AudioContext || window.webkitAudioContext)();
 //##############################################################################################################
 //      FETCH AND MAKE TILES
 //##############################################################################################################
-async function fetchJson(nN) {
+async function fetchJson(vFj) {
     //invert color scheme----------
     try {
         for (const styleSheet of document.styleSheets) {
@@ -89,8 +89,7 @@ async function fetchJson(nN) {
     if (urlParams.get('cmd') == "reboot") { window.location.href = window.location.origin + "/tools?cmd=reboot" }
     if (myParam == null) { hasParams = 0; }
     someoneEn = 0;
-
-    let stats = window.efc ? "?showpluginstats=1" : "";
+    let stats = window.efc && vFj != 2 ? "?showpluginstats=1" : "";
     //let stats = "";
     if (!jsonPath) { jsonPath = "/json"; }
     let myJson;
@@ -131,7 +130,7 @@ async function fetchJson(nN) {
                 console.log("chart was found!!!!!");
                 jStats = true;
                 isFetching = false;
-                newFJ(nN);
+                newFJ(1);
                 return;
             }
             nTh++;
@@ -248,7 +247,7 @@ async function fetchJson(nN) {
                     //----------------------------------------------------------------------------------------------   TaskValues 
                     for (const item of sensor.TaskValues) {
 
-                        const { ValueNumber, Value, Name, NrDecimals, UoM } = item;
+                        var { ValueNumber, Value, Name, NrDecimals, UoM } = item;
 
 
                         //adding an ID for every Tile to be able to access the context menu
@@ -637,7 +636,7 @@ async function fetchJson(nN) {
         document.getElementById("unitT").innerHTML = `${styleU}${unitName}`;
     }
     if (unitNr === unitNr1) myJson2 = myJson;
-    if (nN) getNodes(undefined, undefined, "ch");
+    if (vFj == 1) getNodes(undefined, undefined, "ch");
     paramS();
     changeCss();
     resizeText();
@@ -1104,8 +1103,8 @@ function buttonClick(sensorName, gState) {
         }
     }
 
-    // Refresh data after 400ms
-    setTimeout(fetchJson, 400);
+    // Refresh 
+     setTimeout(() => newFJ(2), 400);
 }
 
 //##############################################################################################################
@@ -1147,7 +1146,7 @@ function getInput(ele, initalCLick) {
         ele.addEventListener('blur', (event) => {
             clearTimeout(iIV)
             isittime = 1;
-            setTimeout(fetchJson, 400);
+             setTimeout(() => newFJ(2), 400);
         });
     }
     if (ele.value.length > 12) { ele.value = ele.value.slice(0, 12); }
@@ -1166,7 +1165,7 @@ function getInput(ele, initalCLick) {
 
             buttonClick(ele.id.split('_vI')[0]);
         }
-        else { setTimeout(fetchJson, 400); }
+        else {  setTimeout(() => newFJ(2), 400); }
         clearTimeout(iIV);
     }
     else if (event.key === 'Escape') {
@@ -1349,9 +1348,9 @@ function nodeChange(event) {
         nP = `${baseUrl}/tools`;
         nP2 = `${baseUrl}/devices`;
         jsonPath = `${baseUrl}/json`;
-        window.history.replaceState(null, null, `?unit=${nNr}`);
-        console.log("nodeChange", node)
-        newFJ(nN);
+        history.replaceState(null, null, nNr===unitNr1?"?":`?unit=${nNr}`);
+        console.log("nodeChange", nNr,unitNr1)
+        newFJ(1);
     }
     if (window.innerWidth < 450 && document.getElementById('sysInfo').offsetHeight === 0) {
         closeNav();
@@ -1401,13 +1400,12 @@ function splitOn(x) {
         framie.style.width = 0;
         framie.innerHTML = "";
     }
-    //setTimeout(fetchJson, 100);
 }
 
 // either open the devices page or the page of a specific plugin (e.g. clock)
 function iFr(x) {
     if (iO) {
-        const src = x ? `${nP2}?index=${x}&page=1` : nP2;
+        const src = x ? `${nP2}?index=${x}&page=1#tr_vcount` : nP2;
         document.getElementById('framie').innerHTML = `<iframe src="${src}"></iframe>`;
         closeNav();
     }
@@ -1477,7 +1475,7 @@ function longPressB() {
                 }
 
                 await getUrl(url);
-                setTimeout(fetchJson, 400);
+                setTimeout(() => newFJ(2), 400);
             }
 
             playSound(1000);
@@ -1597,6 +1595,7 @@ function getEfcUnitData(unitName) {
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
         console.log("visible");
+        nTh = 0;
         runonce2 = true;
         newFJ();
     } else {
@@ -1605,11 +1604,11 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-function newFJ(nN) {
+function newFJ(vFj) {
     fetchAbort?.abort();
     clearTimeout(fJ);
     isFetching = false;
-    fetchJson(nN);
+    fetchJson(vFj);
     fJ = setInterval(fetchJson, durationF);
 }
 

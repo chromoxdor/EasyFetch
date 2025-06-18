@@ -24,8 +24,8 @@ var selectionDataOld;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250617/4";
-const expected = "20250617/3";
+const efcVersion = "20250618/1";
+const expected = "20250618/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -121,7 +121,7 @@ function handleRightClick(event) {
         const span = target.querySelector("span");
 
         isittime = false;
-        updateSaveButton();
+        updateSaveButton("initial");
         currentDivId = target.id;
 
         // Clear and rebuild the context menu based on the device type
@@ -165,7 +165,7 @@ function handleRightClick(event) {
         }
     } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
         isittime = false;
-        updateSaveButton("inital");
+        updateSaveButton("initial");
         console.log("No valid target found");
     }
 }
@@ -777,31 +777,34 @@ function keepOnlyA(obj) {
 
 // **Show or hide the save button based on selection data**
 function updateSaveButton(param) {
-    if (param === "inital") { selectionDataOld = JSON.stringify(selectionData); }
-    if (param !== "hide") {
-        nOpen && (nOpen.innerHTML = "&#9881;&#xFE0E;");
-        mOpen && (mOpen.innerHTML = "&times;&#xFE0E;");
-        // mOpen.addEventListener("click", uploadJson, true);
-        //show the save button only if selectionData has changed
-        if (selectionDataOld !== JSON.stringify(selectionData)) {
-            saveButton.style.display = "block";
-        } else { saveButton.style.display = "none"; }
-        resetButton.style.display = "block";
-        if (hasHiddenProperty(selectionData)) {
-            toggleButton.style.display = "block";
-        }
-        window.configMode = true;
-    } else {
-        nOpen && (nOpen.innerHTML = "&#9776;&#xFE0E;");
-        mOpen && (mOpen.innerHTML = "&#8962;&#xFE0E;");
-        // mOpen.removeEventListener("click", uploadJson, true);
-        saveButton.style.display = "none";
-        resetButton.style.display = "none";
-        toggleButton.style.display = "none";
-        closeContextMenu();
-        //runonce2 = true;
-        window.configMode = false;
+    if (param === "initial" && !selectionDataOld) {
+        selectionDataOld = JSON.stringify(selectionData);
     }
+
+    const isHide = param === "hide";
+    const iconMap = {
+        true: ["&#9776;&#xFE0E;", "&#8962;&#xFE0E;"],
+        false: ["&#9881;&#xFE0E;", "&times;&#xFE0E;"]
+    };
+
+    nOpen && (nOpen.innerHTML = iconMap[isHide][0]);
+    mOpen && (mOpen.innerHTML = iconMap[isHide][1]);
+
+    // Show the save button only if not hiding AND data has changed
+    saveButton.style.display =
+        !isHide && selectionDataOld && selectionDataOld !== JSON.stringify(selectionData)
+            ? "block"
+            : "none";
+
+    resetButton.style.display = isHide ? "none" : "block";
+    toggleButton.style.display =
+        !isHide && hasHiddenProperty(selectionData) ? "block" : "none";
+
+    if (isHide) {
+        closeContextMenu();
+    }
+
+    window.configMode = !isHide;
 }
 
 
@@ -1188,6 +1191,7 @@ function exitConfig() {
     console.log("exitConfig");
     closeNav();
     selectionData = {};
+    selectionDataOld = "";
     updateSaveButton("hide");
     hiddenOverride = false;
     setLongPressDelay(600);
