@@ -7,7 +7,12 @@ EasyFetch is an alternative dashboard in Tile Optic for ESPEasy (https://github.
 
 ![easyfetchmain](https://github.com/chromoxdor/easyfetch/assets/33860956/cd19b11f-40d6-42ef-9f26-86ef43c0920c)
 
+***
 
+### Button cheat sheet:
+<img width="778" alt="cheatsheet" src="https://github.com/user-attachments/assets/ffefb850-b1c3-4c7e-9f40-453e5cc411e8" />
+
+***
 ## Overview:
 The Dashboard consists of different elements with different purposes:
 
@@ -197,13 +202,6 @@ endon
     - with this "trick" you can have a 2 colum grid layout even wihout displaying any "big values":
 ![grid_2](https://user-images.githubusercontent.com/33860956/159265483-e06527c4-25ba-4f0a-bf9c-196242ae849a.png)
 
-
- 
-
-***
-
-### Button cheat sheet:
-<img width="778" alt="cheatsheet" src="https://github.com/user-attachments/assets/ffefb850-b1c3-4c7e-9f40-453e5cc411e8" />
 
 
 
