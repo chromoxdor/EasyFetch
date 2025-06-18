@@ -203,6 +203,7 @@ endon
 ***
 
 ### Button cheat sheet:
-<img width="700" alt="cheatsheet" src="https://github.com/user-attachments/assets/10f018f9-69a9-420d-82c6-242d7e98f36f" />
+<img width="778" alt="cheatsheet" src="https://github.com/user-attachments/assets/ffefb850-b1c3-4c7e-9f40-453e5cc411e8" />
+
 
 
