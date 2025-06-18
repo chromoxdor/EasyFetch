@@ -24,8 +24,8 @@ var selectionDataOld;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250618/1";
-const expected = "20250618/1";
+const efcVersion = "20250618/2";
+const expected = "20250618/2";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -164,7 +164,7 @@ function handleRightClick(event) {
             menuElement.style.top = `${y}px`;
         }
     } else if (target2.id.startsWith("allList") || target2.id.startsWith("container")) {
-        isittime = false;
+        //isittime = false;
         updateSaveButton("initial");
         console.log("No valid target found");
     }
@@ -778,6 +778,7 @@ function keepOnlyA(obj) {
 // **Show or hide the save button based on selection data**
 function updateSaveButton(param) {
     if (param === "initial" && !selectionDataOld) {
+        closeNav();
         selectionDataOld = JSON.stringify(selectionData);
     }
 
@@ -885,6 +886,8 @@ function saveToFile(param) {
     let dataStr = JSON.stringify(selectionData, null, 2);
 
     if (param === "del") {
+        const msg = `Are you sure you want to delete ALL the settings of ${selectionData.unit}?`;
+       if (!confirm(msg)) return;
         dataStr = "{}";
         if (selectionData.unit) {
             efcArray = efcArray.filter(item => item.unit !== selectionData.unit);
@@ -1039,7 +1042,7 @@ function createMenu() {
 
     nOpen.addEventListener('long-press', () => {
         if (saveButton.style.display === "none" && selectionData.unit) {
-            updateSaveButton("inital");
+            updateSaveButton("initial");
             setLongPressDelay(200);
             if (('ontouchstart' in window)) document.addEventListener("long-press", handleRightClick, true);
         } else {
@@ -1192,6 +1195,7 @@ function exitConfig() {
     closeNav();
     selectionData = {};
     selectionDataOld = "";
+    htmlold = "";
     updateSaveButton("hide");
     hiddenOverride = false;
     setLongPressDelay(600);
@@ -1228,17 +1232,34 @@ function uploadJson() {
 }
 
 function extraConfig() {
-
-    selectionData["iV"] = durationF;
-    selectionData["CiV"] = nThX;
     updateSaveButton();
 
     const menu = document.getElementById("menueList");
     menu.innerHTML = "";
 
     menu.innerHTML += `
-        <div style="color: inherit;"><h2>${unitName}</h2></div>
+        <div style="color: inherit;"><h2>Device specific settings<br> for ${unitName}:</h2></div>
     `;
+
+     // Duration input using waitFor (converted to seconds)
+    menu.innerHTML += `
+    <div style="color: inherit;">
+        <label>Grid size:</label><br>
+        <div style="display: flex; gap: 5px; margin-top: 5px;">
+            ${[2, 3, 4].map(n => `
+                <button style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; background:${n==bigLength?'green':'white'}"
+                        onclick="
+                            bigLength = ${n};
+                            htmlold = '';
+                            selectionData['G'] = bigLength;
+                            extraConfig();
+                        ">
+                    ${n}
+                </button>
+            `).join('')}
+        </div>
+    </div>
+`;
 
     // Duration input using waitFor (converted to seconds)
     menu.innerHTML += `
@@ -1249,6 +1270,7 @@ function extraConfig() {
                              const v = input.value;
                              if(v >= 1) {
                                  durationF = +v * 1000;
+                                 selectionData['iV'] = durationF;
                                  extraConfig();
                              }">Submit</button>
         </div>
@@ -1258,12 +1280,13 @@ function extraConfig() {
 
         menu.innerHTML += `
         <div  style="color: inherit;">
-            <label for="ChartIV">ChartInterval(sec):</label><br>
+            <label for="ChartIV">Chart Interval (sec):</label><br>
             <input type="number" id="ChartIV" class="vInputs" placeholder="${nThX * (durationF / 1000)}" min="${durationF / 1000}" step="${durationF / 1000}" style="width:80px;border: 1px solid #ccc; border-radius: 4px;">
             <button class="clickables" onclick="const v = document.getElementById('ChartIV').value;
                 if (v >= 1) {
                     nThX = Math.ceil(v / (durationF / 1000));
                     nTh = 0;
+                    selectionData['CiV'] = nThX;
                     extraConfig();
                 }">
                 Submit
@@ -1281,17 +1304,17 @@ function extraConfig() {
         <br>
         <span style="font-size:12px;">
             (Integrate the config from a device<br>
-            by copying the contents of its efc.json file<br>
-            and pasting them into the upload field)
+            by copying the contents of its<br> efc.json file
+            and pasting them into<br>  the upload field)
         </span>
-        <br><br><br><br><hr><br>
+        <br><br><br><hr><br>
     `;
 
     // Cookie checkboxes
     menu.innerHTML += `
         <br>
         <div  style="color: inherit;"><h2>Gerneral Settings:</h2></div>
-        <span style="font-size:12px;color: red;">  No need to press Save for these settings!</span></div>
+        <span style="font-size:12px;color: red;">  No need to press Save<br> for these settings!</span></div>
     `;
 
 

@@ -57,6 +57,7 @@ var coloumnSet;                       // Column set for UI
 var myJson2;                          // JSON object for the sidenav handling
 var tsX, tsY, teX, teY, tsTime;       // Time and position-related variables (for touch gesture)
 const c = new (window.AudioContext || window.webkitAudioContext)();
+var bigLength;
 
 
 //##############################################################################################################
@@ -486,17 +487,18 @@ async function fetchJson(vFj) {
 
                                 html3 += htmlBig2 + bigSpan + `">`;
                                 let htS3 = `${htmlBig1}${itemName}</div><div id="`;
+                                const itemLower = itemName.toLowerCase();
 
-                                if (["Clock", "Uhr"].some(v => itemName.includes(v))) {
+                                if (itemLower.includes("clock") || itemLower.includes("uhr")) {
                                     html3 += `${htS3}clock" class="valueBig">${clockBig}</div></div>`;
                                 }
-                                else if (["Datum"].some(v => itemName.toLowerCase().includes(v))) {
+                                else if (itemLower.includes("datum")) {
                                     html3 += `${htS3}date" class="valueBig">${dateD}.${dateM}</div></div>`;
                                 }
-                                else if (["Date"].some(v => itemName.toLowerCase().includes(v))) {
+                                else if (itemLower.includes("date")) {
                                     html3 += `${htS3}date" class="valueBig">${dateM}-${dateD}</div></div>`;
                                 }
-                                else if (["Year", "Jahr"].some(v => itemName.toLowerCase().includes(v))) {
+                                else if (itemLower.includes("year") || itemLower.includes("jahr")) {
                                     html3 += `${htS3}year" class="valueBig">${dateY}</div></div>`;
                                 }
                                 else if (itemName.includes("noVal")) {
@@ -533,7 +535,7 @@ async function fetchJson(vFj) {
                             }
                             else if (overrideSelection !== "bigVal" && !chart) {
                                 if (firstItem) {
-                                    html1 += `<div order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
+                                    html1 += `<div titel="kacke" order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
                                 }
 
                                 if (!isHidden || taskVal.includes("bigVS") || taskVal.includes("chart")) {
@@ -593,7 +595,7 @@ async function fetchJson(vFj) {
     }
 
     document.getElementById('sysInfo').innerHTML = syshtml;
-    document.getElementById('sensorList').innerHTML = orderFunction(html);
+    document.getElementById('sensorList').innerHTML = html;
 
     const shouldShow = document.getElementById('allList')?.offsetWidth > 400;
     if (htmlold !== html2 || shouldShow !== shouldShowOld) {
@@ -699,8 +701,8 @@ function changeCss() {
     //var bigLength = 0;
 
     // find the largest group size
-
-    let bigLength = Math.max(...Array.from(list3, div => div.children.length));
+    bigLength = Math.max(...Array.from(list3, div => div.children.length));
+    if (selectionData?.G > 0) { bigLength = selectionData.G; }
 
 
 
@@ -733,7 +735,7 @@ function changeCss() {
 
     let isttwo = false;
     widthLimit = coloumnSet * 150 + (coloumnSet * (window.innerHeight / 100));
-    if (window.innerWidth < widthLimit || document.cookie.includes("Two=1")) {
+    if (window.innerWidth < widthLimit || (document.cookie.includes("Two=1") && !selectionData?.G) || selectionData?.G == 2) {
         isttwo = true;
 
         if (bigLength > 1 || numSet > 1) {
@@ -745,17 +747,29 @@ function changeCss() {
 
     // append missing tiles with order starting from 1
     list3.forEach(group => {
-        let orderCounter = 4;
+        let orderCounter = 5;
 
-        while (group.children.length < bigLength) {
+        while (group.children.length < bigLength || (group.children.length % bigLength !== 0 && bigLength != 2)) {
             let newDiv = document.createElement('div');
             newDiv.className = 'bigNumWrap';
-            newDiv.setAttribute('order', orderCounter++); // Assign increasing order
+            newDiv.setAttribute('order', orderCounter += 2); // Assign increasing order
             group.appendChild(newDiv);
         }
     });
 
+    //calculate and add extra tiles
+    if (numSet % coloumnSet != 0 && coloumnSet != 1) {
+        calcTile = coloumnSet - (numSet - coloumnSet * Math.floor(numSet / coloumnSet));
+        for (let i = 1; i <= calcTile; i++) {
+            sList.innerHTML += '<div order="0" class="sensorset"></div>'
+        }
+    }
+
     // order child elements after all groups are equalized
+    document.querySelectorAll("#sensorList").forEach(div => {
+        div.innerHTML = orderFunction(div.innerHTML); // Apply ordering after adding missing tiles
+    });
+
     list3.forEach(div => {
         div.innerHTML = orderFunction(div.innerHTML); // Apply ordering after adding missing tiles
 
@@ -764,6 +778,7 @@ function changeCss() {
             children.forEach(child => child.classList.add('big3'));
         }
     });
+
 
     if (isttwo) {
         const elements = document.querySelectorAll(".big3");
@@ -775,20 +790,19 @@ function changeCss() {
         item.style.setProperty('grid-template-columns', y);
     });
 
-    //calculate and add extra tiles
-    if (numSet % coloumnSet != 0 && coloumnSet != 1) {
-        calcTile = coloumnSet - (numSet - coloumnSet * Math.floor(numSet / coloumnSet));
-        for (let i = 1; i <= calcTile; i++) {
-            sList.innerHTML += '<div class="sensorset"></div>'
-        }
-    }
+    // //calculate and add extra tiles
+    // if (numSet % coloumnSet != 0 && coloumnSet != 1) {
+    //     calcTile = coloumnSet - (numSet - coloumnSet * Math.floor(numSet / coloumnSet));
+    //     for (let i = 1; i <= calcTile; i++) {
+    //         sList.innerHTML += '<div order="0" class="sensorset"></div>'
+    //     }
+    // }
 
     if (coloumnSet == 2 && bigLength == 1) {
         document.getElementsByClassName('bigNum')[0].appendChild(Object.assign(document.createElement('div'), { className: 'bigNumWrap' }));
     }
 
     document.getElementById('sensorList').innerHTML = sList.innerHTML;
-    bigLength = 0;
 }
 
 //##############################################################################################################
@@ -1104,7 +1118,7 @@ function buttonClick(sensorName, gState) {
     }
 
     // Refresh 
-     setTimeout(() => newFJ(2), 400);
+    setTimeout(() => newFJ(2), 400);
 }
 
 //##############################################################################################################
@@ -1146,7 +1160,7 @@ function getInput(ele, initalCLick) {
         ele.addEventListener('blur', (event) => {
             clearTimeout(iIV)
             isittime = 1;
-             setTimeout(() => newFJ(2), 400);
+            setTimeout(() => newFJ(2), 400);
         });
     }
     if (ele.value.length > 12) { ele.value = ele.value.slice(0, 12); }
@@ -1165,7 +1179,7 @@ function getInput(ele, initalCLick) {
 
             buttonClick(ele.id.split('_vI')[0]);
         }
-        else {  setTimeout(() => newFJ(2), 400); }
+        else { setTimeout(() => newFJ(2), 400); }
         clearTimeout(iIV);
     }
     else if (event.key === 'Escape') {
@@ -1348,8 +1362,8 @@ function nodeChange(event) {
         nP = `${baseUrl}/tools`;
         nP2 = `${baseUrl}/devices`;
         jsonPath = `${baseUrl}/json`;
-        history.replaceState(null, null, nNr===unitNr1?"?":`?unit=${nNr}`);
-        console.log("nodeChange", nNr,unitNr1)
+        history.replaceState(null, null, nNr === unitNr1 ? "?" : `?unit=${nNr}`);
+        console.log("nodeChange", nNr, unitNr1)
         newFJ(1);
     }
     if (window.innerWidth < 450 && document.getElementById('sysInfo').offsetHeight === 0) {
