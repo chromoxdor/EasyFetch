@@ -39,7 +39,7 @@ There are 3 possible categories:
 
 ## Installing Fetch:
 
-1. Download the fetch.html.gz [](https://github.com/chromoxdor/EasyFetch/raw/refs/heads/main/fetch.html.gz) file to your computer. Alternatively, you can rename it to index.htm.gz to replace the main page.
+1. Download the [fetch.html.gz](https://github.com/chromoxdor/EasyFetch/raw/refs/heads/main/fetch.html.gz) file to your computer. Alternatively, you can rename it to index.htm.gz to replace the main page.
 
 2. Open your browser and navigate to http://<ESP_DEVICE_IP>. Replace <ESP_DEVICE_IP> with your device’s Local IP Address.
 
