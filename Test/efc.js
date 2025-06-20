@@ -24,7 +24,7 @@ var selectionDataOld;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250620/1";
+const efcVersion = "20250620/2";
 const expected = "20250620/2";
 //#############################################################################################################
 
@@ -913,7 +913,7 @@ function saveToFile(param) {
 
         const uploadUrl = `${baseUrl}/upload`;
 
-        
+
         if (unitNr !== unitNr1 || !isMain) {
             console.log("uploading file efc.json.gz to:", uploadUrl);
             fetchFile(uploadUrl, formDataEfc);
@@ -1237,28 +1237,28 @@ function uploadJson() {
 
 // Fetch + Forward logic from earlier
 function transferGzFile(uploadUrl) {
-  console.log("Starting file transfer to:", uploadUrl);
+    console.log("Starting file transfer to:", uploadUrl);
 
-  loadScript("https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js", () => {
-    fetch('/main_efc.json.gz')
-      .then(response => {
-        if (!response.ok) throw new Error(`Failed to fetch source file (${response.status})`);
-        return response.arrayBuffer();
-      })
-      .then(buffer => {
-        // Recompress the gzipped buffer (optional, depending on content)
-        const compressed = pako.gzip(buffer);
-        const file = new File([compressed], 'main_efc.json.gz', { type: 'application/gzip' });
+    loadScript("https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js", () => {
+        fetch('/main_efc.json.gz')
+            .then(response => {
+                if (!response.ok) throw new Error(`Failed to fetch source file (${response.status})`);
+                return response.arrayBuffer();
+            })
+            .then(buffer => {
+                // Recompress the gzipped buffer (optional, depending on content)
+                const compressed = pako.gzip(buffer);
+                const file = new File([compressed], 'main_efc.json.gz', { type: 'application/gzip' });
 
-        const formData = new FormData();
-        formData.append('file', file);
+                const formData = new FormData();
+                formData.append('file', file);
 
-        fetchFile(uploadUrl, formData);
-      })
-      .catch(error => {
-        console.error('File transfer failed:', error);
-      });
-  });
+                fetchFile(uploadUrl, formData);
+            })
+            .catch(error => {
+                console.error('File transfer failed:', error);
+            });
+    });
 }
 
 function extraConfig() {
@@ -1339,12 +1339,12 @@ function extraConfig() {
                 })()">Transfer</button>
             </div>
             `;
-    
 
-    
 
-    // Upload JSON button
-    menu.innerHTML += `
+
+
+        // Upload JSON button
+        menu.innerHTML += `
         <br>
         <button onclick="uploadJson()" 
                class="clickables" style="margin:10px 0; padding:5px 15px; background:green; color:white; border:none; border-radius:8px;">
@@ -1356,13 +1356,13 @@ function extraConfig() {
             by copying the contents of its<br> efc.json file
             and pasting them into<br>  the upload field)
         </span>
-        <br><br><br><hr><br>
+        
     `;
     }
 
     // Cookie checkboxes
     menu.innerHTML += `
-        <br>
+        <br><br><br><hr><br><br>
         <div  style="color: inherit;"><h2>Gerneral Settings:</h2></div>
         <span style="font-size:12px;color: red;">  No need to press Save<br> for these settings!</span></div>
     `;
