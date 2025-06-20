@@ -25,7 +25,7 @@ var selectionDataOld;
 //      VERSION CHECK
 //#############################################################################################################
 const efcVersion = "20250620/1";
-const expected = "20250620/1";
+const expected = "20250620/2";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -1359,7 +1359,7 @@ function extraConfig() {
         <br><br><br><hr><br>
     `;
     }
-    
+
     // Cookie checkboxes
     menu.innerHTML += `
         <br>
