@@ -57,7 +57,7 @@ var coloumnSet;                       // Column set for UI
 var myJson2;                          // JSON object for the sidenav handling
 var tsX, tsY, teX, teY, tsTime;       // Time and position-related variables (for touch gesture)
 const c = new (window.AudioContext || window.webkitAudioContext)();
-var bigLength;
+var bigLength;                        // Ammount of big tiles (determines the grid size)
 
 
 //##############################################################################################################
@@ -79,19 +79,21 @@ async function fetchJson(vFj) {
     if (!isittime) { return; }
 
     //----------------------------------------------------------------------------------------------------------get EFC Data
-
-    if (runonce2 === true) {
+    console.log("fetchJson",isMain);
+    if (runonce2) {
         await getEfcData();
     }
     //----------------------------------------------------------------------------------------------------------get EFC Data
 
     let urlParams = new URLSearchParams(window.location.search);
     myParam = urlParams.get('unit');
+
     if (urlParams.get('cmd') == "reboot") { window.location.href = window.location.origin + "/tools?cmd=reboot" }
     if (myParam == null) { hasParams = 0; }
     someoneEn = 0;
+
     let stats = window.efc && vFj != 2 ? "?showpluginstats=1" : "";
-    //let stats = "";
+
     if (!jsonPath) { jsonPath = "/json"; }
     let myJson;
 
@@ -121,7 +123,7 @@ async function fetchJson(vFj) {
         unitName = myJson.WiFi.Hostname;
         unitNr = myJson.System['Unit Number'];
 
-        if (!window.configMode) {
+        if (!window.configMode && isMain) {
             getEfcUnitData(unitName);
         }
 
@@ -1307,7 +1309,6 @@ async function getNodes(sensorName, allNodes, ch) {
         response = await getUrl(`/json`);
         myJson2 = await response.json();
     }
-    console.log("getNodes", myJson2)
     if (!myJson2) return;
     myJson2.nodes.forEach(node => {
         i++
@@ -1503,17 +1504,8 @@ function longPressB() {
 //      HELPER
 //##############################################################################################################
 function minutesToDhm(min) {
-    const d = Math.floor(min / (60 * 24));
-    const h = Math.floor((min % (60 * 24)) / 60);
-    const m = min % 60;
-
-    const format = (value, unit) => value > 0 ? `${value} ${unit}${value === 1 ? '' : 's'} ` : '';
-
-    const dDis = format(d, 'day');
-    const hDis = format(h, 'hour');
-    const mDis = format(m, 'minute');
-
-    return dDis + hDis + mDis;
+  const f = (v, u) => v ? `${v} ${u}${v - 1 ? 's' : ''} ` : '';
+  return f((min / 1440) | 0, 'day') + f((min % 1440 / 60) | 0, 'hour') + f(min % 60, 'minute');
 }
 
 function playSound(freQ) {
@@ -1583,7 +1575,6 @@ async function getEfcData() {
             if (response?.ok) {
                 selectionData = await response.json();
                 console.log("Data from efc.json:", selectionData);
-                isMain = false;
             } else {
                 throw new Error("efc.json not available");
             }
@@ -1592,10 +1583,12 @@ async function getEfcData() {
                 console.log("Fetch aborted for:", unitName);
             } else {
                 console.log("Both fetches failed:", error.message);
-                runonce2 = true;
+                runonce2 = false;
+                //selectionData = {};
             }
             //return; // Exit early since both failed
         }
+        isMain = false;
     }
 }
 

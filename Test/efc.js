@@ -24,8 +24,8 @@ var selectionDataOld;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250618/2";
-const expected = "20250618/2";
+const efcVersion = "20250620/1";
+const expected = "20250620/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -726,7 +726,7 @@ function saveSelections(ignoreDropdown) {
             let key = input.dataset.key;
             console.log(`Processing input with key: ${key}`, input.checked);
             //set html2 to empty string to redraw the slider and charts when when the ammount of tiles is changed
-            if (key === "hide") html2 = ""; 
+            if (key === "hide") html2 = "";
 
             if (input.type === "checkbox") {
                 // Checkbox input
@@ -887,7 +887,7 @@ function saveToFile(param) {
 
     if (param === "del") {
         const msg = `Are you sure you want to delete ALL the settings of ${selectionData.unit}?`;
-       if (!confirm(msg)) return;
+        if (!confirm(msg)) return;
         dataStr = "{}";
         if (selectionData.unit) {
             efcArray = efcArray.filter(item => item.unit !== selectionData.unit);
@@ -899,11 +899,10 @@ function saveToFile(param) {
 
     // Load pako and then process gzip files
     loadScript("https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js", function () {
-        console.log("Pako loaded successfully.");
 
         // Compress efc.json
         const compressedDataEfc = pako.gzip(dataStr);
-        console.log("Compressed efc.json:", compressedDataEfc);
+        //console.log("Compressed efc.json:", compressedDataEfc);
 
         // Create gzipped File object for efc.json
         const fileEfc = new File([compressedDataEfc], 'efc.json.gz', { type: 'application/gzip' });
@@ -914,9 +913,11 @@ function saveToFile(param) {
 
         const uploadUrl = `${baseUrl}/upload`;
 
-        console.log("uploadUrl:", unitNr, unitNr1);
-        if (unitNr !== unitNr1) {
+        
+        if (unitNr !== unitNr1 || !isMain) {
+            console.log("uploading file efc.json.gz to:", uploadUrl);
             fetchFile(uploadUrl, formDataEfc);
+
         }
 
         // Only compress and send main_efc.json.gz if isMain is true
@@ -925,7 +926,7 @@ function saveToFile(param) {
 
             // Compress main_efc.json
             const compressedDataMain = pako.gzip(dataStrArr);
-            console.log("Compressed main_efc.json:", compressedDataMain);
+            //console.log("Compressed main_efc.json:", compressedDataMain);
 
             // Create gzipped File object for main_efc.json
             const fileMain = new File([compressedDataMain], 'main_efc.json.gz', { type: 'application/gzip' });
@@ -935,6 +936,7 @@ function saveToFile(param) {
             formDataMain.append('file', fileMain);
 
             // Upload main_efc.json.gz
+            console.log("uploading file main_efc.json.gz to");
             fetchFile(`/upload`, formDataMain);
         } else {
             console.log("Skipping main_efc.json.gz because isMain is false.");
@@ -961,7 +963,8 @@ function fetchFile(uploadUrl, formData) {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
-            console.log("File uploaded successfully!");
+            runonce2 = true;
+            console.log(`File uploaded successfully to ${uploadUrl}!`);
         })
         .catch(error => {
             clearTimeout(timeoutId);
@@ -1101,7 +1104,7 @@ function closeContextMenu() {
     tempName = ""; // Reset the tempName variable
     removeHighlighting();
     removePointerEvents();
-    updateYAxisVisibility()
+    updateYAxisVisibility();
     isittime = true;
     newFJ();
 }
@@ -1200,7 +1203,7 @@ function exitConfig() {
     hiddenOverride = false;
     setLongPressDelay(600);
     document.removeEventListener("long-press", handleRightClick, true);
-    //runonce2 = false;
+    runonce2 = true;
     setTimeout(newFJ, 200);
 }
 
@@ -1221,6 +1224,7 @@ function uploadJson() {
             // Try to parse it as JSON
             selectionData = JSON.parse(jsonStr);
             console.log("Parsed JSON object:", selectionData);
+            updateSaveButton();
         } catch (e) {
             console.error("Invalid JSON after trimming:", e);
         }
@@ -1229,6 +1233,32 @@ function uploadJson() {
         console.log("Input too short or cancelled.");
         //exitConfig();
     }
+}
+
+// Fetch + Forward logic from earlier
+function transferGzFile(uploadUrl) {
+  console.log("Starting file transfer to:", uploadUrl);
+
+  loadScript("https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js", () => {
+    fetch('/main_efc.json.gz')
+      .then(response => {
+        if (!response.ok) throw new Error(`Failed to fetch source file (${response.status})`);
+        return response.arrayBuffer();
+      })
+      .then(buffer => {
+        // Recompress the gzipped buffer (optional, depending on content)
+        const compressed = pako.gzip(buffer);
+        const file = new File([compressed], 'main_efc.json.gz', { type: 'application/gzip' });
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetchFile(uploadUrl, formData);
+      })
+      .catch(error => {
+        console.error('File transfer failed:', error);
+      });
+  });
 }
 
 function extraConfig() {
@@ -1241,13 +1271,13 @@ function extraConfig() {
         <div style="color: inherit;"><h2>Device specific settings<br> for ${unitName}:</h2></div>
     `;
 
-     // Duration input using waitFor (converted to seconds)
+    // Duration input using waitFor (converted to seconds)
     menu.innerHTML += `
     <div style="color: inherit;">
         <label>Grid size:</label><br>
         <div style="display: flex; gap: 5px; margin-top: 5px;">
             ${[2, 3, 4].map(n => `
-                <button style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; background:${n==bigLength?'green':'white'}"
+                <button style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; background:${n == bigLength ? 'green' : 'white'}"
                         onclick="
                             bigLength = ${n};
                             htmlold = '';
@@ -1294,6 +1324,25 @@ function extraConfig() {
         </div>
     `;
     }
+
+    if (unitNr === unitNr1 && isMain) {
+        menu.innerHTML += `
+            <div style="color: inherit;">
+                <label for="unitInput">Transfer settings to:</label><br>
+                <input type="number" id="unitInput" class="vInputs" min="1" max="255" placeholder="Unit #" style="width: 80px; border: 1px solid #ccc; border-radius: 4px;">
+                <button onclick="(() => {
+                const u = +document.getElementById('unitInput').value;
+                const n = window.myJson2?.nodes?.find(n => n.nr == u && n.ip);
+                if (!n) return;
+                const uu = 'http://' + n.ip + '/upload';
+                transferGzFile(uu);
+                })()">Transfer</button>
+            </div>
+            `;
+    
+
+    
+
     // Upload JSON button
     menu.innerHTML += `
         <br>
@@ -1309,7 +1358,8 @@ function extraConfig() {
         </span>
         <br><br><br><hr><br>
     `;
-
+    }
+    
     // Cookie checkboxes
     menu.innerHTML += `
         <br>
