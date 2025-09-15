@@ -40,7 +40,10 @@
         </div>
     </div>
     <script>
-        fetchJson();
+        window.addEventListener("load", async () => {
+    await fetchJson(); // your main logic
+});
+
     </script>
 </body>
 

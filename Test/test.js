@@ -60,6 +60,11 @@ const c = new (window.AudioContext || window.webkitAudioContext)();
 var bigLength;                        // Ammount of big tiles (determines the grid size)
 
 
+
+window.addEventListener("load", async () => {
+    await fetchJson(); // your main logic
+});
+
 //##############################################################################################################
 //      FETCH AND MAKE TILES
 //##############################################################################################################
@@ -79,7 +84,7 @@ async function fetchJson(vFj) {
     if (!isittime) { return; }
 
     //----------------------------------------------------------------------------------------------------------get EFC Data
-    console.log("fetchJson",isMain);
+    console.log("fetchJson", isMain);
     if (runonce2) {
         await getEfcData();
     }
@@ -232,15 +237,16 @@ async function fetchJson(vFj) {
 
             let isHidden = (!hiddenOverride && selectionData[TaskNumber]?.["A"]?.["hide"] === 1);
 
+            const orderA = selectionData[TaskNumber]?.["A"]?.["order"] || "0";
+            const chart = selectionData[TaskNumber]?.["A"]?.["chart"] || 0;
+            let efcIDA = `efc:${deviceName}=${TaskDeviceNumber},${TaskNumber}`;
+            //chart  
+            if (chart && window.efc) {
+                html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:160px;padding:0;"><div style="padding: 4.2px;font-weight: bold;">${sensorName}</div><div style="height:135px"><canvas id="${TaskName}chart" ></canvas></div></div>`;
+            }
+
             if (taskEnabled === "true" && !isHidden && !exC && exC2 && !hasParams) {
 
-                const orderA = selectionData[TaskNumber]?.["A"]?.["order"] || "0";
-                const chart = selectionData[TaskNumber]?.["A"]?.["chart"] || 0;
-                let efcIDA = `efc:${deviceName}=${TaskDeviceNumber},${TaskNumber}`;
-                //chart  
-                if (chart && window.efc) {
-                    html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:160px;padding:0;"><div style="padding: 4.2px;font-weight: bold;">${sensorName}</div><div style="height:135px"><canvas id="${TaskName}chart" ></canvas></div></div>`;
-                }
                 if (sensor.TaskValues) {
                     someoneEn = 1;
                     let firstItem = false;
@@ -260,8 +266,8 @@ async function fetchJson(vFj) {
                         // getting efc data
 
                         let selectedTaskVal = selectionData?.[TaskNumber]?.[ValueNumber];
-
                         let overrideSelection = selectionData[TaskNumber]?.["A"]?.["val"];
+                        let inv = selectionData[TaskNumber]?.["A"]?.["inv"] || selectedTaskVal?.["inv"];
 
                         tBG = selectionData[TaskNumber]?.["A"]?.["color"] &&
                             selectionData[TaskNumber]["A"]["color"] !== "#000000"
@@ -321,8 +327,7 @@ async function fetchJson(vFj) {
                             if ((itemName === "btnStateC" && Value < 2) || Value === 1) { bS = "on"; }
                             else if (Value === 2) { bS = "alert"; }
 
-                            if (TaskDeviceGPIO1 && (itemName === "State" || itemName === "iState")) {
-                                if (itemName === "iState") { Value = Value == 1 ? 0 : 1; }
+                            if (TaskDeviceGPIO1 && (itemName === "State")) {
                                 const uttonGP = `${sensorName}|${TaskDeviceGPIO1}`;
                                 html += `<div order="${orderA}" id="${efcID}A" class="btnTile ${bS} ${htS1} buttonClick('${uttonGP}', '${Value}')">${htS2}`;
 
@@ -336,7 +341,6 @@ async function fetchJson(vFj) {
 
                             } else if (itemName.includes("btnState")) {
                                 if (itemName === "ibtnState") { Value = Value == 1 ? 0 : 1; }
-                                if (kindN) { sensorName = `${sensorName}|${kindN}`; }
                                 html += `<div order="${orderA}" id="${efcID}A" id="${sensorName}" class="btnTile ${XI} ${bS} ${htS1}buttonClick('${sensorName}', '${Value}')">${htS2}`;
                             } else {
                                 wasUsed = false;
@@ -347,8 +351,11 @@ async function fetchJson(vFj) {
                             if (TaskDeviceNumber !== 33) XI = "noI";
                             wasUsed = true;
                             //button coloring
+                            if (inv) Value = Value == 1 ? 0 : 1;
+                            console.error("sensorName", inv);
                             if ((kindN === "C" && Value < 2) || Value === 1) { bS = "on"; }
                             else if (Value === 2) { bS = "alert"; }
+
                             //handle tile hiding of dummy tiles
                             if (["dButtons", "vInput", "pButtons"].some(v => TaskName.includes(v)) && Name.includes("noVal")) {
                                 //novalAuto tiles are only shown on larger screens
@@ -395,6 +402,7 @@ async function fetchJson(vFj) {
                             }
                             //normal slider
                             else if ((sensorName).includes("vSlider")) {
+                                if (TaskDeviceNumber == 2 && itemName != "") { itemNameChanged = deviceName; }
                                 num2Value = Number(num2Value).toFixed((slStep.toString().split('.')[1] || '').length);
                                 itemName = itemName === "noVal" ? "&nbsp;" : itemName;
                                 html2 += `<div order="${order}" id="${efcID}" class="${XI} sensorset"><input type="range" data-unit="${kindN}" min="${slMin}" max="${slMax}" step="${slStep}" value="${num2Value}" id="${itemName}" class="slider sL ${TaskNumber},${ValueNumber}`;
@@ -507,7 +515,7 @@ async function fetchJson(vFj) {
                                     html3 += `${htmlBig1}</div><div class="valueBig"></span></div></div>`;
                                 }
                                 else {
-                                    html3 += `${htmlBig1}${itemName}</div><div class="valueBig">${num2Value}${kindNP}</div></div>`;
+                                    html3 += `${htmlBig1}${itemNameChanged}</div><div class="valueBig">${num2Value}${kindNP}</div></div>`;
                                 }
                             }
                         }
@@ -517,7 +525,7 @@ async function fetchJson(vFj) {
                             if (isHidden) {
                                 htmlBigS += `${htmlBig1}</div><div class="valueBig"></div></div>`;
                             } else {
-                                htmlBigS += `${htmlBig1}${itemName}</div><div class="valueBig">${num2Value}${kindNP}</div></div>`;
+                                htmlBigS += `${htmlBig1}${itemNameChanged}</div><div class="valueBig">${num2Value}${kindNP}</div></div>`;
                             }
 
                         }
@@ -535,9 +543,9 @@ async function fetchJson(vFj) {
                                             </div></div>`;
                                 }
                             }
-                            else if (overrideSelection !== "bigVal" && !chart) {
+                            else if (overrideSelection !== "bigVal") { // && !chart) {
                                 if (firstItem) {
-                                    html1 += `<div titel="kacke" order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
+                                    html1 += `<div order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
                                 }
 
                                 if (!isHidden || taskVal.includes("bigVS") || taskVal.includes("chart")) {
@@ -1101,10 +1109,12 @@ function buttonClick(sensorName, gState) {
         const [uN, gpioNr] = sensorName.split("|");
 
         if (unitNr === unitNr1) {
-            getUrl(`${cmD}gpio,${gpioNr},${1 - gState}`);
+            getUrl(`${cmD}GPIO,${gpioNr},[Plugin%23GPIO%23Pinstate%23${gpioNr}]`);  //workaround to set gpio to output
+            getUrl(`${cmD}GPIOToggle,${gpioNr}`);
             getUrl(`${cmD}event,${uN}Event`);
         } else {
-            getUrl(`${cmD}SendTo,${nNr},"gpio,${gpioNr},${1 - gState}"`);
+            getUrl(`${cmD}SendTo,${nNr},"GPIO,${gpioNr},[Plugin%23GPIO%23Pinstate%23${gpioNr}]"`);
+            getUrl(`${cmD}SendTo,${nNr},"GPIOToggle,${gpioNr}"`);
             getUrl(`${cmD}SendTo,${nNr},"event,${uN}Event"`);
         }
     }
@@ -1504,8 +1514,8 @@ function longPressB() {
 //      HELPER
 //##############################################################################################################
 function minutesToDhm(min) {
-  const f = (v, u) => v ? `${v} ${u}${v - 1 ? 's' : ''} ` : '';
-  return f((min / 1440) | 0, 'day') + f((min % 1440 / 60) | 0, 'hour') + f(min % 60, 'minute');
+    const f = (v, u) => v ? `${v} ${u}${v - 1 ? 's' : ''} ` : '';
+    return f((min / 1440) | 0, 'day') + f((min % 1440 / 60) | 0, 'hour') + f(min % 60, 'minute');
 }
 
 function playSound(freQ) {
@@ -1560,36 +1570,39 @@ async function getUrl(url, options = {}) {
 
 async function getEfcData() {
     runonce2 = false;
-    try {
-        let response = await getUrl(`/main_efc.json.gz`);
-        if (response?.ok) {
+    let response;
+    let retry = true;
+    let i = 0;
+
+    while (retry) {
+
+        response = await getUrl(`/main_efc.json.gz`);
+        if (response && response.ok) {
             efcArray = await response.json();
             console.log("Data from main_efc.json:", efcArray);
+            return;
+        }
+        i++;
+        if (i < 2) {
+            // First retry silently
+            retry = true;
         } else {
-            throw new Error("main_efc.json not available");
+            retry = confirm("Failed to load main_efc.json. Try again?");
         }
-    } catch (error) {
-        console.log("Fallback: main_efc.json failed:", error.message);
-        try {
-            let response = await getUrl(`${baseUrl}/efc.json.gz`);
-            if (response?.ok) {
-                selectionData = await response.json();
-                console.log("Data from efc.json:", selectionData);
-            } else {
-                throw new Error("efc.json not available");
-            }
-        } catch (error) {
-            if (error.name === "AbortError") {
-                console.log("Fetch aborted for:", unitName);
-            } else {
-                console.log("Both fetches failed:", error.message);
-                runonce2 = false;
-                //selectionData = {};
-            }
-            //return; // Exit early since both failed
-        }
-        isMain = false;
+        await new Promise(res => setTimeout(res, 500));
     }
+
+    // Fallback to secondary source
+    response = await getUrl(`${baseUrl}/efc.json.gz`);
+    if (response && response.ok) {
+        selectionData = await response.json();
+        console.log("Data from efc.json:", selectionData);
+    } else {
+        runonce2 = false;
+        console.log("Both fetches failed.");
+    }
+
+    isMain = false;
 }
 
 function getEfcUnitData(unitName) {
@@ -1637,43 +1650,53 @@ function receiveNote(S) {
 //----------------------------------------------------------------------------------------------------------------
 
 // Inject minimal Web App Manifest
-const favicon = document.querySelector("link[rel='icon']").getAttribute("href");
+// Inject manifest
 const manifest = {
     name: "easyfetch",
     short_name: "ef",
-    //start_url: "",
+    start_url: ".",
     display: "standalone",
     background_color: "#000",
     theme_color: "#000",
-    icons: [192, 256, 384, 512, 57, 72, 76, 120, 152, 167, 180, 1024].map((x) => ({
-        src: favicon,
-        sizes: `${x}x${x}`,
-        purpose: "any"
-    }))
+    //   icons: [
+    //     { src: "icon-192.png", sizes: "192x192", type: "image/png" },
+    //     { src: "icon-512.png", sizes: "512x512", type: "image/png" }
+    //   ]
 };
 const link = document.createElement("link");
 link.rel = "manifest";
 link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/json" }));
 document.head.appendChild(link);
 
-// Register minimal Service Worker
+// Apple-specific meta tags (insert manually in HTML for best results)
+const meta1 = document.createElement("meta");
+meta1.name = "apple-mobile-web-app-capable";
+meta1.content = "yes";
+document.head.appendChild(meta1);
+
+// Register Service Worker
 if ("serviceWorker" in navigator) {
     const sw = `
-      self.addEventListener("fetch", e => {
-        e.respondWith(
-          fetch(e.request).catch(() =>
-            new Response("Offline", { status: 503 })
-          )
-        );
-      });
-    `;
+    self.addEventListener("install", () => self.skipWaiting());
+    self.addEventListener("activate", () => self.clients.claim());
+    self.addEventListener("fetch", e => {
+      e.respondWith(
+        fetch(e.request).catch(() =>
+          new Response("Offline", { status: 503 })
+        )
+      );
+    });
+  `;
     navigator.serviceWorker.register("data:application/javascript," + encodeURIComponent(sw));
 }
-// Handle install prompt
-window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    e.prompt?.(); // Prompt immediately, or delay with setTimeout if needed
-});
+
+// // iOS install instructions
+// const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+// const isInStandalone = 'standalone' in window.navigator && window.navigator.standalone;
+
+// if (isIOS && !isInStandalone) {
+//   alert("To install this app, tap the Share icon and choose 'Add to Home Screen'.");
+// }
 // ----------------------------------------------------------------------------------------------------------------
 
 //longpress custom.js

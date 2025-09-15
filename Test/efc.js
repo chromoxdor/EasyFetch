@@ -370,6 +370,11 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         if (["dButtons", "vSlider"].includes(selectedOption) && deviceType === 33) {
             addCheckbox(formFields, " no input", "noI");
         }
+
+        if (["dButtons", "pButtons"].includes(selectedOption)) {
+            addCheckbox(formFields," invert", "inv");
+        }
+
         //needs Json output for clock plugin in ESPEasy
         if (["tSlider"].includes(selectedOption) && deviceType === 33) {
             addTextInput(formFields, "taskname: ", "timeName");
@@ -1397,7 +1402,7 @@ function getColorScheme() {
         ];
     } else {
         return [
-            "rgba(71, 227, 39, 0.6)",
+            "rgba(119, 214, 29, 0.6)",
             "rgba(71, 209, 255, 0.6)",
             "rgba(255, 75, 102, 0.6)",
             "rgba(255, 78, 255, 0.6)"
