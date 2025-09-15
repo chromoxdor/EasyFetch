@@ -114,7 +114,7 @@ async function fetchJson(vFj) {
     // set individual interval for each unit
     if (!configMode) {
         durationF = selectionData?.iV ?? 2000;
-        nThX = selectionData?.CiV ?? 1;
+        nThX = selectionData?.CiV ?? 5;
     }
 
     try {

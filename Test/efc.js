@@ -25,7 +25,7 @@ var selectionDataOld;
 //      VERSION CHECK
 //#############################################################################################################
 const efcVersion = "20250620/2";
-const expected = "20250915/3";
+const expected = "20250915/4";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -372,7 +372,7 @@ function updateMenuFields(deviceType, selectedOption, deviceName, deviceIndex, v
         }
 
         if (["dButtons", "pButtons"].includes(selectedOption)) {
-            addCheckbox(formFields," invert", "inv");
+            addCheckbox(formFields, " invert", "inv");
         }
 
         //needs Json output for clock plugin in ESPEasy
