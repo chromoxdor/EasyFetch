@@ -1087,8 +1087,8 @@ function sliderChange(event) {
 //##############################################################################################################
 //      NORMAL BUTTON EVENT
 //##############################################################################################################
-function buttonClick(sensorName, gState) {
-
+function buttonClick(sensorName) {
+    console.log("Button clicked:", sensorName);
     // Handle "dButtons" sending to other nodes
     if (sensorName.includes("&")) {
         const [utton2, nodeInfo] = sensorName.split("&");
@@ -1117,7 +1117,7 @@ function buttonClick(sensorName, gState) {
             getUrl(`${cmD}GPIOToggle,${gpioNr}`);
             getUrl(`${cmD}event,${uN}Event`);
         } else {
-            getUrl(`${cmD}SendTo,${nNr},"GPIO,${gpioNr},[Plugin%23GPIO%23Pinstate%23${gpioNr}]"`);
+            getUrl(`${cmD}SendTo,${nNr},"GPIO,${gpioNr},\\[Plugin%23GPIO%23Pinstate%23${gpioNr}\\]"`); //workaround to set gpio to output
             getUrl(`${cmD}SendTo,${nNr},"GPIOToggle,${gpioNr}"`);
             getUrl(`${cmD}SendTo,${nNr},"event,${uN}Event"`);
         }
