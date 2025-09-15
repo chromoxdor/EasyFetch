@@ -235,7 +235,7 @@ async function fetchJson(vFj) {
             exC = [87, 38, 41, 42].includes(TaskDeviceNumber); //all PluginNR in an array that need to be excluded 
             exC2 = !sensor.Type?.includes("Display")
 
-            let isHidden = (!hiddenOverride && selectionData[TaskNumber]?.["A"]?.["hide"] === 1);
+            let isHidden = (!hiddenOverride && (selectionData[TaskNumber]?.["A"]?.["hide"] === 1 || sensorName.endsWith("XX")));
 
             const orderA = selectionData[TaskNumber]?.["A"]?.["order"] || "0";
             const chart = selectionData[TaskNumber]?.["A"]?.["chart"] || 0;
@@ -283,7 +283,7 @@ async function fetchJson(vFj) {
                         const sendToValue = selectedTaskVal?.sendTo;
                         const [sendToNr = "", gpio = ""] = (typeof sendToValue === "string" ? sendToValue.split(",") : []) || [];
 
-                        isHidden = (!hiddenOverride && selectedTaskVal?.["hide"] === 1);
+                        isHidden = (!hiddenOverride && (selectedTaskVal?.["hide"] === 1 || Name.toString().includes("XX")));
 
                         // Handle range values
                         if (selectedTaskVal?.["range"]) {
@@ -442,7 +442,7 @@ async function fetchJson(vFj) {
 
                             }
                             // thermostat slider
-                            else if ((sensorName).includes("thSlider")) {
+                            else if ((sensorName).includes("thSlider") || (sensorName).includes("thermoSlider")) {
                                 if (NrDecimals !== 3) itemName = "For the Thermo slider the value<br>must have 3 decimals!";
                                 //itemName = changeNN(itemName);
                                 slT1 = Value.toFixed(3);
@@ -692,7 +692,11 @@ async function getRemoteGPIOState(taskNum, unitToNum, gpioNum, unitFromNum, valu
 //##############################################################################################################
 
 function changeNN(nn) {
-    return nn.replace(/_/g, " ").replace(/\./g, "-<br>"); //replace "_" and "." in device and "BigValue" names
+    return nn
+        .replace(/\?.*$/, "")   // remove "?" and everything after
+        .replace(/\&.*$/, "")   // remove "&" and everything after
+        .replace(/_/g, " ")     // replace "_" with space
+        .replace(/\./g, "-<br>"); // replace "." with "-<br>"
 }
 
 //##############################################################################################################
