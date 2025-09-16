@@ -84,8 +84,7 @@ async function fetchJson(vFj) {
     if (!isittime) { return; }
 
     //----------------------------------------------------------------------------------------------------------get EFC Data
-    console.log("fetchJson", isMain);
-    if (runonce2) {
+    if (runonce2 && !configMode) {
         await getEfcData();
     }
     //----------------------------------------------------------------------------------------------------------get EFC Data
@@ -143,6 +142,7 @@ async function fetchJson(vFj) {
             }
             nTh++;
         } else {
+            cD = [];        
             jStats = false;
         }
     } catch (error) {
@@ -212,6 +212,7 @@ async function fetchJson(vFj) {
                 const existing = cD.find(item => item.device === TaskName);
                 existing ? (existing.chart = PluginStats) : cD.push({ device: TaskName, chart: PluginStats });
             }
+            //else {cD = [];}
 
             //console.log("chartData", cD);
             var bigSpan = "";
@@ -241,11 +242,13 @@ async function fetchJson(vFj) {
             const chart = selectionData[TaskNumber]?.["A"]?.["chart"] || 0;
             let efcIDA = `efc:${deviceName}=${TaskDeviceNumber},${TaskNumber}`;
             //chart  
-            if (chart && window.efc) {
-                html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:160px;padding:0;"><div style="padding: 4.2px;font-weight: bold;">${sensorName}</div><div style="height:135px"><canvas id="${TaskName}chart" ></canvas></div></div>`;
-            }
 
             if (taskEnabled === "true" && !isHidden && !exC && exC2 && !hasParams) {
+                if (chart && window.efc) {
+                    html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:160px;padding:0;"><div style="padding: 4.2px;font-weight: bold;">${sensorName}</div><div style="height:135px"><canvas id="${TaskName}chart" ></canvas></div></div>`;
+                }
+
+
 
                 if (sensor.TaskValues) {
                     someoneEn = 1;
@@ -352,7 +355,6 @@ async function fetchJson(vFj) {
                             wasUsed = true;
                             //button coloring
                             if (inv) Value = Value == 1 ? 0 : 1;
-                            console.error("sensorName", inv);
                             if ((kindN === "C" && Value < 2) || Value === 1) { bS = "on"; }
                             else if (Value === 2) { bS = "alert"; }
 
@@ -607,8 +609,13 @@ async function fetchJson(vFj) {
     document.getElementById('sysInfo').innerHTML = syshtml;
     document.getElementById('sensorList').innerHTML = html;
 
+
+
     const shouldShow = document.getElementById('allList')?.offsetWidth > 400;
     if (htmlold !== html2 || shouldShow !== shouldShowOld) {
+        if (window.efc && !configMode) {
+            snapshotAllCanvases(cD);
+        };
         document.getElementById('sliderList').innerHTML = orderFunction(html2);
         chartInstances = {};
     }

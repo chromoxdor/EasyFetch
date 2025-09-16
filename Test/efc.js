@@ -24,8 +24,8 @@ var selectionDataOld;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250620/2";
-const expected = "20250915/4";
+const efcVersion = "20250916/1";
+const expected = "20250916/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -1372,15 +1372,19 @@ function extraConfig() {
         <span style="font-size:12px;color: red;">  No need to press Save<br> for these settings!</span></div>
     `;
 
+    const hNames = ["Sound", "Colormode inverted"]; // "Two Columns"];
+    const shortNames = ["Snd", "Col"];  //, "Two"];
 
-    ["Snd", "Two", "Col"].forEach(name => {
+    shortNames.forEach((name, index) => {
+        const fullName = hNames[index]; // get corresponding full name
         const checked = document.cookie.includes(`${name}=1`) ? "checked" : "";
+
         menu.innerHTML += `
-            <div>
-                <input type="checkbox" id="chk_${name}" ${checked} onchange="mC('${name}')">
-                <label for="chk_${name}">${name}</label>
-            </div>
-        `;
+        <div>
+            <input type="checkbox" id="chk_${name}" ${checked} onchange="mC('${name}')">
+            <label for="chk_${name}">${fullName}</label>
+        </div>
+    `;
     });
 }
 
@@ -1395,20 +1399,45 @@ function getColorScheme() {
     const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
     if (bgColor === "0") {
         return [
-            "rgba(34, 165, 89, 0.5)",
-            "rgba(34, 36, 165, 0.5)",
-            "rgba(255, 99, 133, 0.5)",
-            "rgba(115, 46, 133, 0.5)"
+            'rgba(47, 141, 67, 1)',
+            'rgba(66, 144, 196, 1)',   // #4290c4c3
+            'rgba(186, 104, 100, 1)',  // #ba6964b3
+            'rgba(213, 183, 61, 1)'   // #d5b73dbd
+
         ];
     } else {
         return [
-            "rgba(119, 214, 29, 0.6)",
-            "rgba(71, 209, 255, 0.6)",
-            "rgba(255, 75, 102, 0.6)",
-            "rgba(255, 78, 255, 0.6)"
+
+            'rgba(69, 201, 98, 1)',
+            'rgba(54, 163, 235, 1)',
+            'rgba(255, 99, 133, 1)',
+            'rgba(255, 204, 86, 1)',
+
+
         ];
 
     }
+}
+
+// Chart.js plugin for conditional blending
+const multiply = {
+    id: "multiply",
+    beforeDatasetsDraw(chart) {
+        //const bg = getComputedStyle(document.body).backgroundColor;
+        //const [, g, ,] = bg.match(/\d+/g);   // get green component
+        //const blendmode = g === "0" ? "lighten" : "lighten";
+        chart.ctx.globalCompositeOperation = "lighten";
+    },
+    afterDatasetsDraw(chart) {
+        chart.ctx.globalCompositeOperation = "source-over";
+    }
+};
+
+function transparentize(c, o = 0.5) {
+    return c.replace(/rgba?\(([^)]+)\)/, (m, v) => {
+        const p = v.split(',').map(x => x.trim());
+        return `rgba(${p[0]},${p[1]},${p[2]},${1 - o})`;
+    });
 }
 
 function makeChart() {
@@ -1428,8 +1457,9 @@ function makeChart() {
             // Apply colors
             cdD.datasets.forEach((dataset, index) => {
                 const color = colorArray[index % colorArray.length];
-                dataset.backgroundColor = color;
+                dataset.backgroundColor = transparentize(color, 0.6),
                 dataset.borderColor = color;
+                dataset.borderWidth = 1,
                 dataset.tension = 0.3;
                 dataset.fill = true;
                 dataset.pointRadius = 6;
@@ -1437,7 +1467,7 @@ function makeChart() {
                 dataset.pointBackgroundColor = "rgba(0, 0, 0, 0)";
                 dataset.pointBorderColor = "rgba(0, 0, 0, 0)";
                 dataset.pointHoverBackgroundColor = color;
-                dataset.pointHoverBorderColor = color;
+                dataset.pointHoverBorderColor = 'black';
             });
 
             if (!chartInstances[chartId]) {
@@ -1453,12 +1483,18 @@ function makeChart() {
                         },
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: false,
+                        animation: {
+                            duration: 0,
+                            onComplete: () => {
+                                document.querySelectorAll(".cImg").forEach(img => img.remove());
+                            }
+                        },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
                                 enabled: true,
                                 displayColors: true,
+                                itemSort: (a, b) => b.parsed.y - a.parsed.y, // highest value first
                                 callbacks: {
                                     labelColor: function (context) {
                                         const dataset = context.dataset;
@@ -1476,7 +1512,8 @@ function makeChart() {
                             line: { tension: 0.2 },
                             point: { radius: 0, hoverRadius: 6 }
                         }
-                    }
+                    },
+                    plugins: [multiply]   // ✅ add plugin here
                 });
 
                 updateYAxisVisibility();
@@ -1486,11 +1523,17 @@ function makeChart() {
                 let existingChart = chartInstances[chartId];
                 existingChart.data.labels = cdD.labels;
                 existingChart.data.datasets = cdD.datasets;
-                existingChart.update();
+                existingChart.update({
+                    duration: 400,
+                    easing: 'easeOutQuart'
+                });
                 updateYAxisVisibility();
             }
         });
     });
+    setTimeout(() => {
+        //document.querySelectorAll(".cImg").forEach(img => img.remove());
+    }, 40);
 }
 
 function updateYAxisVisibility() {
@@ -1518,4 +1561,33 @@ function checkColumns() {
     let c = coloumnSet < 3;
     if (c && l) console.log("column count dropped"), htmlold = "", newFJ();
     l = !c;
+}
+
+function snapshotAllCanvases(cD) {
+    if (cD.length === 0 || !cD) {
+        document.querySelectorAll(".cImg").forEach(img => img.remove());
+        return;
+    }
+
+    const canvases = document.querySelectorAll("canvas");
+
+
+
+    canvases.forEach(canvas => {
+        const img = new Image();
+        img.src = canvas.toDataURL();
+
+        const rect = canvas.getBoundingClientRect();
+        img.style.position = "fixed";   // relative to viewport
+        img.style.top = rect.top + "px";
+        img.style.left = rect.left + "px";
+        img.style.width = rect.width + "px";
+        img.style.height = rect.height + "px";
+        img.style.transition = "opacity 0.6s";
+        img.style.pointerEvents = "none"; // Allow clicks to pass through
+        img.style.zIndex = 9999;
+        img.classList.add("cImg"); // tag it
+        //canvas.style.visibility = "hidden"; // or display = "none"
+        document.body.appendChild(img);
+    });
 }
