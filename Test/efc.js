@@ -1585,7 +1585,7 @@ function snapshotAllCanvases(cD) {
         img.style.height = rect.height + "px";
         img.style.transition = "opacity 0.6s";
         img.style.pointerEvents = "none"; // Allow clicks to pass through
-        img.style.zIndex = 9999;
+        img.style.zIndex = 19;
         img.classList.add("cImg"); // tag it
         //canvas.style.visibility = "hidden"; // or display = "none"
         document.body.appendChild(img);
