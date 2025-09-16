@@ -1525,31 +1525,41 @@ function makeChart() {
             }
         });
     });
-    setTimeout(() => {
-        //document.querySelectorAll(".cImg").forEach(img => img.remove());
-    }, 40);
 }
 
 function updateYAxisVisibility() {
     const shouldShow = coloumnSet > 2;
     const [, bgColor] = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
+
     Object.values(chartInstances).forEach(chart => {
         if (!chart) return;
 
-        // Loop through all Y-axes and update visibility
+        let leftGridSet = false;
+
         Object.keys(chart.options.scales).forEach(scaleKey => {
-            if (scaleKey.startsWith("y-")) { // Only target Y-axes
-                chart.options.scales[scaleKey].display = shouldShow || !!(selectionData[chart.canvas.offsetParent?.id.match(/=(\d+),(\d+)/)?.[2]]?.A?.Y);
-                chart.options.scales[scaleKey].ticks.color = bgColor === "0" ? "grey" : "white";
+            const scale = chart.options.scales[scaleKey];
+
+            // Set display and tick color
+            if (scaleKey.startsWith("y-")) {
+                scale.display = shouldShow || !!(selectionData[chart.canvas.offsetParent?.id.match(/=(\d+),(\d+)/)?.[2]]?.A?.Y);
+                scale.ticks = { ...scale.ticks, color: bgColor === "0" ? "grey" : "white" };
+                scale.grid.tickLength = 0;
+                //scale.tickPixelInterval= 50;
+                // Only the first left axis draws grid lines
+                scale.grid = { ...scale.grid, drawOnChartArea: !leftGridSet };
+                leftGridSet = true;
             }
-            if (scaleKey.startsWith("y-r")) { // Only target Y-axes
-                chart.options.scales[scaleKey].position = "right";
+
+            if (scaleKey.startsWith("y-r")) {
+                scale.position = "right";
+                scale.grid = { ...scale.grid, drawOnChartArea: false };
             }
         });
 
         chart.update();
     });
 }
+
 let l = true;
 function checkColumns() {
     let c = coloumnSet < 3;
