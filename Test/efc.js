@@ -1407,7 +1407,6 @@ function getColorScheme() {
         ];
     } else {
         return [
-
             'rgba(69, 201, 98, 1)',
             'rgba(54, 163, 235, 1)',
             'rgba(255, 99, 133, 1)',
@@ -1458,9 +1457,9 @@ function makeChart() {
             cdD.datasets.forEach((dataset, index) => {
                 const color = colorArray[index % colorArray.length];
                 dataset.backgroundColor = transparentize(color, 0.6),
-                dataset.borderColor = color;
+                    dataset.borderColor = color;
                 dataset.borderWidth = 1,
-                dataset.tension = 0.3;
+                    dataset.tension = 0.3;
                 dataset.fill = true;
                 dataset.pointRadius = 6;
                 dataset.pointHoverRadius = 6;
@@ -1493,17 +1492,15 @@ function makeChart() {
                             legend: { display: false },
                             tooltip: {
                                 enabled: true,
+                                yAlign: 'center',
                                 displayColors: true,
-                                itemSort: (a, b) => b.parsed.y - a.parsed.y, // highest value first
+                                itemSort: (a, b) => b.raw - a.raw,
                                 callbacks: {
-                                    labelColor: function (context) {
-                                        const dataset = context.dataset;
-                                        return {
-                                            backgroundColor: dataset.borderColor,
-                                            borderColor: dataset.borderColor,
-                                            borderWidth: 2,
-                                        };
-                                    }
+                                    labelColor: ctx => ({
+                                        backgroundColor: ctx.dataset.borderColor,
+                                        borderColor: ctx.dataset.borderColor,
+                                        borderWidth: 2
+                                    })
                                 }
                             },
                         },
@@ -1523,10 +1520,7 @@ function makeChart() {
                 let existingChart = chartInstances[chartId];
                 existingChart.data.labels = cdD.labels;
                 existingChart.data.datasets = cdD.datasets;
-                existingChart.update({
-                    duration: 400,
-                    easing: 'easeOutQuart'
-                });
+                existingChart.update();
                 updateYAxisVisibility();
             }
         });
