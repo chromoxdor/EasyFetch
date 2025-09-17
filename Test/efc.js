@@ -1438,13 +1438,13 @@ function transparentize(c, o = 0.5) {
         return `rgba(${p[0]},${p[1]},${p[2]},${1 - o})`;
     });
 }
-
+var chartCdnAlready=false
 function makeChart() {
     checkColumns();
-    loadScript("https://cdn.jsdelivr.net/npm/chart.js", function () {
-        if (!cD) return;
-        colorArray = getColorScheme();
+    if (!cD) return;
+    colorArray = getColorScheme();
 
+ function initCharts() {
         cD.forEach(chart => {
             if (!chart.chart) return;
 
@@ -1524,7 +1524,13 @@ function makeChart() {
                 updateYAxisVisibility();
             }
         });
+    }
+  if (!chartCdnAlready) {
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js", () => {
+        chartCdnAlready = true;
+        initCharts();
     });
+} else initCharts();
 }
 
 function updateYAxisVisibility() {
@@ -1534,25 +1540,36 @@ function updateYAxisVisibility() {
     Object.values(chartInstances).forEach(chart => {
         if (!chart) return;
 
-        let leftGridSet = false;
-
         Object.keys(chart.options.scales).forEach(scaleKey => {
             const scale = chart.options.scales[scaleKey];
 
             // Set display and tick color
             if (scaleKey.startsWith("y-")) {
+                //scale.beginAtZero = true;
+                //scale.type = "logarithmic";
                 scale.display = shouldShow || !!(selectionData[chart.canvas.offsetParent?.id.match(/=(\d+),(\d+)/)?.[2]]?.A?.Y);
-                scale.ticks = { ...scale.ticks, color: bgColor === "0" ? "grey" : "white" };
+                scale.ticks = { ...scale.ticks, 
+                    color: bgColor === "0" ? "grey" : "white", 
+                     count: 5,
+                     //stepsize: 10,
+                     //precision: "auto"
+                };
                 scale.grid.tickLength = 0;
                 //scale.tickPixelInterval= 50;
-                // Only the first left axis draws grid lines
-                scale.grid = { ...scale.grid, drawOnChartArea: !leftGridSet };
-                leftGridSet = true;
+
+                scale.grid = {
+                    ...scale.grid,
+                    tickLength: 0,
+                    drawOnChartArea: true,
+                    color: ctx => ctx.tick?.value === 0 ? "#af170085" : (bgColor === "0" ? "#3d3d3d" : "#756f6f"), 
+                    
+                };
             }
 
             if (scaleKey.startsWith("y-r")) {
                 scale.position = "right";
-                scale.grid = { ...scale.grid, drawOnChartArea: false };
+               // scale.type = "linear";
+                //scale.grid = { ...scale.grid, drawOnChartArea: false };
             }
         });
 
@@ -1589,7 +1606,7 @@ function snapshotAllCanvases(cD) {
         img.style.height = rect.height + "px";
         img.style.transition = "opacity 0.6s";
         img.style.pointerEvents = "none"; // Allow clicks to pass through
-        img.style.zIndex = 19;
+        img.style.zIndex = 1;
         img.classList.add("cImg"); // tag it
         //canvas.style.visibility = "hidden"; // or display = "none"
         document.body.appendChild(img);
