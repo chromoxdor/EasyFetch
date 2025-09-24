@@ -1,5 +1,5 @@
 // State tracking variables
-var firstRun = 1;                    // Indicates if it's the first run
+var firstRun = true;                    // Indicates if it's the first run
 var hasParams = 1;                   // Flag to check if parameters are available
 var isittime = 1;                    // Flag to check if it is time to create the tiles
 
@@ -50,7 +50,7 @@ var baseUrl = "";                     // Default base URL (empty for now)
 // Flags and configuration
 var runonce2 = true;                  // Flag for one-time execution logic
 var hiddenOverride = false;           // Flag for hidebutton in efc
-var isMain = true;                    // Flag to determine if this is the main app
+var isMain = false;                    // Flag to determine if this is the main app
 
 // Miscellaneous variables
 var coloumnSet;                       // Column set for UI
@@ -61,9 +61,9 @@ var bigLength;                        // Ammount of big tiles (determines the gr
 
 
 
-window.addEventListener("load", async () => {
-    await fetchJson(); // your main logic
-});
+// window.addEventListener("load", async () => {
+//     await fetchJson(); // your main logic
+// });
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
@@ -83,19 +83,26 @@ async function fetchJson(vFj) {
     }
     if (!isittime) { return; }
 
-    //----------------------------------------------------------------------------------------------------------get EFC Data
-    if (runonce2 && !configMode) {
-        await getEfcData();
-    }
-    //----------------------------------------------------------------------------------------------------------get EFC Data
-
     let urlParams = new URLSearchParams(window.location.search);
     myParam = urlParams.get('unit');
 
     if (urlParams.get('cmd') == "reboot") { window.location.href = window.location.origin + "/tools?cmd=reboot" }
     if (myParam == null) { hasParams = 0; }
     someoneEn = 0;
+    if (window.efc) rmImg();
 
+
+    //----------------------------------------------------------------------------------------------------------get EFC Data
+    if (runonce2 && !configMode) {
+        //if ((hasParams >= 0 && !isMain) || firstRun) {
+           // isittime = false
+            await getEfcData();
+            //isittime = true
+      //  }
+    }
+    //----------------------------------------------------------------------------------------------------------get EFC Data
+
+console.log("ismain",isMain)
     let stats = window.efc && vFj != 2 ? "?showpluginstats=1" : "";
 
     if (!jsonPath) { jsonPath = "/json"; }
@@ -109,7 +116,6 @@ async function fetchJson(vFj) {
         return;
     }
     isFetching = true;
-
     // set individual interval for each unit
     if (!configMode) {
         durationF = selectionData?.iV ?? 2000;
@@ -142,7 +148,7 @@ async function fetchJson(vFj) {
             }
             nTh++;
         } else {
-            cD = [];        
+            cD = [];
             jStats = false;
         }
     } catch (error) {
@@ -236,14 +242,14 @@ async function fetchJson(vFj) {
             exC = [87, 38, 41, 42].includes(TaskDeviceNumber); //all PluginNR in an array that need to be excluded 
             exC2 = !sensor.Type?.includes("Display")
 
-            let isHidden = (!hiddenOverride && (selectionData[TaskNumber]?.["A"]?.["hide"] === 1 || sensorName.endsWith("XX")));
+            let isHiddenT = (!hiddenOverride && (selectionData[TaskNumber]?.["A"]?.["hide"] === 1 || sensorName.endsWith("XX")));
 
             const orderA = selectionData[TaskNumber]?.["A"]?.["order"] || "0";
             const chart = selectionData[TaskNumber]?.["A"]?.["chart"] || 0;
             let efcIDA = `efc:${deviceName}=${TaskDeviceNumber},${TaskNumber}`;
             //chart  
 
-            if (taskEnabled === "true" && !isHidden && !exC && exC2 && !hasParams) {
+            if (taskEnabled === "true" && (!isHiddenT || chart) && !exC && exC2 && !hasParams) {
                 if (chart && window.efc) {
                     html2 += `<div order="${orderA}" id="${efcIDA},1A" class="sensorset chart" style="height:160px;padding:0;"><div style="padding: 4.2px;font-weight: bold;">${sensorName}</div><div style="height:135px"><canvas id="${TaskName}chart" ></canvas></div></div>`;
                 }
@@ -545,12 +551,12 @@ async function fetchJson(vFj) {
                                             </div></div>`;
                                 }
                             }
-                            else if (overrideSelection !== "bigVal") { // && !chart) {
+                            else if (overrideSelection !== "bigVal" && !isHiddenT) {
                                 if (firstItem) {
                                     html1 += `<div order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
                                 }
 
-                                if (!isHidden || taskVal.includes("bigVS") || taskVal.includes("chart")) {
+                                if (!isHidden || taskVal.includes("bigVS")){ // || taskVal.includes("chart")) {
                                     if (TaskDeviceNumber === 81) {
                                         html1 += `
                                             <div id="${efcID}" class="cron">
@@ -614,7 +620,7 @@ async function fetchJson(vFj) {
     const shouldShow = document.getElementById('allList')?.offsetWidth > 400;
     if (htmlold !== html2 || shouldShow !== shouldShowOld) {
         if (window.efc && !configMode) {
-            snapshotAllCanvases(cD);
+            snapshotAllCanvases();
         };
         document.getElementById('sliderList').innerHTML = orderFunction(html2);
         chartInstances = {};
@@ -647,7 +653,7 @@ async function fetchJson(vFj) {
         firstRun = false;
     }
     // Set unit symbol if unit number matches
-    styleU = unitNr === unitNr1 ? "&#8858;&#xFE0E;" : "";
+    styleU = unitNr === unitNr1 ? "&#9750;&#xFE0E;" : "";
 
     // Update unit display if there are no parameters
     if (!hasParams) {
@@ -703,7 +709,7 @@ function changeNN(nn) {
         .replace(/\?.*$/, "")   // remove "?" and everything after
         .replace(/\&.*$/, "")   // remove "&" and everything after
         .replace(/_/g, " ")     // replace "_" with space
-        .replace(/\./g, "-<br>"); // replace "." with "-<br>"
+        .replace(/(?<!\d)\.(?!\d)/g, "-<br>"); // replace "." with "-<br>"
 }
 
 //##############################################################################################################
@@ -723,7 +729,9 @@ function changeCss() {
 
     // find the largest group size
     bigLength = Math.max(...Array.from(list3, div => div.children.length));
-    if (selectionData?.G > 0) { bigLength = selectionData.G; }
+    if (selectionData?.G > 0) {
+        bigLength = selectionData.G;
+    }
 
 
 
@@ -764,6 +772,10 @@ function changeCss() {
             bigLength = 2;
         }
     }
+     //for only charts visible calculate the width according to the efc
+        document.querySelectorAll(".chart").forEach(chart => {
+            chart.style.width = `calc(${150 * bigLength}px + ${bigLength-1}vh)`;
+        });
 
 
     // append missing tiles with order starting from 1
@@ -1336,10 +1348,11 @@ async function getNodes(sensorName, allNodes, ch) {
         if (node.nr == myParam && hasParams) {
             nodeChange(i);
             hasParams = 0;
+            return;
         }
 
         styleN = node.nr === unitNr1
-            ? (node.nr === unitNr ? "&#8857;&#xFE0E;" : "&#8858;&#xFE0E;")
+            ? isMain ? (node.nr === unitNr ? "&#9751;&#xFE0E;" : "&#9750;&#xFE0E;") : (node.nr === unitNr ? "&#8857;&#xFE0E;" : "&#8858;&#xFE0E;")
             : (node.nr === unitNr ? "&#183;&#xFE0E;" : "");
 
         html4 += `
@@ -1374,9 +1387,15 @@ function nodeChange(event) {
     const node = myJson2.nodes[event];
     cD = [];
     if (!isMain) runonce2 = true;
+    firstRun = false;
     selectionData = {};
     jStats = false;
-    if (window.efc && window.configMode) exitConfig();
+    if (window.efc){
+        rmImg(true);
+       if (window.configMode) exitConfig();
+    } 
+       
+
     if (node) {
         nNr = node.nr;
         nN = node.name;
@@ -1575,45 +1594,46 @@ async function getUrl(url, options = {}) {
             if (error.name !== "AbortError" || isTimeout) {
                 receiveNote("R");
             }
+            return null;
         }
     }
+
 }
 
 async function getEfcData() {
     runonce2 = false;
-    let response;
-    let retry = true;
     let i = 0;
 
-    while (retry) {
+    // if (nNr != unitNr1 && !isMain) { //when other nodes beeing accessed by a non main node dont ask for config (CORS)
+    // }
 
-        response = await getUrl(`/main_efc.json.gz`);
-        if (response && response.ok) {
+    while (i < 1) {
+        let response = await getUrl(`/main_efc.json.gz`);
+        if (response?.ok) {
             efcArray = await response.json();
             console.log("Data from main_efc.json:", efcArray);
-            return;
+            isittime = true;
+            isMain = true;
+            return efcArray;
         }
+
+
+        response = await getUrl(`${baseUrl}/efc.json.gz`);
+        if (response?.ok) {
+            selectionData = await response.json();
+            console.log("Data from efc.json:", selectionData);
+            isittime = true;
+            return selectionData;
+        }
+
         i++;
-        if (i < 2) {
-            // First retry silently
-            retry = true;
-        } else {
-            retry = confirm("Failed to load main_efc.json. Try again?");
-        }
+        console.log("Both fetches failed, retrying...");
         await new Promise(res => setTimeout(res, 500));
     }
+    
+    isittime = true;
+    console.error("Failed to load EFC data after retries");
 
-    // Fallback to secondary source
-    response = await getUrl(`${baseUrl}/efc.json.gz`);
-    if (response && response.ok) {
-        selectionData = await response.json();
-        console.log("Data from efc.json:", selectionData);
-    } else {
-        runonce2 = false;
-        console.log("Both fetches failed.");
-    }
-
-    isMain = false;
 }
 
 function getEfcUnitData(unitName) {

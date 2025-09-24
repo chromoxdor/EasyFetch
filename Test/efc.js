@@ -24,8 +24,8 @@ var selectionDataOld;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250916/1";
-const expected = "20250916/1";
+const efcVersion = "20250924/1";
+const expected = "20250924/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
             saveUrlToServer(url, filename);
             //window.open(url, "_blank");
         } else {
-            document.cookie = `efcVersion=${expected}; path=/; max-age=86400`; // 1 day
+            document.cookie = `efcVersion=${expected}; path=/; max-age=10368000`; // 3 months
         }
     }
 });
@@ -1049,7 +1049,7 @@ function createMenu() {
 
 
     nOpen.addEventListener('long-press', () => {
-        if (saveButton.style.display === "none" && selectionData.unit) {
+        if (saveButton.style.display === "none") { //&& selectionData.unit) {
             updateSaveButton("initial");
             setLongPressDelay(200);
             if (('ontouchstart' in window)) document.addEventListener("long-press", handleRightClick, true);
@@ -1281,18 +1281,23 @@ function extraConfig() {
     <div style="color: inherit;">
         <label>Grid size:</label><br>
         <div style="display: flex; gap: 5px; margin-top: 5px;">
-            ${[2, 3, 4].map(n => `
-                <button style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; background:${n == bigLength ? 'green' : 'white'}"
-                        onclick="
-                            bigLength = ${n};
-                            htmlold = '';
-                            selectionData['G'] = bigLength;
-                            extraConfig();
-                        ">
-                    ${n}
-                </button>
-            `).join('')}
-        </div>
+  ${[2, 3, 4].map(n => `
+    <button 
+      style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; background:${n == bigLength ? 'green' : 'white'}"
+      onclick="
+        if (bigLength === ${n}) {
+          bigLength = null;       // Unselect if clicking the same tile
+        } else {
+          bigLength = ${n};       // Select new tile
+        }
+        htmlold = '';
+        selectionData['G'] = bigLength;
+        extraConfig();
+      ">
+      ${n}
+    </button>
+  `).join('')}
+</div>
     </div>
 `;
 
@@ -1364,6 +1369,23 @@ function extraConfig() {
         
     `;
     }
+    else if (unitNr === unitNr1 && !isMain) {
+        // make Main button
+        menu.innerHTML += `
+        <br>
+        <button onclick="makeMain()" 
+               class="clickables" style="margin:10px 0; padding:5px 15px; background:red; color:white; border:none; border-radius:8px;">
+            Make Main
+        </button>
+        <br>
+        <span style="font-size:12px;">
+            (Make this device the main device<br>
+            in your Network.<br> It will create a main_efc.json.gz file.<br>
+            Configs of all device will be stored there.)
+        </span>
+        
+    `;
+    }
 
     // Cookie checkboxes
     menu.innerHTML += `
@@ -1386,6 +1408,11 @@ function extraConfig() {
         </div>
     `;
     });
+}
+
+function makeMain() {
+    isMain = true;
+    saveToFile();
 }
 
 
@@ -1438,13 +1465,13 @@ function transparentize(c, o = 0.5) {
         return `rgba(${p[0]},${p[1]},${p[2]},${1 - o})`;
     });
 }
-var chartCdnAlready=false
+var chartCdnAlready = false
 function makeChart() {
     checkColumns();
     if (!cD) return;
     colorArray = getColorScheme();
 
- function initCharts() {
+    function initCharts() {
         cD.forEach(chart => {
             if (!chart.chart) return;
 
@@ -1456,9 +1483,9 @@ function makeChart() {
             // Apply colors
             cdD.datasets.forEach((dataset, index) => {
                 const color = colorArray[index % colorArray.length];
-                dataset.backgroundColor = transparentize(color, 0.6),
+                dataset.backgroundColor = transparentize(color, 0.75),
                     dataset.borderColor = color;
-                dataset.borderWidth = 1,
+                dataset.borderWidth = 1.2,
                     dataset.tension = 0.3;
                 dataset.fill = true;
                 dataset.pointRadius = 6;
@@ -1485,7 +1512,7 @@ function makeChart() {
                         animation: {
                             duration: 0,
                             onComplete: () => {
-                                document.querySelectorAll(".cImg").forEach(img => img.remove());
+                                rmImg();
                             }
                         },
                         plugins: {
@@ -1525,12 +1552,12 @@ function makeChart() {
             }
         });
     }
-  if (!chartCdnAlready) {
-    loadScript("https://cdn.jsdelivr.net/npm/chart.js", () => {
-        chartCdnAlready = true;
-        initCharts();
-    });
-} else initCharts();
+    if (!chartCdnAlready) {
+        loadScript("https://cdn.jsdelivr.net/npm/chart.js", () => {
+            chartCdnAlready = true;
+            initCharts();
+        });
+    } else initCharts();
 }
 
 function updateYAxisVisibility() {
@@ -1548,11 +1575,12 @@ function updateYAxisVisibility() {
                 //scale.beginAtZero = true;
                 //scale.type = "logarithmic";
                 scale.display = shouldShow || !!(selectionData[chart.canvas.offsetParent?.id.match(/=(\d+),(\d+)/)?.[2]]?.A?.Y);
-                scale.ticks = { ...scale.ticks, 
-                    color: bgColor === "0" ? "grey" : "white", 
-                     count: 5,
-                     //stepsize: 10,
-                     //precision: "auto"
+                scale.ticks = {
+                    ...scale.ticks,
+                    color: bgColor === "0" ? "grey" : "white",
+                    count: 5,
+                    //stepsize: 10,
+                    //precision: "auto"
                 };
                 scale.grid.tickLength = 0;
                 //scale.tickPixelInterval= 50;
@@ -1561,14 +1589,14 @@ function updateYAxisVisibility() {
                     ...scale.grid,
                     tickLength: 0,
                     drawOnChartArea: true,
-                    color: ctx => ctx.tick?.value === 0 ? "#af170085" : (bgColor === "0" ? "#3d3d3d" : "#756f6f"), 
-                    
+                    color: ctx => ctx.tick?.value === 0 ? "#af170085" : (bgColor === "0" ? "#3d3d3d" : "#756f6f"),
+
                 };
             }
 
             if (scaleKey.startsWith("y-r")) {
                 scale.position = "right";
-               // scale.type = "linear";
+                // scale.type = "linear";
                 //scale.grid = { ...scale.grid, drawOnChartArea: false };
             }
         });
@@ -1580,35 +1608,43 @@ function updateYAxisVisibility() {
 let l = true;
 function checkColumns() {
     let c = coloumnSet < 3;
-    if (c && l) console.log("column count dropped"), htmlold = "", newFJ();
+    if (c && l) htmlold = "", newFJ();
     l = !c;
 }
 
-function snapshotAllCanvases(cD) {
-    if (cD.length === 0 || !cD) {
-        document.querySelectorAll(".cImg").forEach(img => img.remove());
-        return;
+function snapshotAllCanvases() {
+    rmImg();
+    if (jStats) {
+        const canvases = document.querySelectorAll("canvas");
+        //console.log(canvases, " cD:", cD)
+        canvases.forEach(canvas => {
+            const img = new Image();
+            img.src = canvas.toDataURL();
+
+            const rect = canvas.getBoundingClientRect();
+            img.style.position = "fixed";   // relative to viewport
+            img.style.top = rect.top + "px";
+            img.style.left = rect.left + "px";
+            img.style.width = rect.width + "px";
+            img.style.height = rect.height + "px";
+            img.style.transition = "opacity 0.6s";
+            img.style.pointerEvents = "none"; // Allow clicks to pass through
+            img.style.zIndex = 1;
+            img.classList.add("cImg"); // tag it
+            //canvas.style.visibility = "hidden"; // or display = "none"
+            document.body.appendChild(img);
+        });
     }
+}
 
-    const canvases = document.querySelectorAll("canvas");
-
-
-
-    canvases.forEach(canvas => {
-        const img = new Image();
-        img.src = canvas.toDataURL();
-
-        const rect = canvas.getBoundingClientRect();
-        img.style.position = "fixed";   // relative to viewport
-        img.style.top = rect.top + "px";
-        img.style.left = rect.left + "px";
-        img.style.width = rect.width + "px";
-        img.style.height = rect.height + "px";
-        img.style.transition = "opacity 0.6s";
-        img.style.pointerEvents = "none"; // Allow clicks to pass through
-        img.style.zIndex = 1;
-        img.classList.add("cImg"); // tag it
-        //canvas.style.visibility = "hidden"; // or display = "none"
-        document.body.appendChild(img);
-    });
+function rmImg(t = false) {
+    if (t) {
+        const targets = document.querySelectorAll("#allList div[order]");
+        targets.forEach(div => {
+            div.style.transition = "opacity 0.3s";
+            div.style.opacity = "0";
+        });
+        document.querySelectorAll("canvas").forEach(c => c.remove());
+    }
+    document.querySelectorAll(".cImg").forEach(img => img.remove());
 }
