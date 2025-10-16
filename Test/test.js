@@ -1705,52 +1705,26 @@ function receiveNote(S) {
 
 // Inject minimal Web App Manifest
 // Inject manifest
-// const manifest = {
-//     name: "easyfetch",
-//     short_name: "ef",
-//     start_url: ".",
-//     display: "standalone",
-//background_color: "#ffffffff",
-//theme_color: "#ffffffff",
-//   icons: [
-//     { src: "icon-192.png", sizes: "192x192", type: "image/png" },
-//     { src: "icon-512.png", sizes: "512x512", type: "image/png" }
-//   ]
-// };
-// const link = document.createElement("link");
-// link.rel = "manifest";
-// link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/json" }));
-// document.head.appendChild(link);
 
-// // Apple-specific meta tags (insert manually in HTML for best results)
-// const meta1 = document.createElement("meta");
-// meta1.name = "apple-mobile-web-app-capable";
-// meta1.content = "yes";
-// document.head.appendChild(meta1);
+// Convert RGB → HEX (since manifest prefers hex format)
+function rgbToHex(rgb){
+  const m = rgb.match(/\d+/g);
+  return m ? "#" + m.slice(0,3).map(x => (+x).toString(16).padStart(2,'0')).join('') : "#000";
+}
 
-// // Register Service Worker
-// if ("serviceWorker" in navigator) {
-//     const sw = `
-//     self.addEventListener("install", () => self.skipWaiting());
-//     self.addEventListener("activate", () => self.clients.claim());
-//     self.addEventListener("fetch", e => {
-//       e.respondWith(
-//         fetch(e.request).catch(() =>
-//           new Response("Offline", { status: 503 })
-//         )
-//       );
-//     });
-//   `;
-//     navigator.serviceWorker.register("data:application/javascript," + encodeURIComponent(sw));
-// }
+// ensure meta tag exists
+const meta = document.querySelector('meta[name="theme-color"]') 
+           || Object.assign(document.head.appendChild(document.createElement('meta')), {name:'theme-color'});
 
-// // iOS install instructions
-// const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-// const isInStandalone = 'standalone' in window.navigator && window.navigator.standalone;
+// update meta content based on current body background
+const updateTheme = () => meta.content = rgbToHex(getComputedStyle(document.body).backgroundColor);
 
-// if (isIOS && !isInStandalone) {
-//   alert("To install this app, tap the Share icon and choose 'Add to Home Screen'.");
-// }
+// initial update
+document.addEventListener("DOMContentLoaded", updateTheme);
+
+// listen to system theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+
 // ----------------------------------------------------------------------------------------------------------------
 
 //longpress custom.js
