@@ -477,7 +477,7 @@ input[type=number] {
 .open {
     background: none;
     display: flex;
-    max-width: 250px;
+    max-width: 275px;
     align-items: center;
     margin: auto;
     padding-bottom: 2vh;
@@ -504,9 +504,9 @@ input[type=number] {
 
 .menueItem {
     display: grid;
+    align-items: center;
     justify-content: start;
-    grid-template-columns: 25px auto;
-    align-items: center
+    grid-template-columns: 25px auto
 }
 
 .numberUnit {
@@ -540,13 +540,14 @@ input[type=number] {
 }
 
 #menueList {
+    display: flex;
+    flex-direction: column;
     overflow: scroll;
     -ms-overflow-style: none;
     scrollbar-width: none;
     transition: .2s;
-    width: max-content;
-    max-width: 280px;
-    padding: 6px
+    padding: 6px;
+    margin-bottom: 50px;
 }
 
 #menueList::-webkit-scrollbar {
@@ -598,6 +599,10 @@ input[type=number] {
     grid-row: 1 / span 2;
     height: 100%;
 }
+   #opener,
+    #unitId {
+        background: #e8e8e874
+    }
 
 @media screen and (max-height: 450px) {
     /* #framie {

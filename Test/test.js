@@ -50,7 +50,9 @@ var baseUrl = "";                     // Default base URL (empty for now)
 // Flags and configuration
 var runonce2 = true;                  // Flag for one-time execution logic
 var hiddenOverride = false;           // Flag for hidebutton in efc
-var isMain = false;                    // Flag to determine if this is the main app
+var isMain = false;                   // Flag to determine if this is the main app
+var localEfc = false;                 // Flag to determine if local efc.json is loaded      
+var noCors = false;                   // Flag to skip local efc.json fetch if CORS error occurs               
 
 // Miscellaneous variables
 var coloumnSet;                       // Column set for UI
@@ -95,14 +97,16 @@ async function fetchJson(vFj) {
     //----------------------------------------------------------------------------------------------------------get EFC Data
     if (runonce2 && !configMode) {
         //if ((hasParams >= 0 && !isMain) || firstRun) {
-           // isittime = false
-            await getEfcData();
-            //isittime = true
-      //  }
+        // isittime = false
+        await getEfcData();
+        //isittime = true
+        //}
+    } else if (selectionData.unit == unitName && isMain) {
+        // console.log("------------getting efc data again")
+        // await getEfcData(true);
     }
     //----------------------------------------------------------------------------------------------------------get EFC Data
 
-console.log("ismain",isMain)
     let stats = window.efc && vFj != 2 ? "?showpluginstats=1" : "";
 
     if (!jsonPath) { jsonPath = "/json"; }
@@ -134,7 +138,7 @@ console.log("ismain",isMain)
         unitNr = myJson.System['Unit Number'];
 
         if (!window.configMode && isMain) {
-            getEfcUnitData(unitName);
+            await getEfcUnitData(unitName);
         }
 
         if (JSON.stringify(selectionData).includes('"chart":1')) {
@@ -556,7 +560,7 @@ console.log("ismain",isMain)
                                     html1 += `<div order="${orderA}" id="${efcID}A" class="${htS1}buttonClick('${sensorName}')" style="${tBG}">${htS2}`;
                                 }
 
-                                if (!isHidden || taskVal.includes("bigVS")){ // || taskVal.includes("chart")) {
+                                if (!isHidden || taskVal.includes("bigVS")) { // || taskVal.includes("chart")) {
                                     if (TaskDeviceNumber === 81) {
                                         html1 += `
                                             <div id="${efcID}" class="cron">
@@ -653,7 +657,9 @@ console.log("ismain",isMain)
         firstRun = false;
     }
     // Set unit symbol if unit number matches
-    styleU = unitNr === unitNr1 ? "&#9750;&#xFE0E;" : "";
+    //styleU = unitNr === unitNr1 ? "&#9750;&#xFE0E;" : "";
+    styleU = unitNr === unitNr1 ? (isMain === false ? "&#8857;&#xFE0E;" : "&#9750;&#xFE0E;") : "";
+    if (localEfc && unitNr != unitNr1) styleU = "*" + styleU;
 
     // Update unit display if there are no parameters
     if (!hasParams) {
@@ -665,7 +671,7 @@ console.log("ismain",isMain)
     paramS();
     changeCss();
     resizeText();
-    if (window.efc && cD) makeChart();
+    if (window.efc && cD.length) makeChart();
     if (!window.configMode) { longPressB(); }
 }
 
@@ -729,10 +735,11 @@ function changeCss() {
 
     // find the largest group size
     bigLength = Math.max(...Array.from(list3, div => div.children.length));
+    if (bigLength < 2 && cD.length) bigLength = 2;
     if (selectionData?.G > 0) {
         bigLength = selectionData.G;
     }
-
+    console.log("bigLength", bigLength);
 
 
     z = 0;
@@ -772,10 +779,10 @@ function changeCss() {
             bigLength = 2;
         }
     }
-     //for only charts visible calculate the width according to the efc
-        document.querySelectorAll(".chart").forEach(chart => {
-            chart.style.width = `calc(${150 * bigLength}px + ${bigLength-1}vh)`;
-        });
+    //for only charts visible calculate the width according to the efc
+    document.querySelectorAll(".chart").forEach(chart => {
+        chart.style.width = `calc(${150 * bigLength}px + ${bigLength - 1}vh)`;
+    });
 
 
     // append missing tiles with order starting from 1
@@ -1153,7 +1160,7 @@ function buttonClick(sensorName) {
     }
 
     // Refresh 
-    setTimeout(() => newFJ(2), 400);
+    setTimeout(() => newFJ(2), 500);
 }
 
 //##############################################################################################################
@@ -1385,18 +1392,21 @@ async function getNodes(sensorName, allNodes, ch) {
 //##############################################################################################################
 function nodeChange(event) {
     const node = myJson2.nodes[event];
-    cD = [];
-    if (!isMain) runonce2 = true;
-    firstRun = false;
-    selectionData = {};
-    jStats = false;
-    if (window.efc){
-        rmImg(true);
-       if (window.configMode) exitConfig();
-    } 
-       
 
-    if (node) {
+    if (node && unitNr !== node.nr) {
+        document.getElementById("unitId").innerHTML = `contacting ${node.name}...`;
+        cD = [];
+        if (!isMain) runonce2 = true;
+        firstRun = false;
+        localEfc = false;
+        noCors = false;
+        selectionData = {};
+        jStats = false;
+        if (window.efc) {
+            rmImg(true);
+            if (window.configMode) exitConfig();
+        }
+
         nNr = node.nr;
         nN = node.name;
         baseUrl = `http://${node.ip}`;
@@ -1600,28 +1610,35 @@ async function getUrl(url, options = {}) {
 
 }
 
-async function getEfcData() {
+async function getEfcData(g = false) {
+    if (localEfc) g = true;
     runonce2 = false;
     let i = 0;
 
-    // if (nNr != unitNr1 && !isMain) { //when other nodes beeing accessed by a non main node dont ask for config (CORS)
-    // }
-
     while (i < 1) {
-        let response = await getUrl(`/main_efc.json.gz`);
-        if (response?.ok) {
-            efcArray = await response.json();
-            console.log("Data from main_efc.json:", efcArray);
-            isittime = true;
-            isMain = true;
-            return efcArray;
+        let response
+        if (!g) {
+            response = await getUrl(`/main_efc.json.gz`);
+            if (response?.ok) {
+                efcArray = await response.json();
+                console.log("Data from main_efc.json:", efcArray);
+                isittime = true;
+                isMain = true;
+                return efcArray;
+            }
         }
 
-
         response = await getUrl(`${baseUrl}/efc.json.gz`);
+        console.log(response)
+        if ((response == null || response.status == 404) && g) noCors = true; // probably no local efc.json or CORS disabled, next time we skip this fetch 
         if (response?.ok) {
-            selectionData = await response.json();
-            console.log("Data from efc.json:", selectionData);
+            const text = await response.text();
+            if (text.length === 1) return; // empty file, nothing to do
+
+            selectionData = JSON.parse(text);
+            if (selectionData.unit && isMain) localEfc = true;
+
+            console.log("Data from efc.json:", selectionData, "localEfc:", localEfc);
             isittime = true;
             return selectionData;
         }
@@ -1630,17 +1647,23 @@ async function getEfcData() {
         console.log("Both fetches failed, retrying...");
         await new Promise(res => setTimeout(res, 500));
     }
-    
-    isittime = true;
-    console.error("Failed to load EFC data after retries");
 
+    isittime = true;
+    localEfc = false;
+    console.error("Failed to load EFC data after retries");
 }
 
-function getEfcUnitData(unitName) {
-    if (efcArray) {
-        selectionData = structuredClone(efcArray.find(entry => entry.unit === unitName));
+async function getEfcUnitData(unitName) {
+    if (localEfc === true) return;
+
+    //either we find the data in the main config array or we load the local efc.json
+    const found = efcArray?.find(entry => entry.unit === unitName);
+    selectionData = structuredClone(found ?? { unit: unitName });
+
+    if (selectionData.unit && Object.keys(selectionData).length === 1 && !noCors) {
+        console.log("----------------get local data")
+        await getEfcData(true);
     }
-    if (!selectionData) selectionData = { unit: unitName };
 }
 
 document.addEventListener("visibilitychange", () => {
@@ -1682,44 +1705,44 @@ function receiveNote(S) {
 
 // Inject minimal Web App Manifest
 // Inject manifest
-const manifest = {
-    name: "easyfetch",
-    short_name: "ef",
-    start_url: ".",
-    display: "standalone",
-    background_color: "#000",
-    theme_color: "#000",
-    //   icons: [
-    //     { src: "icon-192.png", sizes: "192x192", type: "image/png" },
-    //     { src: "icon-512.png", sizes: "512x512", type: "image/png" }
-    //   ]
-};
-const link = document.createElement("link");
-link.rel = "manifest";
-link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/json" }));
-document.head.appendChild(link);
+// const manifest = {
+//     name: "easyfetch",
+//     short_name: "ef",
+//     start_url: ".",
+//     display: "standalone",
+//background_color: "#ffffffff",
+//theme_color: "#ffffffff",
+//   icons: [
+//     { src: "icon-192.png", sizes: "192x192", type: "image/png" },
+//     { src: "icon-512.png", sizes: "512x512", type: "image/png" }
+//   ]
+// };
+// const link = document.createElement("link");
+// link.rel = "manifest";
+// link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/json" }));
+// document.head.appendChild(link);
 
-// Apple-specific meta tags (insert manually in HTML for best results)
-const meta1 = document.createElement("meta");
-meta1.name = "apple-mobile-web-app-capable";
-meta1.content = "yes";
-document.head.appendChild(meta1);
+// // Apple-specific meta tags (insert manually in HTML for best results)
+// const meta1 = document.createElement("meta");
+// meta1.name = "apple-mobile-web-app-capable";
+// meta1.content = "yes";
+// document.head.appendChild(meta1);
 
-// Register Service Worker
-if ("serviceWorker" in navigator) {
-    const sw = `
-    self.addEventListener("install", () => self.skipWaiting());
-    self.addEventListener("activate", () => self.clients.claim());
-    self.addEventListener("fetch", e => {
-      e.respondWith(
-        fetch(e.request).catch(() =>
-          new Response("Offline", { status: 503 })
-        )
-      );
-    });
-  `;
-    navigator.serviceWorker.register("data:application/javascript," + encodeURIComponent(sw));
-}
+// // Register Service Worker
+// if ("serviceWorker" in navigator) {
+//     const sw = `
+//     self.addEventListener("install", () => self.skipWaiting());
+//     self.addEventListener("activate", () => self.clients.claim());
+//     self.addEventListener("fetch", e => {
+//       e.respondWith(
+//         fetch(e.request).catch(() =>
+//           new Response("Offline", { status: 503 })
+//         )
+//       );
+//     });
+//   `;
+//     navigator.serviceWorker.register("data:application/javascript," + encodeURIComponent(sw));
+// }
 
 // // iOS install instructions
 // const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);

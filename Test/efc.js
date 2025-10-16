@@ -24,8 +24,8 @@ var selectionDataOld;
 //#############################################################################################################
 //      VERSION CHECK
 //#############################################################################################################
-const efcVersion = "20250924/1";
-const expected = "20250924/1";
+const efcVersion = "20251016/1";
+const expected = "20251016/1";
 //#############################################################################################################
 
 // **Check if the current version is outdated**
@@ -893,7 +893,7 @@ function saveToFile(param) {
     if (param === "del") {
         const msg = `Are you sure you want to delete ALL the settings of ${selectionData.unit}?`;
         if (!confirm(msg)) return;
-        dataStr = "{}";
+        dataStr = " ";
         if (selectionData.unit) {
             efcArray = efcArray.filter(item => item.unit !== selectionData.unit);
         }
@@ -918,8 +918,8 @@ function saveToFile(param) {
 
         const uploadUrl = `${baseUrl}/upload`;
 
-
-        if (unitNr !== unitNr1 || !isMain) {
+        // dont`t save localy when param is N (param becomes N when  a new node is included into the main config array)
+        if ((unitNr !== unitNr1 && param != "N") || !isMain) {
             console.log("uploading file efc.json.gz to:", uploadUrl);
             fetchFile(uploadUrl, formDataEfc);
 
@@ -948,7 +948,7 @@ function saveToFile(param) {
         }
     });
     // runonce2 = true;
-    exitConfig()
+    if (param !== "M") exitConfig();
 
 }
 
@@ -1201,6 +1201,8 @@ function checkBigSinglesLength() {
 function exitConfig() {
     console.log("exitConfig");
     closeNav();
+    localEfc = false;
+    noCors = false;
     selectionData = {};
     selectionDataOld = "";
     htmlold = "";
@@ -1283,15 +1285,16 @@ function extraConfig() {
         <div style="display: flex; gap: 5px; margin-top: 5px;">
   ${[2, 3, 4].map(n => `
     <button 
-      style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; background:${n == bigLength ? 'green' : 'white'}"
+      style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; background:${n == selectionData['G'] ? 'green' : 'white'}"
       onclick="
-        if (bigLength === ${n}) {
-          bigLength = null;       // Unselect if clicking the same tile
+      g =  selectionData['G'] ? selectionData['G'] : bigLength;
+        if (g === ${n}) {
+          g = null;       // Unselect if clicking the same tile
         } else {
-          bigLength = ${n};       // Select new tile
+          g = ${n};       // Select new tile
         }
         htmlold = '';
-        selectionData['G'] = bigLength;
+        selectionData['G'] = g;
         extraConfig();
       ">
       ${n}
@@ -1335,8 +1338,26 @@ function extraConfig() {
     `;
     }
 
-    if (unitNr === unitNr1 && isMain) {
+    if (isMain && localEfc) {
+        // add config to main efc
         menu.innerHTML += `
+        <br>
+        <button onclick="saveToFile('N'); localEfc = false;" 
+               class="clickables" style="margin:10px 0; padding:5px 15px; background:blue; color:white; border:none; border-radius:8px;">
+            Add config to Main
+        </button>
+        <span style="font-size:12px;">
+            (Integrate the local config data<br>
+            to your Main device.<br>It will be added to main_efc.json.gz)
+        </span>        
+    `;
+    }
+
+    if (unitNr === unitNr1 && isMain) {
+
+        menu.innerHTML += `
+ <br><br><br><hr><br>
+            <div  style="color: inherit;"><h2>Gerneral Settings:</h2></div>
             <div style="color: inherit;">
                 <label for="unitInput">Transfer settings to:</label><br>
                 <input type="number" id="unitInput" class="vInputs" min="1" max="255" placeholder="Unit #" style="width: 80px; border: 1px solid #ccc; border-radius: 4px;">
@@ -1355,19 +1376,32 @@ function extraConfig() {
 
         // Upload JSON button
         menu.innerHTML += `
+            <br>
+            <button onclick="uploadJson()" 
+                   class="clickables" style="margin:10px 0; padding:5px 15px; background:green; color:white; border:none; border-radius:8px;">
+                Upload JSON
+            </button>
+            <span style="font-size:12px;">
+                (Integrate the config from a device<br>
+                by copying the contents of its<br> efc.json file
+                and pasting them into<br>  the upload field)<br>
+                Fallback for esp826 devices<br>with CORS issues)
+            </span>
+
+        `;
+
+        // Dropdown list of the saved units and delete button
+        menu.innerHTML += `
         <br>
-        <button onclick="uploadJson()" 
-               class="clickables" style="margin:10px 0; padding:5px 15px; background:green; color:white; border:none; border-radius:8px;">
-            Upload JSON
+        <label>Remove from config:</label>
+        <div id="unitsList"></div>
+        <button onclick="deleteSelectedEntry()" 
+               id="deleteEntry" class="clickables" style="margin:10px 0; padding:5px 15px; background:red; color:white; border:none; border-radius:8px;">
+            Delete entry
         </button>
-        <br>
-        <span style="font-size:12px;">
-            (Integrate the config from a device<br>
-            by copying the contents of its<br> efc.json file
-            and pasting them into<br>  the upload field)
-        </span>
-        
-    `;
+        `;
+        renderDropdown();
+
     }
     else if (unitNr === unitNr1 && !isMain) {
         // make Main button
@@ -1377,20 +1411,18 @@ function extraConfig() {
                class="clickables" style="margin:10px 0; padding:5px 15px; background:red; color:white; border:none; border-radius:8px;">
             Make Main
         </button>
-        <br>
         <span style="font-size:12px;">
             (Make this device the main device<br>
             in your Network.<br> It will create a main_efc.json.gz file.<br>
             Configs of all device will be stored there.)
         </span>
-        
     `;
     }
 
     // Cookie checkboxes
     menu.innerHTML += `
-        <br><br><br><hr><br><br>
-        <div  style="color: inherit;"><h2>Gerneral Settings:</h2></div>
+        <br><br><hr><br>
+        <div  style="color: inherit;"><h2>Extra Settings:</h2></div>
         <span style="font-size:12px;color: red;">  No need to press Save<br> for these settings!</span></div>
     `;
 
@@ -1472,6 +1504,7 @@ function makeChart() {
     colorArray = getColorScheme();
 
     function initCharts() {
+        console.log(cD)
         cD.forEach(chart => {
             if (!chart.chart) return;
 
@@ -1639,7 +1672,7 @@ function snapshotAllCanvases() {
 
 function rmImg(t = false) {
     if (t) {
-        const targets = document.querySelectorAll("#allList div[order]");
+        const targets = document.querySelectorAll("#allList div div");
         targets.forEach(div => {
             div.style.transition = "opacity 0.3s";
             div.style.opacity = "0";
@@ -1647,4 +1680,53 @@ function rmImg(t = false) {
         document.querySelectorAll("canvas").forEach(c => c.remove());
     }
     document.querySelectorAll(".cImg").forEach(img => img.remove());
+}
+
+//##############################################################################################################
+//      Manage Units Functions
+//##############################################################################################################
+
+// render the del unit dropdown menu ===
+function renderDropdown() {
+    const menu = document.getElementById("unitsList");
+    menu.innerHTML = "";
+    const select = document.createElement("select");
+    select.id = "unitSelect";
+    select.className = "clickables";
+    select.style = "margin-right:10px; padding:5px;";
+
+    const placeholder = new Option("-- Select a unit --", "");
+    // placeholder.selected = true;
+    select.add(placeholder);
+
+    efcArray
+        .map((item, idx) => ({ item, idx }))          // attach original index
+        .filter(x => x.item.unit && x.item.nr)
+        .sort((a, b) => a.item.nr - b.item.nr)       // sort by nr
+        .forEach(x => {
+            const opt = new Option(`${x.item.unit} (${x.item.nr})`, x.idx);
+            select.add(opt);
+        });
+    document.getElementById("deleteEntry").style.background = "red";
+    document.getElementById("deleteEntry").style.pointerEvents = "all";
+    menu.appendChild(select);
+}
+
+function deleteSelectedEntry() {
+    const select = document.getElementById("unitSelect");
+    const index = parseInt(select.value);
+    if (isNaN(index)) return alert("No entry selected.");
+
+    if (!select.value) {
+        alert("Please select a unit to delete.");
+        return;
+    }
+
+    const deleted = efcArray.splice(index, 1);
+    console.log("Deleted:", deleted);
+    console.log("Updated array:", efcArray);
+    saveToFile("M"); //only save conf. donÄt close menu
+    document.getElementById("deleteEntry").style.background = "grey";
+    document.getElementById("deleteEntry").style.pointerEvents = "none";
+    setTimeout(() => renderDropdown(), 2000);
 }
