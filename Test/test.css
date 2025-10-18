@@ -734,7 +734,7 @@ input[type=number] {
         border-right: 20px solid #444
     }
 
-    .npSl::-webkit-slider-thumb {
+    /* .npSl::-webkit-slider-thumb {
         box-shadow: 0 0 4px 3px grey;
         background: #44607a;
     }
@@ -742,7 +742,7 @@ input[type=number] {
     .npSl::-moz-range-thumb {
         box-shadow: 0 0 4px 3px grey;
         background: #44607a;
-    }
+    } */
 
     .npS,
     .npH,

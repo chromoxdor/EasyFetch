@@ -71,6 +71,9 @@ var bigLength;                        // Ammount of big tiles (determines the gr
 //      FETCH AND MAKE TILES
 //##############################################################################################################
 async function fetchJson(vFj) {
+    if (inIframe) { 
+        window.location.href = `/tools`
+        return; }
     //invert color scheme----------
     try {
         for (const styleSheet of document.styleSheets) {
@@ -1703,29 +1706,62 @@ function receiveNote(S) {
 
 //----------------------------------------------------------------------------------------------------------------
 
-// Inject minimal Web App Manifest
-// Inject manifest
 
-// Convert RGB → HEX (since manifest prefers hex format)
-function rgbToHex(rgb){
-  const m = rgb.match(/\d+/g);
-  return m ? "#" + m.slice(0,3).map(x => (+x).toString(16).padStart(2,'0')).join('') : "#000";
+// // listen to system theme changes
+function rgbToHex(r) {
+  const m = r.match(/\d+/g);
+  return m ? "#" + m.slice(0, 3).map(x => (+x).toString(16).padStart(2, "0")).join("") : "#000";
 }
 
-// ensure meta tag exists
-const meta = document.querySelector('meta[name="theme-color"]') 
-           || Object.assign(document.head.appendChild(document.createElement('meta')), {name:'theme-color'});
+const meta = document.querySelector('meta[name="theme-color"]') ||
+  Object.assign(document.head.appendChild(document.createElement("meta")), { name: "theme-color" });
 
-// update meta content based on current body background
-const updateTheme = () => meta.content = rgbToHex(getComputedStyle(document.body).backgroundColor);
+const link = document.head.appendChild(
+  Object.assign(document.createElement("link"), { rel: "manifest" })
+);
 
-// initial update
-document.addEventListener("DOMContentLoaded", updateTheme);
+function update() {
+  // Update <meta name="theme-color"> based on <body> background
+  const c = rgbToHex(getComputedStyle(document.body).backgroundColor);
+  meta.content = c;
 
-// listen to system theme changes
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+  // Get favicon SVG from <head>
+  const iconLink = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+  const svgDataUrl = iconLink?.href || "";
+
+  if (svgDataUrl.startsWith("data:image/svg+xml")) {
+    // Build manifest dynamically using favicon SVG as icon
+    const manifest = {
+      icons: [
+        {
+          src: svgDataUrl,
+          sizes: "any",
+          type: "image/svg+xml"
+        }
+      ],
+    };
+
+    // Update <link rel="manifest">
+    link.href = URL.createObjectURL(
+      new Blob([JSON.stringify(manifest)], { type: "application/json" })
+    );
+  }
+}
+
+document.addEventListener("DOMContentLoaded", update);
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", update);
 
 // ----------------------------------------------------------------------------------------------------------------
+
+let inIframe = false;
+try {
+  inIframe = window.self !== window.top;
+} catch (e) {
+  // Access denied — must be in a cross-origin iframe
+  inIframe = true;
+}
+
+
 
 //longpress custom.js
 !function (e, n) { "use strict"; let t = null; const o = 10, a = 10; let i = { x: 0, y: 0 }, s = 1e3; const c = "ontouchstart" in e || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0, r = "PointerEvent" in e || e.navigator && "msPointerEnabled" in e.navigator ? { down: "pointerdown", up: "pointerup", move: "pointermove", leave: "pointerleave" } : c ? { down: "touchstart", up: "touchend", move: "touchmove", leave: "touchleave" } : { down: "mousedown", up: "mouseup", move: "mousemove", leave: "mouseleave" }; function u(e) { v(); const t = l(e), o = new CustomEvent("long-press", { bubbles: !0, cancelable: !0, detail: (a = t, { clientX: a.clientX, clientY: a.clientY, offsetX: a.offsetX, offsetY: a.offsetY, pageX: a.pageX, pageY: a.pageY, screenX: a.screenX, screenY: a.screenY }) }); var a; this.dispatchEvent(o) || n.addEventListener("click", m, !0) } function l(e) { return e.changedTouches ? e.changedTouches[0] : e } function d(e, n = s) { v(); const o = e.target; t = setTimeout((() => u.call(o, e)), n) } function v() { t && (clearTimeout(t), t = null) } function m(e) { n.removeEventListener("click", m, !0), e.preventDefault(), e.stopImmediatePropagation() } n.addEventListener(r.down, (function (e) { const n = l(e); i = { x: n.clientX, y: n.clientY }, d(e) }), !0), n.addEventListener(r.move, (function (e) { const n = l(e); (Math.abs(i.x - n.clientX) > o || Math.abs(i.y - n.clientY) > a) && v() }), !0), n.addEventListener(r.up, v, !0), n.addEventListener(r.leave, v, !0), n.addEventListener("wheel", v, !0), n.addEventListener("scroll", v, !0), navigator.userAgent.toLowerCase().includes("android") || n.addEventListener("contextmenu", v, !0), e.setLongPressDelay = function (e) { s = e } }(window, document);
