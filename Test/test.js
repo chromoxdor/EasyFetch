@@ -71,9 +71,10 @@ var bigLength;                        // Ammount of big tiles (determines the gr
 //      FETCH AND MAKE TILES
 //##############################################################################################################
 async function fetchJson(vFj) {
-    if (inIframe) { 
+    if (inIframe) {
         window.location.href = `/tools`
-        return; }
+        return;
+    }
     //invert color scheme----------
     try {
         for (const styleSheet of document.styleSheets) {
@@ -180,6 +181,12 @@ async function fetchJson(vFj) {
 
     //if (!myJson) return;
     sysInfo = myJson?.System
+    let nodeNr = myJson?.System['Unit Number'];
+    const rssi =
+        myJson.WiFi?.['RSSI'] ??
+        myJson['WiFi Station']?.['RSSI'] ??
+        myJson['WiFi AP']?.['RSSI'] ??
+        null;
 
     const sysPairs = [
         { label: 'Sysinfo of', value: unitName },
@@ -193,8 +200,8 @@ async function fetchJson(vFj) {
         },
         { label: 'Free Ram', value: sysInfo['Free RAM'] },
         { label: 'Free Stack', value: sysInfo['Free Stack'] },
-        { label: 'IP Address', value: myJson.WiFi['IP Address'] },
-        { label: 'RSSI', value: `${myJson.WiFi['RSSI']} dBm` },
+        { label: 'IP Address', value: myJson.nodes.find(n => n.nr === nodeNr)?.ip || 'N/A' },
+        ...(rssi != null ? [{ label: 'RSSI', value: `${rssi} dBm` }] : []),
         { label: 'Build', value: sysInfo['Build'] },
         { label: 'Eco Mode', value: sysInfo['CPU Eco Mode'] === "true" ? 'on' : 'off' }
     ].filter(Boolean);
@@ -666,7 +673,7 @@ async function fetchJson(vFj) {
 
     // Update unit display if there are no parameters
     if (!hasParams) {
-        document.getElementById("unitId").innerHTML = `${styleU}${unitName} <span class="numberUnit"> (${myJson.WiFi.RSSI})</span>`;
+        document.getElementById("unitId").innerHTML = `${styleU}${unitName} <span class="numberUnit"> (${rssi})</span>`;
         document.getElementById("unitT").innerHTML = `${styleU}${unitName}`;
     }
     if (unitNr === unitNr1) myJson2 = myJson;
@@ -1709,43 +1716,43 @@ function receiveNote(S) {
 
 // // listen to system theme changes
 function rgbToHex(r) {
-  const m = r.match(/\d+/g);
-  return m ? "#" + m.slice(0, 3).map(x => (+x).toString(16).padStart(2, "0")).join("") : "#000";
+    const m = r.match(/\d+/g);
+    return m ? "#" + m.slice(0, 3).map(x => (+x).toString(16).padStart(2, "0")).join("") : "#000";
 }
 
 const meta = document.querySelector('meta[name="theme-color"]') ||
-  Object.assign(document.head.appendChild(document.createElement("meta")), { name: "theme-color" });
+    Object.assign(document.head.appendChild(document.createElement("meta")), { name: "theme-color" });
 
 const link = document.head.appendChild(
-  Object.assign(document.createElement("link"), { rel: "manifest" })
+    Object.assign(document.createElement("link"), { rel: "manifest" })
 );
 
 function update() {
-  // Update <meta name="theme-color"> based on <body> background
-  const c = rgbToHex(getComputedStyle(document.body).backgroundColor);
-  meta.content = c;
+    // Update <meta name="theme-color"> based on <body> background
+    const c = rgbToHex(getComputedStyle(document.body).backgroundColor);
+    meta.content = c;
 
-  // Get favicon SVG from <head>
-  const iconLink = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
-  const svgDataUrl = iconLink?.href || "";
+    // Get favicon SVG from <head>
+    const iconLink = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+    const svgDataUrl = iconLink?.href || "";
 
-  if (svgDataUrl.startsWith("data:image/svg+xml")) {
-    // Build manifest dynamically using favicon SVG as icon
-    const manifest = {
-      icons: [
-        {
-          src: svgDataUrl,
-          sizes: "any",
-          type: "image/svg+xml"
-        }
-      ],
-    };
+    if (svgDataUrl.startsWith("data:image/svg+xml")) {
+        // Build manifest dynamically using favicon SVG as icon
+        const manifest = {
+            icons: [
+                {
+                    src: svgDataUrl,
+                    sizes: "any",
+                    type: "image/svg+xml"
+                }
+            ],
+        };
 
-    // Update <link rel="manifest">
-    link.href = URL.createObjectURL(
-      new Blob([JSON.stringify(manifest)], { type: "application/json" })
-    );
-  }
+        // Update <link rel="manifest">
+        link.href = URL.createObjectURL(
+            new Blob([JSON.stringify(manifest)], { type: "application/json" })
+        );
+    }
 }
 
 document.addEventListener("DOMContentLoaded", update);
@@ -1755,10 +1762,10 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", upd
 
 let inIframe = false;
 try {
-  inIframe = window.self !== window.top;
+    inIframe = window.self !== window.top;
 } catch (e) {
-  // Access denied — must be in a cross-origin iframe
-  inIframe = true;
+    // Access denied — must be in a cross-origin iframe
+    inIframe = true;
 }
 
 
