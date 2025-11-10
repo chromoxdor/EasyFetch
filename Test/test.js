@@ -138,7 +138,7 @@ async function fetchJson(vFj) {
         if (fetchAbort.signal.aborted) return;
 
         myJson = await response.json();
-        unitName = myJson.WiFi.Hostname;
+        unitName = myJson.System['Unit Name'];
         unitNr = myJson.System['Unit Number'];
 
         if (!window.configMode && isMain) {
