@@ -187,6 +187,7 @@ async function fetchJson(vFj) {
         myJson['WiFi Station']?.['RSSI'] ??
         myJson['WiFi AP']?.['RSSI'] ??
         null;
+    const nodeIP = myJson.nodes.find(n => n.nr === nodeNr)?.ip || 'N/A';
 
     const sysPairs = [
         { label: 'Sysinfo of', value: unitName },
@@ -200,7 +201,7 @@ async function fetchJson(vFj) {
         },
         { label: 'Free Ram', value: sysInfo['Free RAM'] },
         { label: 'Free Stack', value: sysInfo['Free Stack'] },
-        { label: 'IP Address', value: myJson.nodes.find(n => n.nr === nodeNr)?.ip || 'N/A' },
+        { label: 'IP Address', value: nodeIP },
         ...(rssi != null ? [{ label: 'RSSI', value: `${rssi} dBm` }] : []),
         { label: 'Build', value: sysInfo['Build'] },
         { label: 'Eco Mode', value: sysInfo['CPU Eco Mode'] === "true" ? 'on' : 'off' }
@@ -654,7 +655,7 @@ async function fetchJson(vFj) {
         fJ = setInterval(fetchJson, durationF);
 
         unitNr1 = myJson.System["Unit Number"];
-        initIP = myJson.WiFi["IP Address"] === "(IP unset)" ? "192.168.4.1" : myJson.WiFi["IP Address"];
+        initIP = nodeIP === "(IP unset)" ? "192.168.4.1" : nodeIP;
 
         nP2 = `http://${initIP}/devices`;
         nP = `http://${initIP}/tools`;
