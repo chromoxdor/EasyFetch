@@ -15,6 +15,7 @@ var iIV;                             // Interval for input tile
 var unitName = "";                   // Name of the unit
 var unitNr;                          // Unit number of choosen node
 var unitNr1;                         // Primary unit number
+var oldsubnet = null;
 
 // Navigation and interaction variables
 var navOpen;                         // Flag to check if sidenav is open
@@ -64,13 +65,14 @@ var bigLength;                        // Ammount of big tiles (determines the gr
 
 
 // window.addEventListener("load", async () => {
-//     await fetchJson(); // your main logic
+//     await fetchJson(); 
 // });
 
 //##############################################################################################################
 //      FETCH AND MAKE TILES
 //##############################################################################################################
 async function fetchJson(vFj) {
+
     if (inIframe) {
         window.location.href = `/tools`
         return;
@@ -99,7 +101,7 @@ async function fetchJson(vFj) {
 
 
     //----------------------------------------------------------------------------------------------------------get EFC Data
-    if (runonce2 && !configMode) {
+    if (runonce2 && !window.configMode) {
         //if ((hasParams >= 0 && !isMain) || firstRun) {
         // isittime = false
         await getEfcData();
@@ -125,7 +127,7 @@ async function fetchJson(vFj) {
     }
     isFetching = true;
     // set individual interval for each unit
-    if (!configMode) {
+    if (!window.configMode) {
         durationF = selectionData?.iV ?? 2000;
         nThX = selectionData?.CiV ?? 5;
     }
@@ -187,7 +189,18 @@ async function fetchJson(vFj) {
         myJson['WiFi Station']?.['RSSI'] ??
         myJson['WiFi AP']?.['RSSI'] ??
         null;
-    const nodeIP = myJson.nodes.find(n => n.nr === nodeNr)?.ip || 'N/A';
+    const nodeIP =
+    window.location.hostname === "192.168.4.1"
+        ? "192.168.4.1"
+        : (myJson.nodes.find(n => n.nr === nodeNr)?.ip || "N/A");
+
+    //small addition to detect subnet change for vpn
+    const subnet = nodeIP?.match(/^(\d+\.\d+\.\d+)/)?.[1] || null;
+    console.log("subnet", subnet, "oldsubnet", oldsubnet);
+    if (subnet && subnet !== oldsubnet && oldsubnet !== null) {
+        location.reload();
+    }
+    oldsubnet = subnet;
 
     const sysPairs = [
         { label: 'Sysinfo of', value: unitName },
@@ -1164,7 +1177,7 @@ function buttonClick(sensorName) {
         const eventCmd = `event,${sensorName}Event`;
 
         if (unitNr === unitNr1) {
-            getUrl(`${cmD}${eventCmd}`);
+            getUrl(cmD + eventCmd);
         } else {
             getUrl(`${cmD}SendTo,${nNr},"${eventCmd}"`);
         }
@@ -1193,9 +1206,9 @@ function pushClick(sensorName, b) {
         const [utton2, nNr2] = sensorName.split("&");
         getUrl(`${cmD}SendTo,${nNr2},"event,${utton2}Event=${b}"`);
     } else {
-        const eventCmd = `${cmD}event,${sensorName}Event=${b}`;
+        const eventCmd = `event,${sensorName}Event=${b}`;
         if (unitNr === unitNr1) {
-            getUrl(eventCmd);
+            getUrl(cmD + eventCmd);
         } else {
             getUrl(`${cmD}SendTo,${nNr},"${eventCmd}"`);
         }
